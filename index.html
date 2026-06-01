@@ -205,7 +205,7 @@ async function testTelegram(){
 async function aiCall(sys,prompt,maxT=800){
   const r=await fetch(API_URL,{
     method:'POST',headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:maxT,system:sys,messages:[{role:'user',content:prompt}]})
+    body:JSON.stringify({model:'claude-sonnet-4-5',max_tokens:maxT,system:sys,messages:[{role:'user',content:prompt}]})
   });
   const d=await r.json();
   if(d.error) throw new Error(d.error.message);
