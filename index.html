@@ -37,7 +37,7 @@ button:disabled{opacity:.4;cursor:not-allowed}
 .step-line{width:10px;height:2px;margin-bottom:13px;transition:background .3s}
 .step-label{font-size:7px;white-space:nowrap}
 .agent-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:10px;margin-bottom:18px}
-.agent-card{background:#09091a;border-radius:12px;padding:14px 16px;transition:all .4s ease}
+.agent-card{background:#09091a;border-radius:12px;padding:14px 16px}
 .agent-bar{height:3px;background:#111;border-radius:2px;margin-bottom:9px}
 .agent-fill{height:100%;border-radius:2px;transition:width 1s ease}
 .chip{border-radius:4px;padding:2px 7px;font-size:10px;font-family:monospace;white-space:nowrap}
@@ -58,7 +58,6 @@ button:disabled{opacity:.4;cursor:not-allowed}
 </style>
 </head>
 <body>
-
 <div class="header">
   <div style="display:flex;align-items:center;gap:10px">
     <div class="logo">⚡</div>
@@ -83,8 +82,6 @@ button:disabled{opacity:.4;cursor:not-allowed}
     <button class="tab" onclick="showTab('memoire',this)">🧠 Mémoire</button>
     <button class="tab" onclick="showTab('stats',this)">📈 Stats</button>
   </div>
-
-  <!-- ENQUÊTEUR -->
   <div id="tab-enqueteur">
     <div class="card" style="border-color:#a78bfa20">
       <div style="font-size:8px;color:#a78bfa;letter-spacing:3px;margin-bottom:4px">🔍 L'ENQUÊTEUR</div>
@@ -93,8 +90,6 @@ button:disabled{opacity:.4;cursor:not-allowed}
       <div id="enqueteResult"></div>
     </div>
   </div>
-
-  <!-- ORCHESTRATEUR -->
   <div id="tab-orchestrateur" style="display:none">
     <div class="card">
       <div class="label">INSTRUMENT</div>
@@ -109,7 +104,7 @@ button:disabled{opacity:.4;cursor:not-allowed}
     </div>
     <div id="stepBar" style="display:none;margin-bottom:16px"></div>
     <div id="errorBox" style="display:none" class="error-box"></div>
-    <div id="smcData" style="display:none" class="card" style="border-color:#10b98130"></div>
+    <div id="smcData" style="display:none" class="card"></div>
     <div id="signalBanner"></div>
     <div id="agentGrid" style="display:none">
       <div style="font-size:7px;color:#1a1a30;letter-spacing:3px;margin-bottom:10px">RAPPORTS DES AGENTS</div>
@@ -117,163 +112,162 @@ button:disabled{opacity:.4;cursor:not-allowed}
     </div>
     <div id="decisionPanel"></div>
   </div>
-
-  <!-- MÉMOIRE -->
   <div id="tab-memoire" style="display:none">
     <div style="font-size:7px;color:#1a1a30;letter-spacing:3px;margin-bottom:12px">HISTORIQUE</div>
-    <div id="lastSignal" style="display:none" class="card" style="border-color:#00ff8830"></div>
     <div id="tradesList"></div>
   </div>
-
-  <!-- STATS -->
   <div id="tab-stats" style="display:none">
     <div style="font-size:7px;color:#1a1a30;letter-spacing:3px;margin-bottom:12px">STATISTIQUES</div>
     <div id="statsContent"></div>
   </div>
-
   <div class="footer">⚠️ Outil éducatif uniquement. Ne constitue pas un conseil en investissement.</div>
 </div>
 
 <script>
-const TELEGRAM_TOKEN = "8967631550:AAF6wiZgO60y0lEeI2X9nm6CnxPD2McJTp0";
-const TELEGRAM_CHAT_ID = "5411273910";
-const TD_KEY = "767259bc7ee84bac8f54f97f888a3bd0";
-const API_URL = "https://api.anthropic.com/v1/messages";
+// ── CONFIG ────────────────────────────────────────────────────
+const BACKEND   = "https://trading-master-backend.onrender.com";
+const API_URL   = BACKEND + "/anthropic";
+const TD_KEY    = "767259bc7ee84bac8f54f97f888a3bd0";
 
+// ── CONSTANTES ───────────────────────────────────────────────
 const ALL_PAIRS = ["EUR/USD","GBP/USD","USD/JPY","GBP/JPY","EUR/GBP","EUR/JPY","USD/CAD","USD/CHF","AUD/USD","NZD/USD","GBP/CHF","XAU/USD","XAG/USD","WTI","BRENT","BTC/USD","ETH/USD","BNB/USD","SOL/USD","XRP/USD","ADA/USD","NAS100","SPX500","DAX40"];
-const TFS = ["M15","H1","H4","Daily"];
-const COLORS = {liquidite:"#00d4ff",structure:"#a78bfa",zones:"#f59e0b",timing:"#34d399",risk:"#f87171",memoire:"#fb923c",backtest:"#e879f9",eco:"#10b981"};
-const ICONS = {liquidite:"💧",structure:"📊",zones:"🎯",timing:"⏰",risk:"🛡️",memoire:"🧠",backtest:"📈",eco:"🌍"};
-const AGENT_KEYS = ["liquidite","structure","zones","timing","risk","memoire","backtest","eco"];
-const STEPS = ["Liquidité","Structure","Zones","Timing","Risk","Mémoire","Backtest","Éco","Synthèse"];
+const TFS       = ["M15","H1","H4","Daily"];
+const COLORS    = {liquidite:"#00d4ff",structure:"#a78bfa",zones:"#f59e0b",timing:"#34d399",risk:"#f87171",memoire:"#fb923c",backtest:"#e879f9",eco:"#10b981"};
+const ICONS     = {liquidite:"💧",structure:"📊",zones:"🎯",timing:"⏰",risk:"🛡️",memoire:"🧠",backtest:"📈",eco:"🌍"};
+const AGENT_KEYS= ["liquidite","structure","zones","timing","risk","memoire","backtest","eco"];
+const STEPS     = ["Liquidité","Structure","Zones","Timing","Risk","Mémoire","Backtest","Éco","Synthèse"];
 
 let selectedPair = "EUR/USD";
-let selectedTf = "H1";
-let loading = false;
-let trades = [];
-let lastId = null;
+let selectedTf   = "H1";
+let loading      = false;
+let trades       = [];
+let lastId       = null;
 
-// Init pairs & TF buttons
+// ── PIP & FORMAT ─────────────────────────────────────────────
+function getPip(p){ return p>10000?50:p>1000?2:p>100?0.01:0.0001; }
+function fmtLevel(p,v){ return p>1000?v.toFixed(2):p>100?v.toFixed(3):v.toFixed(5); }
+
+// ── CONTRÔLES ────────────────────────────────────────────────
 function initControls(){
-  const pc = document.getElementById('pairsContainer');
-  ALL_PAIRS.forEach(p => {
-    const b = document.createElement('button');
-    b.className = 'pair-btn' + (p===selectedPair?' active':'');
-    b.textContent = p;
-    b.onclick = () => { selectedPair=p; document.querySelectorAll('.pair-btn').forEach(x=>x.classList.remove('active')); b.classList.add('active'); };
+  const pc=document.getElementById('pairsContainer');
+  ALL_PAIRS.forEach(p=>{
+    const b=document.createElement('button');
+    b.className='pair-btn'+(p===selectedPair?' active':'');
+    b.textContent=p;
+    b.onclick=()=>{selectedPair=p;document.querySelectorAll('.pair-btn').forEach(x=>x.classList.remove('active'));b.classList.add('active');};
     pc.appendChild(b);
   });
-  const tc = document.getElementById('tfContainer');
-  TFS.forEach(t => {
-    const b = document.createElement('button');
-    b.className = 'tf-btn' + (t===selectedTf?' active':'');
-    b.textContent = t;
-    b.onclick = () => { selectedTf=t; document.querySelectorAll('.tf-btn').forEach(x=>x.classList.remove('active')); b.classList.add('active'); };
+  const tc=document.getElementById('tfContainer');
+  TFS.forEach(t=>{
+    const b=document.createElement('button');
+    b.className='tf-btn'+(t===selectedTf?' active':'');
+    b.textContent=t;
+    b.onclick=()=>{selectedTf=t;document.querySelectorAll('.tf-btn').forEach(x=>x.classList.remove('active'));b.classList.add('active');};
     tc.appendChild(b);
   });
 }
 
-function showTab(name, btn){
-  ['enqueteur','orchestrateur','memoire','stats'].forEach(t => document.getElementById('tab-'+t).style.display='none');
+function showTab(name,btn){
+  ['enqueteur','orchestrateur','memoire','stats'].forEach(t=>document.getElementById('tab-'+t).style.display='none');
   document.getElementById('tab-'+name).style.display='block';
   document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');
   if(name==='memoire') renderTrades();
-  if(name==='stats') renderStats();
+  if(name==='stats')   renderStats();
 }
 
+// ── TELEGRAM (via backend) ───────────────────────────────────
 async function sendTelegram(msg){
   try{
-    await fetch(`https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`,{
+    await fetch(BACKEND+"/telegram",{
       method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({chat_id:TELEGRAM_CHAT_ID,text:msg,parse_mode:'HTML'})
+      body:JSON.stringify({text:msg})
     });
   }catch(e){}
 }
 
 async function testTelegram(){
-  const btn = document.getElementById('btnTg');
-  btn.textContent = '📡...'; btn.className='btn-tg';
+  const btn=document.getElementById('btnTg');
+  btn.textContent='📡...';btn.className='btn-tg';
   try{
-    const r = await fetch(`https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`,{
+    const r=await fetch(BACKEND+"/telegram",{
       method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({chat_id:TELEGRAM_CHAT_ID,text:'✅ <b>Trading Master V5 connecté !</b>\n\nTelegram opérationnel 🚀',parse_mode:'HTML'})
+      body:JSON.stringify({text:'✅ <b>Trading Master V5</b>\n\nBackend + Telegram opérationnels 🚀'})
     });
-    const d = await r.json();
-    btn.textContent = d.ok?'✅ OK':'❌ ERR';
-    btn.className = d.ok?'btn-tg ok':'btn-tg err';
+    const d=await r.json();
+    btn.textContent=d.ok?'✅ OK':'❌ ERR';
+    btn.className=d.ok?'btn-tg ok':'btn-tg err';
   }catch(e){btn.textContent='❌ ERR';btn.className='btn-tg err';}
   setTimeout(()=>{btn.textContent='📱 Test TG';btn.className='btn-tg';},4000);
 }
 
+// ── API CLAUDE (via backend) ─────────────────────────────────
 async function aiCall(sys,prompt,maxT=800){
-  const r = await fetch(API_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:maxT,system:sys,messages:[{role:'user',content:prompt}]})});
-  const d = await r.json();
+  const r=await fetch(API_URL,{
+    method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:maxT,system:sys,messages:[{role:'user',content:prompt}]})
+  });
+  const d=await r.json();
   if(d.error) throw new Error(d.error.message);
-  const text = (d.content||[]).map(b=>b.text||'').join('');
+  const text=(d.content||[]).map(b=>b.text||'').join('');
   const t=text.trim().replace(/^```\w*\n?/m,'').replace(/\n?```$/m,'').trim();
   const s=t.indexOf('{'),e=t.lastIndexOf('}');
   if(s===-1||e===-1) throw new Error('Pas de JSON');
-  try{return JSON.parse(t.slice(s,e+1));}
-  catch(x){return JSON.parse(t.slice(s,e+1).replace(/,\s*}/g,'}').replace(/,\s*]/g,']'));}
+  let raw=t.slice(s,e+1).replace(/[\u0000-\u001F\u007F]/g,' ').replace(/,\s*}/g,'}').replace(/,\s*]/g,']');
+  try{return JSON.parse(raw);}
+  catch(x){
+    const ex=k=>{const m=raw.match(new RegExp('"'+k+'"\\s*:\\s*"([^"]*)"'));return m?m[1]:'';};
+    const exN=k=>{const m=raw.match(new RegExp('"'+k+'"\\s*:\\s*([0-9.]+)'));return m?+m[1]:0;};
+    return{nom:ex('nom')||'Agent',analyse:ex('analyse')||'—',verdict:ex('verdict')||'—',
+      score:exN('score'),score_max:exN('score_max')||20,
+      direction:ex('direction'),trend_htf:ex('trend_htf'),biais_fondamental:ex('biais_fondamental'),
+      kill_zone:raw.includes('"kill_zone":true'),rr:ex('rr'),sl:ex('sl'),
+      bsl:ex('bsl'),ssl:ex('ssl'),bias:ex('bias'),raisonnement:ex('raisonnement'),
+      confluence:ex('confluence'),invalidation:ex('invalidation'),message:ex('message')};
+  }
 }
 
-const ENQUETEUR_SYS=`Tu es L'ENQUÊTEUR, agent de renseignement des marchés financiers. JSON UNIQUEMENT: {"session_actuelle":"...","sentiment":"risk-on","dxy":"hausse","resume_macro":"2 phrases max","evenements_jour":[{"heure":"14h30","event":"NFP","impact":"fort","paire_impactee":"USD"}],"top_opportunites":[{"rang":1,"paire":"EUR/USD","direction":"ACHETER","raison":"1 phrase","session_ideale":"London Open","score_opportunite":82,"alerte":""}],"paires_eviter":[{"paire":"USD/JPY","raison":"texte court"}],"conseil_du_jour":"1 phrase"}`;
-
-function getSys(key){
-  const m={
-    liquidite:`Expert SMC. JSON: {"nom":"Agent Liquidite","analyse":"...","bsl":"1.08500","ssl":"1.08100","direction":"bullish","score":15,"score_max":20,"verdict":"..."}`,
-    structure:`Expert SMC. JSON: {"nom":"Agent Structure","analyse":"...","trend_htf":"bullish","trend_ltf":"bearish","bos_choch":"BOS a 1.08300","wyckoff":"Distribution","score":14,"score_max":20,"verdict":"..."}`,
-    zones:`Expert SMC. JSON: {"nom":"Agent Zones","analyse":"...","ob_type":"bearish","ob_niveau":"1.08420","fvg":"1.08380-1.08450","zone_type":"premium","score":13,"score_max":20,"verdict":"..."}`,
-    timing:`Expert ICT. JSON: {"nom":"Agent Timing","analyse":"...","kill_zone":true,"session":"London Open","jour_ok":true,"macro":"aucun","score":11,"score_max":15,"verdict":"..."}`,
-    risk:`Expert risk. JSON: {"nom":"Agent Risk","analyse":"...","entry":"1.08420","sl":"1.08200","tp":"1.08800","rr":"2.5:1","taille":"1%","score":11,"score_max":15,"verdict":"..."}`,
-    memoire:`Expert trading. JSON: {"nom":"Agent Memoire","analyse":"...","winrate":"68%","meilleur":"...","score":3,"score_max":5,"verdict":"..."}`,
-    backtest:`Expert backtest. JSON: {"nom":"Agent Backtest","analyse":"...","occurrences":28,"succes":"71%","rr_hist":"2.4:1","score":4,"score_max":5,"verdict":"..."}`,
-    eco:`Expert macro. JSON: {"nom":"Agent Eco","analyse":"...","evenements":"...","banques_centrales":"...","risk_mode":"risk-off","alerte":"aucune","biais_fondamental":"bearish","score":7,"score_max":10,"verdict":"..."}`
-  };
-  return m[key]||m.memoire;
-}
+// ── ENQUÊTEUR ────────────────────────────────────────────────
+const ENQUETEUR_SYS=`Réponds UNIQUEMENT avec un objet JSON brut. Zéro texte avant ou après. Pas de markdown. Tu es L'ENQUÊTEUR. Format: {"session_actuelle":"...","sentiment":"risk-on","dxy":"hausse","resume_macro":"2 phrases max","top_opportunites":[{"rang":1,"paire":"EUR/USD","direction":"ACHETER","raison":"1 phrase","session_ideale":"London Open","score_opportunite":82}],"paires_eviter":[{"paire":"USD/JPY","raison":"texte"}],"conseil_du_jour":"1 phrase"}`;
 
 async function runEnquete(){
-  const btn = document.getElementById('btnEnquete');
-  btn.disabled=true; btn.textContent='🔍 ENQUÊTE...';
+  const btn=document.getElementById('btnEnquete');
+  btn.disabled=true;btn.textContent='🔍 ENQUÊTE...';
   document.getElementById('enqueteResult').innerHTML='';
   const now=new Date(),h=now.getHours();
   const sess=h>=7&&h<10?'London Open':h>=13&&h<16?'NY Open':h>=2&&h<6?'Asian Session':'Inter-session';
   const days=['Dimanche','Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi'];
   try{
-    const r=await aiCall(ENQUETEUR_SYS,'Date:'+now.toLocaleDateString('fr-FR')+' Heure:'+now.toLocaleTimeString('fr-FR')+' Session:'+sess+' Jour:'+days[now.getDay()]+'\nPaires: '+ALL_PAIRS.join(', ')+'\nJSON uniquement.',2000);
+    const r=await aiCall(ENQUETEUR_SYS,'Date:'+now.toLocaleDateString('fr-FR')+' Heure:'+now.toLocaleTimeString('fr-FR')+' Session:'+sess+' Jour:'+days[now.getDay()]+'\nPaires: '+ALL_PAIRS.join(', '),2000);
     renderEnquete(r);
   }catch(e){document.getElementById('enqueteResult').innerHTML=`<div class="error-box">⚠ ${e.message}</div>`;}
-  btn.disabled=false; btn.textContent='🔍 LANCER L\'ENQUÊTE';
+  btn.disabled=false;btn.textContent='🔍 LANCER L\'ENQUÊTE';
 }
 
 function renderEnquete(r){
-  const sentColor=r.sentiment==='risk-on'?'#00ff88':r.sentiment==='risk-off'?'#ff4444':'#f5c518';
+  const sc=r.sentiment==='risk-on'?'#00ff88':r.sentiment==='risk-off'?'#ff4444':'#f5c518';
   let html=`<div class="card" style="margin-bottom:14px">
     <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap">
-      <span class="chip" style="background:${sentColor}20;border:1px solid ${sentColor}40;color:${sentColor}">${r.session_actuelle||'—'}</span>
-      <span class="chip" style="background:${sentColor}20;border:1px solid ${sentColor}40;color:${sentColor}">Sentiment: ${r.sentiment||'—'}</span>
+      <span class="chip" style="background:${sc}20;border:1px solid ${sc}40;color:${sc}">${r.session_actuelle||'—'}</span>
+      <span class="chip" style="background:${sc}20;border:1px solid ${sc}40;color:${sc}">Sentiment: ${r.sentiment||'—'}</span>
       <span class="chip" style="background:#88888820;border:1px solid #88888840;color:#888">DXY: ${r.dxy||'—'}</span>
     </div>
     <p style="font-size:11px;color:#777;line-height:1.6">${r.resume_macro||''}</p>
   </div>`;
-
   if(r.top_opportunites?.length){
     html+=`<div style="font-size:8px;color:#2a2a40;letter-spacing:3px;margin-bottom:10px">🎯 TOP OPPORTUNITÉS</div>`;
     r.top_opportunites.forEach(op=>{
-      const isLong=op.direction==='ACHETER',dc=isLong?'#00ff88':'#ff4444';
+      const isL=op.direction==='ACHETER',dc=isL?'#00ff88':'#ff4444';
       html+=`<div style="background:#07071a;border:2px solid ${dc}30;border-left:4px solid ${dc};border-radius:11px;padding:14px 16px;margin-bottom:10px">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
           <span style="font-size:15px;font-weight:900;color:#fff;font-family:monospace">${op.paire}</span>
-          <span style="font-size:12px;font-weight:900;color:${dc}">${isLong?'🟢':'🔴'} ${op.direction} — ${op.score_opportunite}/100</span>
+          <span style="font-size:12px;font-weight:900;color:${dc}">${isL?'🟢':'🔴'} ${op.direction} — ${op.score_opportunite}/100</span>
         </div>
         <p style="font-size:11px;color:#777;margin:0 0 10px">${op.raison||''}</p>
         <button onclick="analyzeFromEnquete('${op.paire}')" style="width:100%;background:${dc}20;border:2px solid ${dc}40;color:${dc};border-radius:7px;padding:9px;font-size:11px;font-weight:700;font-family:monospace;cursor:pointer">⚡ Analyser ${op.paire}</button>
       </div>`;
     });
   }
-
   if(r.conseil_du_jour) html+=`<div style="background:#a78bfa10;border:1px solid #a78bfa25;border-radius:10px;padding:12px 16px"><p style="font-size:11px;color:#a78bfacc;margin:0;font-style:italic">💡 "${r.conseil_du_jour}"</p></div>`;
   document.getElementById('enqueteResult').innerHTML=html;
 }
@@ -285,14 +279,30 @@ function analyzeFromEnquete(pair){
   setTimeout(()=>launch(),100);
 }
 
+// ── AGENTS ───────────────────────────────────────────────────
+function getSys(key){
+  const pre=`Réponds UNIQUEMENT avec un objet JSON brut. Zéro texte avant ou après. Pas de markdown. `;
+  const m={
+    liquidite:pre+`Expert SMC liquidité. Format: {"nom":"Agent Liquidite","analyse":"texte","bsl":"niveau","ssl":"niveau","direction":"bullish","score":15,"score_max":20,"verdict":"texte"}`,
+    structure:pre+`Expert SMC structure. Format: {"nom":"Agent Structure","analyse":"texte","trend_htf":"bullish","trend_ltf":"bearish","wyckoff":"phase","score":14,"score_max":20,"verdict":"texte"}`,
+    zones:    pre+`Expert SMC zones. Format: {"nom":"Agent Zones","analyse":"texte","ob_type":"bearish","zone_type":"premium","score":13,"score_max":20,"verdict":"texte"}`,
+    timing:   pre+`Expert ICT timing. Format: {"nom":"Agent Timing","analyse":"texte","kill_zone":true,"session":"London Open","jour_ok":true,"score":11,"score_max":15,"verdict":"texte"}`,
+    risk:     pre+`Expert risk management. Format: {"nom":"Agent Risk","analyse":"texte","taille":"1%","score":11,"score_max":15,"verdict":"texte"}`,
+    memoire:  pre+`Expert trading mémoire. Format: {"nom":"Agent Memoire","analyse":"texte","winrate":"68%","score":3,"score_max":5,"verdict":"texte"}`,
+    backtest: pre+`Expert backtest SMC. Format: {"nom":"Agent Backtest","analyse":"texte","succes":"71%","score":4,"score_max":5,"verdict":"texte"}`,
+    eco:      pre+`Expert macro fondamental. Format: {"nom":"Agent Eco","analyse":"texte","risk_mode":"risk-off","biais_fondamental":"bearish","score":7,"score_max":10,"verdict":"texte"}`
+  };
+  return m[key]||m.memoire;
+}
+
+// ── LOADING ──────────────────────────────────────────────────
 function setLoading(val){
   loading=val;
   document.getElementById('btnLaunch').disabled=val;
   document.getElementById('btnLaunch').textContent=val?'⟳ ANALYSE...':'▶ LANCER';
   const dot=document.getElementById('statusDot');
-  const txt=document.getElementById('statusTxt');
   dot.style.animation=val?'pulse 1.4s ease infinite':'none';
-  txt.textContent=val?'ANALYSE...':'PRÊT';
+  document.getElementById('statusTxt').textContent=val?'ANALYSE...':'PRÊT';
 }
 
 function renderStepBar(step,label){
@@ -300,26 +310,21 @@ function renderStepBar(step,label){
   let html='<div class="step-bar">';
   STEPS.forEach((lbl,i)=>{
     const done=i<step,active=i===step,col=colors[i]||'#00ff88';
-    html+=`<div class="step">
-      <div class="step-circle" style="background:${done?col:active?col+'30':'#0d0d1f'};border:2px solid ${done||active?col:'#1a1a2e'};color:${done?'#000':active?col:'#333'};box-shadow:${active?'0 0 8px '+col:'none'}">${done?'✓':i+1}</div>
-      <span class="step-label" style="color:${done||active?col:'#222'}">${lbl}</span>
-    </div>`;
+    html+=`<div class="step"><div class="step-circle" style="background:${done?col:active?col+'30':'#0d0d1f'};border:2px solid ${done||active?col:'#1a1a2e'};color:${done?'#000':active?col:'#333'};box-shadow:${active?'0 0 8px '+col:'none'}">${done?'✓':i+1}</div><span class="step-label" style="color:${done||active?col:'#222'}">${lbl}</span></div>`;
     if(i<STEPS.length-1) html+=`<div class="step-line" style="background:${done?col:'#0d0d1f'}"></div>`;
   });
   html+='</div>';
   if(label) html+=`<p style="text-align:center;font-size:9px;color:#444;font-family:monospace;margin-top:5px">${label}</p>`;
   const sb=document.getElementById('stepBar');
-  sb.innerHTML=html; sb.style.display='block';
+  sb.innerHTML=html;sb.style.display='block';
 }
 
 function renderAgentCard(key,data){
   const color=COLORS[key]||'#888',icon=ICONS[key]||'🤖';
   const pct=data.score_max>0?Math.round(data.score/data.score_max*100):0;
   let chips='';
-  if(key==='liquidite') chips=`<span class="chip" style="background:#00d4ff20;border:1px solid #00d4ff40;color:#00d4ff">BSL: ${data.bsl||'—'}</span><span class="chip" style="background:#f8717120;border:1px solid #f8717140;color:#f87171">SSL: ${data.ssl||'—'}</span>`;
   if(key==='timing') chips=`<span class="chip" style="background:${data.kill_zone?'#34d39920':'#55555520'};border:1px solid ${data.kill_zone?'#34d39940':'#55555540'};color:${data.kill_zone?'#34d399':'#555'}">${data.kill_zone?'Kill Zone ✓':'Hors Kill Zone'}</span>`;
-  if(key==='risk') chips=`<span class="chip" style="background:#00ff8820;border:1px solid #00ff8840;color:#00ff88">RR ${data.rr||'—'}</span><span class="chip" style="background:#f8717120;border:1px solid #f8717140;color:#f87171">SL ${data.sl||'—'}</span>`;
-  if(key==='eco') chips=`<span class="chip" style="background:#10b98120;border:1px solid #10b98140;color:#10b981">Biais: ${data.biais_fondamental||'—'}</span>`;
+  if(key==='eco')    chips=`<span class="chip" style="background:#10b98120;border:1px solid #10b98140;color:#10b981">Biais: ${data.biais_fondamental||'—'}</span>`;
   return `<div class="agent-card" style="border:1px solid ${color}22">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
       <div style="display:flex;align-items:center;gap:7px"><span style="font-size:14px">${icon}</span><span style="font-size:10px;font-weight:700;color:${color};font-family:monospace">${data.nom||key}</span></div>
@@ -332,6 +337,7 @@ function renderAgentCard(key,data){
   </div>`;
 }
 
+// ── LAUNCH ───────────────────────────────────────────────────
 async function launch(forcePair){
   const targetPair=forcePair||selectedPair;
   if(loading) return;
@@ -347,27 +353,41 @@ async function launch(forcePair){
   const sess=h>=7&&h<10?'London Open':h>=13&&h<16?'NY Open':h>=2&&h<6?'Asian Session':'Inter-session';
   const days=['Dimanche','Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi'];
   const results={};
+  let smcData=null;
+  let jsLevels=null;
 
   try{
-    // Données marché
     renderStepBar(0,'📡 Données marché...');
-    let smcData=null;
     try{
-      const PAIR_SRC={"EUR/USD":{s:"EUR/USD",t:"td"},"GBP/USD":{s:"GBP/USD",t:"td"},"USD/JPY":{s:"USD/JPY",t:"td"},"GBP/JPY":{s:"GBP/JPY",t:"td"},"EUR/GBP":{s:"EUR/GBP",t:"td"},"EUR/JPY":{s:"EUR/JPY",t:"td"},"USD/CAD":{s:"USD/CAD",t:"td"},"USD/CHF":{s:"USD/CHF",t:"td"},"AUD/USD":{s:"AUD/USD",t:"td"},"NZD/USD":{s:"NZD/USD",t:"td"},"GBP/CHF":{s:"GBP/CHF",t:"td"},"XAU/USD":{s:"XAU/USD",t:"td"},"XAG/USD":{s:"XAG/USD",t:"td"},"WTI":{s:"WTI/USD",t:"td"},"BRENT":{s:"BRENT/USD",t:"td"},"NAS100":{s:"NDX",t:"td"},"SPX500":{s:"SPX",t:"td"},"DAX40":{s:"DAX",t:"td"},"BTC/USD":{s:"BTCUSDT",t:"bnb"},"ETH/USD":{s:"ETHUSD",t:"bnb"},"BNB/USD":{s:"BNBUSDT",t:"bnb"},"SOL/USD":{s:"SOLUSDT",t:"bnb"},"XRP/USD":{s:"XRPUSDT",t:"bnb"},"ADA/USD":{s:"ADAUSDT",t:"bnb"}};
+      const PAIR_SRC={"EUR/USD":{s:"EUR/USD",t:"td"},"GBP/USD":{s:"GBP/USD",t:"td"},"USD/JPY":{s:"USD/JPY",t:"td"},"GBP/JPY":{s:"GBP/JPY",t:"td"},"EUR/GBP":{s:"EUR/GBP",t:"td"},"EUR/JPY":{s:"EUR/JPY",t:"td"},"USD/CAD":{s:"USD/CAD",t:"td"},"USD/CHF":{s:"USD/CHF",t:"td"},"AUD/USD":{s:"AUD/USD",t:"td"},"NZD/USD":{s:"NZD/USD",t:"td"},"GBP/CHF":{s:"GBP/CHF",t:"td"},"XAU/USD":{s:"XAUUSDT",t:"bnb"},"XAG/USD":{s:"XAGUSDT",t:"bnb"},"WTI":{s:"WTI/USD",t:"td"},"BRENT":{s:"BRENT/USD",t:"td"},"NAS100":{s:"NDX",t:"td"},"SPX500":{s:"SPX",t:"td"},"DAX40":{s:"DAX",t:"td"},"BTC/USD":{s:"BTCUSDT",t:"bnb"},"ETH/USD":{s:"ETHUSDT",t:"bnb"},"BNB/USD":{s:"BNBUSDT",t:"bnb"},"SOL/USD":{s:"SOLUSDT",t:"bnb"},"XRP/USD":{s:"XRPUSDT",t:"bnb"},"ADA/USD":{s:"ADAUSDT",t:"bnb"}};
       const TF_SRC={"M15":{td:"15min",bnb:"15m"},"H1":{td:"1h",bnb:"1h"},"H4":{td:"4h",bnb:"4h"},"Daily":{td:"1day",bnb:"1d"}};
       const pc=PAIR_SRC[targetPair],tc=TF_SRC[selectedTf];
       let candles;
-      if(pc.t==='bnb'){const r=await fetch('https://api.binance.com/api/v3/klines?symbol='+pc.s+'&interval='+tc.bnb+'&limit=50');const d=await r.json();candles=d.map(c=>({open:+c[1],high:+c[2],low:+c[3],close:+c[4]}));}
-      else{const r=await fetch('https://api.twelvedata.com/time_series?symbol='+encodeURIComponent(pc.s)+'&interval='+tc.td+'&outputsize=50&apikey='+TD_KEY);const d=await r.json();if(d.status==='error')throw new Error(d.message);candles=d.values.slice().reverse().map(c=>({open:+c.open,high:+c.high,low:+c.low,close:+c.close}));}
+      if(pc.t==='bnb'){
+        const r=await fetch('https://api.binance.com/api/v3/klines?symbol='+pc.s+'&interval='+tc.bnb+'&limit=50');
+        const d=await r.json();
+        candles=d.map(c=>({open:+c[1],high:+c[2],low:+c[3],close:+c[4]}));
+      } else {
+        const r=await fetch('https://api.twelvedata.com/time_series?symbol='+encodeURIComponent(pc.s)+'&interval='+tc.td+'&outputsize=50&apikey='+TD_KEY);
+        const d=await r.json();
+        if(d.status==='error') throw new Error(d.message);
+        candles=d.values.slice().reverse().map(c=>({open:+c.open,high:+c.high,low:+c.low,close:+c.close}));
+      }
       const w=candles.slice(-20),last=w[w.length-1];
       const hi=Math.max(...w.map(c=>c.high)),lo=Math.min(...w.map(c=>c.low)),mid=(hi+lo)/2;
-      smcData={price:last.close.toFixed(5),bsl:hi.toFixed(5),ssl:lo.toFixed(5),trend:last.close>w[0].open?'bullish':'bearish',zone:last.close>mid?'premium':'discount'};
+      smcData={price:fmtLevel(last.close,last.close),bsl:fmtLevel(last.close,hi),ssl:fmtLevel(last.close,lo),trend:last.close>w[0].open?'bullish':'bearish',zone:last.close>mid?'premium':'discount'};
+      const pip=getPip(last.close),isBull=last.close>w[0].open;
+      jsLevels={
+        entry: fmtLevel(last.close,last.close),
+        sl:    fmtLevel(last.close,isBull?last.close-pip*20:last.close+pip*20),
+        tp:    fmtLevel(last.close,isBull?last.close+pip*40:last.close-pip*40),
+        rr:    '2.0:1', bias:isBull?'long':'short'
+      };
       const sd=document.getElementById('smcData');
-      sd.innerHTML=`<div style="font-size:7px;color:#10b981;letter-spacing:3px;margin-bottom:8px">📡 DONNÉES — ${targetPair} ${selectedTf}</div><div class="data-grid">${[['PRIX',smcData.price,'#fff'],['BSL',smcData.bsl,'#00d4ff'],['SSL',smcData.ssl,'#f87171'],['TREND',smcData.trend,smcData.trend==='bullish'?'#00ff88':'#f87171'],['ZONE',smcData.zone,smcData.zone==='premium'?'#f87171':'#00ff88']].map(([k,v,c])=>`<div class="data-box"><div style="font-size:7px;color:#222;letter-spacing:1.5px;margin-bottom:2px">${k}</div><div style="font-size:10px;font-weight:700;color:${c};font-family:monospace">${v}</div></div>`).join('')}</div>`;
+      sd.innerHTML=`<div style="font-size:7px;color:#10b981;letter-spacing:3px;margin-bottom:8px">📡 DONNÉES LIVE — ${targetPair} ${selectedTf}</div><div class="data-grid">${[['PRIX',smcData.price,'#fff'],['BSL',smcData.bsl,'#00d4ff'],['SSL',smcData.ssl,'#f87171'],['ENTRY',jsLevels.entry,'#f5c518'],['SL',jsLevels.sl,'#f87171'],['TP',jsLevels.tp,'#00ff88'],['TREND',smcData.trend,smcData.trend==='bullish'?'#00ff88':'#f87171'],['ZONE',smcData.zone,smcData.zone==='premium'?'#f87171':'#00ff88']].map(([k,v,c])=>`<div class="data-box"><div style="font-size:7px;color:#222;letter-spacing:1.5px;margin-bottom:2px">${k}</div><div style="font-size:10px;font-weight:700;color:${c};font-family:monospace">${v}</div></div>`).join('')}</div>`;
       sd.style.display='block';
     }catch(e){}
 
-    // Agents
     for(let i=0;i<AGENT_KEYS.length;i++){
       const key=AGENT_KEYS[i];
       renderStepBar(i,ICONS[key]+' Agent '+(i+1)+'/8...');
@@ -380,65 +400,65 @@ async function launch(forcePair){
       await new Promise(r=>setTimeout(r,200));
     }
 
-    // Orchestrateur
     renderStepBar(8,'⚡ Synthèse...');
     const total=Object.values(results).reduce((s,a)=>s+(a.score||0),0);
     const dec=total>=86?'EXECUTION':total>=61?'SIGNAL':'ATTENDRE';
     const sum=Object.values(results).map(a=>(a.nom||'?')+':'+(a.score||0)).join(' ');
-    const sys=`Orchestrateur SMC. JSON: {"score_total":${total},"decision":"${dec}","bias":"short","raisonnement":"...","confluence":"...","invalidation":"...","entry":"1.08420","sl":"1.08200","tp":"1.08800","rr":"2.5:1","taille":"1%","message":"..."}`;
-    const o=await aiCall(sys,targetPair+' '+selectedTf+' | '+sum,1000);
-    o.pair=targetPair; o.tf=selectedTf;
+    const sys=`Réponds UNIQUEMENT avec un objet JSON brut. Orchestrateur SMC. Format: {"score_total":${total},"decision":"${dec}","bias":"short","raisonnement":"texte","confluence":"texte","invalidation":"texte","message":"texte"}`;
+    const oRaw=await aiCall(sys,targetPair+' '+selectedTf+' | '+sum,800);
+    const o={
+      score_total:total, decision:dec,
+      bias:        jsLevels?jsLevels.bias:(oRaw.bias||'long'),
+      raisonnement:oRaw.raisonnement||'Analyse complétée.',
+      confluence:  oRaw.confluence||'—',
+      invalidation:oRaw.invalidation||'—',
+      message:     oRaw.message||'—',
+      entry: jsLevels?jsLevels.entry:'—',
+      sl:    jsLevels?jsLevels.sl:'—',
+      tp:    jsLevels?jsLevels.tp:'—',
+      rr:    jsLevels?jsLevels.rr:'—',
+      pair:targetPair, tf:selectedTf
+    };
 
     renderStepBar(9,'');
     renderDecision(o);
 
-    // Telegram si signal
     if((o.score_total||0)>=65&&o.decision!=='ATTENDRE'){
-      const isLong=o.bias==='long';
-      const msg=`⚡ <b>SIGNAL TRADING MASTER V5</b>\n━━━━━━━━━━━━━━\n${isLong?'🟢 <b>ACHETER</b>':'🔴 <b>VENDRE</b>'} <b>${targetPair}</b>\n📊 ${selectedTf} | Score: <b>${o.score_total||0}/100</b>\n━━━━━━━━━━━━━━\n📍 Entrée: <b>${o.entry||'—'}</b>\n🛡️ SL: <b>${o.sl||'—'}</b>\n🎯 TP: <b>${o.tp||'—'}</b>\n⚖️ RR: <b>${o.rr||'—'}</b>\n━━━━━━━━━━━━━━\n📱 Ouvre MT4 !`;
-      await sendTelegram(msg);
+      const isL=o.bias==='long';
+      await sendTelegram(`⚡ <b>SIGNAL TRADING MASTER V5</b>\n━━━━━━━━━━━━━━\n${isL?'🟢 <b>ACHETER</b>':'🔴 <b>VENDRE</b>'} <b>${targetPair}</b>\n📊 ${selectedTf} | Score: <b>${o.score_total}/100</b>\n━━━━━━━━━━━━━━\n📍 Entrée: <b>${o.entry}</b>\n🛡️ SL: <b>${o.sl}</b>\n🎯 TP: <b>${o.tp}</b>\n⚖️ RR: <b>${o.rr}</b>\n━━━━━━━━━━━━━━\n📱 Ouvre MT4 !`);
     }
 
-    // Sauvegarder
-    const t={id:Date.now(),date:new Date().toLocaleString('fr-FR'),pair:targetPair,tf:selectedTf,score:o.score_total||0,decision:o.decision||'ATTENDRE',bias:o.bias||'',entry:o.entry||'',sl:o.sl||'',tp:o.tp||'',rr:o.rr||'',outcome:null};
-    trades.unshift(t); lastId=t.id;
+    const t={id:Date.now(),date:new Date().toLocaleString('fr-FR'),pair:targetPair,tf:selectedTf,score:o.score_total,decision:o.decision,bias:o.bias,entry:o.entry,sl:o.sl,tp:o.tp,rr:o.rr,outcome:null};
+    trades.unshift(t);lastId=t.id;
     if(trades.length>100) trades=trades.slice(0,100);
 
   }catch(e){
     const eb=document.getElementById('errorBox');
-    eb.textContent='⚠ '+e.message; eb.style.display='block';
+    eb.textContent='⚠ '+e.message;eb.style.display='block';
     document.getElementById('stepBar').style.display='none';
   }
   setLoading(false);
 }
 
+// ── DÉCISION ─────────────────────────────────────────────────
 function renderDecision(o){
   const cfg={ATTENDRE:{icon:'⏳',color:'#ff4444',label:'ATTENDRE',sub:'Setup insuffisant'},SIGNAL:{icon:'👁️',color:'#f5c518',label:'SIGNAL DÉTECTÉ',sub:'Attendre confirmation'},EXECUTION:{icon:'⚡',color:'#00ff88',label:'EXÉCUTION POSSIBLE',sub:'Setup haute probabilité'}};
   const c=cfg[o.decision]||cfg.ATTENDRE;
-
-  // Signal banner
   if((o.score_total||0)>=65&&o.decision!=='ATTENDRE'){
-    const isLong=o.bias==='long',cl=isLong?'#00ff88':'#ff4444';
+    const isL=o.bias==='long',cl=isL?'#00ff88':'#ff4444';
     document.getElementById('signalBanner').innerHTML=`<div class="signal-banner" style="background:${cl}15;border:3px solid ${cl};box-shadow:0 0 30px ${cl}20">
-      <div style="text-align:center;margin-bottom:16px">
-        <div style="font-size:28px;font-weight:900;color:${cl};font-family:monospace;letter-spacing:2px;margin-bottom:4px">${isLong?'🟢 ACHETER':'🔴 VENDRE'}</div>
-      </div>
+      <div style="text-align:center;margin-bottom:16px"><div style="font-size:28px;font-weight:900;color:${cl};font-family:monospace">${isL?'🟢 ACHETER':'🔴 VENDRE'}</div></div>
       <div class="signal-grid">
         ${[['📍 ENTRÉE',o.entry,'#f5c518'],['🛡️ STOP LOSS',o.sl,'#ff4444'],['🎯 TAKE PROFIT',o.tp,'#00ff88'],['⚖️ R:R',o.rr,'#a78bfa']].map(([k,v,col])=>`<div class="signal-box" style="background:#06060f;border:2px solid ${col}30"><div style="font-size:8px;color:${col};letter-spacing:2px;margin-bottom:4px">${k}</div><div style="font-size:18px;font-weight:900;color:${col};font-family:monospace">${v||'—'}</div></div>`).join('')}
       </div>
     </div>`;
   }
-
-  // Decision panel
-  document.getElementById('decisionPanel').innerHTML=`<div style="font-size:7px;color:#1a1a30;letter-spacing:3px;margin-bottom:10px">DÉCISION FINALE</div>
+  document.getElementById('decisionPanel').innerHTML=`
+  <div style="font-size:7px;color:#1a1a30;letter-spacing:3px;margin-bottom:10px">DÉCISION FINALE</div>
   <div class="decision-panel" style="background:${c.color}06;border:2px solid ${c.color}40">
     <div style="display:flex;align-items:center;gap:14px;margin-bottom:14px;flex-wrap:wrap">
       <div style="width:48px;height:48px;border-radius:11px;background:${c.color}18;border:2px solid ${c.color}30;display:flex;align-items:center;justify-content:center;font-size:22px">${c.icon}</div>
-      <div style="flex:1">
-        <div style="font-size:8px;color:#333;letter-spacing:3px;margin-bottom:2px">DÉCISION ORCHESTRATEUR</div>
-        <div style="font-size:17px;font-weight:900;color:${c.color};font-family:monospace">${c.label}</div>
-        <div style="font-size:10px;color:#555;margin-top:2px">${c.sub}</div>
-      </div>
+      <div style="flex:1"><div style="font-size:8px;color:#333;letter-spacing:3px;margin-bottom:2px">DÉCISION</div><div style="font-size:17px;font-weight:900;color:${c.color};font-family:monospace">${c.label}</div></div>
       <div style="font-size:32px;font-weight:900;color:${c.color};font-family:monospace">${o.score_total||0}<span style="font-size:14px;color:#333">/100</span></div>
     </div>
     <div style="background:#06060f;border-radius:9px;padding:11px 13px;margin-bottom:10px">
@@ -446,18 +466,12 @@ function renderDecision(o){
       <p style="font-size:11px;color:#999;line-height:1.7;margin:0">${o.raisonnement||''}</p>
     </div>
     <div class="decision-row">
-      <div style="padding:9px 11px;background:#00ff8806;border:1px solid #00ff8820;border-radius:7px">
-        <div style="font-size:7px;color:#00ff8866;letter-spacing:2px;margin-bottom:3px">CONFLUENCE</div>
-        <div style="font-size:10px;color:#00ff88bb">${o.confluence||''}</div>
-      </div>
-      <div style="padding:9px 11px;background:#ff444406;border:1px solid #ff444420;border-radius:7px">
-        <div style="font-size:7px;color:#ff444466;letter-spacing:2px;margin-bottom:3px">INVALIDATION</div>
-        <div style="font-size:10px;color:#ff4444bb">${o.invalidation||''}</div>
-      </div>
+      <div style="padding:9px 11px;background:#00ff8806;border:1px solid #00ff8820;border-radius:7px"><div style="font-size:7px;color:#00ff8866;letter-spacing:2px;margin-bottom:3px">CONFLUENCE</div><div style="font-size:10px;color:#00ff88bb">${o.confluence||''}</div></div>
+      <div style="padding:9px 11px;background:#ff444406;border:1px solid #ff444420;border-radius:7px"><div style="font-size:7px;color:#ff444466;letter-spacing:2px;margin-bottom:3px">INVALIDATION</div><div style="font-size:10px;color:#ff4444bb">${o.invalidation||''}</div></div>
     </div>
     ${o.message?`<div style="margin-top:10px;padding:9px 13px;background:${c.color}08;border:1px solid ${c.color}20;border-radius:7px"><p style="font-size:11px;color:${c.color}bb;margin:0;font-style:italic">"${o.message}"</p></div>`:''}
     ${lastId?`<div style="margin-top:14px;padding:12px;background:#07071a;border:1px solid #00ff8830;border-radius:10px">
-      <div style="font-size:8px;color:#00ff88;letter-spacing:2px;margin-bottom:8px">RÉSULTAT DE CE TRADE ?</div>
+      <div style="font-size:8px;color:#00ff88;letter-spacing:2px;margin-bottom:8px">RÉSULTAT ?</div>
       <div style="display:flex;gap:7px;flex-wrap:wrap">
         <button onclick="markOutcome(${lastId},'win')" style="background:#00ff8818;border:1px solid #00ff8840;color:#00ff88;border-radius:6px;padding:7px 12px;font-size:10px;font-weight:700;cursor:pointer">✅ Gagné</button>
         <button onclick="markOutcome(${lastId},'loss')" style="background:#f8717118;border:1px solid #f8717140;color:#f87171;border-radius:6px;padding:7px 12px;font-size:10px;font-weight:700;cursor:pointer">❌ Perdu</button>
@@ -476,10 +490,10 @@ function markOutcome(id,outcome){
 function renderTrades(){
   const DC={ATTENDRE:'#ff4444',SIGNAL:'#f5c518',EXECUTION:'#00ff88'};
   const OC={win:'#00ff88',loss:'#f87171',be:'#888'};
-  if(!trades.length){document.getElementById('tradesList').innerHTML='<div style="text-align:center;padding:40px;color:#222;font-size:11px">Aucune analyse. Lance l\'Enquêteur ou l\'Orchestrateur.</div>';return;}
+  if(!trades.length){document.getElementById('tradesList').innerHTML='<div style="text-align:center;padding:40px;color:#222;font-size:11px">Aucune analyse.</div>';return;}
   document.getElementById('tradesList').innerHTML=trades.slice(0,50).map(t=>`
     <div class="trade-item">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:${t.entry?5:0}px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
         <div style="display:flex;gap:7px;align-items:center">
           <span style="font-size:10px;font-weight:700;color:#fff;font-family:monospace">${t.pair}</span>
           <span style="font-size:8px;color:#333;font-family:monospace">${t.tf}</span>
@@ -491,7 +505,7 @@ function renderTrades(){
           ${t.outcome?`<span style="font-size:8px;color:${OC[t.outcome]};background:${OC[t.outcome]}15;border-radius:3px;padding:1px 5px">${t.outcome.toUpperCase()}</span>`:''}
         </div>
       </div>
-      ${t.entry?`<div style="display:flex;gap:7px;flex-wrap:wrap">
+      ${t.entry&&t.entry!=='—'?`<div style="display:flex;gap:7px;flex-wrap:wrap">
         <span style="font-size:8px;color:#f5c518;font-family:monospace">E:${t.entry}</span>
         <span style="font-size:8px;color:#f87171;font-family:monospace">SL:${t.sl}</span>
         <span style="font-size:8px;color:#00ff88;font-family:monospace">TP:${t.tp}</span>
@@ -501,19 +515,17 @@ function renderTrades(){
 }
 
 function renderStats(){
-  if(!trades.length){document.getElementById('statsContent').innerHTML='<div style="text-align:center;padding:40px;color:#222;font-size:11px">Lance des analyses et marque les résultats.</div>';return;}
+  if(!trades.length){document.getElementById('statsContent').innerHTML='<div style="text-align:center;padding:40px;color:#222;font-size:11px">Lance des analyses.</div>';return;}
   const done=trades.filter(t=>t.outcome);
   const wins=done.filter(t=>t.outcome==='win').length;
   const wr=done.length>0?Math.round(wins/done.length*100):0;
-  const sigs=trades.filter(t=>t.decision!=='ATTENDRE').length;
   document.getElementById('statsContent').innerHTML=`
     <div class="stat-grid">
-      ${[['ANALYSES',trades.length,'#fff'],['SIGNAUX',sigs,'#f5c518'],['GAGNÉS',wins,'#00ff88'],['PERDUS',done.length-wins,'#f87171'],['WINRATE',wr+'%','#00ff88']].map(([k,v,c])=>`<div class="stat-box"><div style="font-size:7px;color:#222;letter-spacing:2px;margin-bottom:5px">${k}</div><div style="font-size:20px;font-weight:900;color:${c};font-family:monospace">${v}</div></div>`).join('')}
+      ${[['ANALYSES',trades.length,'#fff'],['SIGNAUX',trades.filter(t=>t.decision!=='ATTENDRE').length,'#f5c518'],['GAGNÉS',wins,'#00ff88'],['PERDUS',done.length-wins,'#f87171'],['WINRATE',wr+'%','#00ff88']].map(([k,v,c])=>`<div class="stat-box"><div style="font-size:7px;color:#222;letter-spacing:2px;margin-bottom:5px">${k}</div><div style="font-size:20px;font-weight:900;color:${c};font-family:monospace">${v}</div></div>`).join('')}
     </div>`;
 }
 
-// Init
 initControls();
 </script>
 </body>
-
+</html>
