@@ -79,7 +79,7 @@ button:disabled{opacity:.4;cursor:not-allowed}
   <div class="tabs">
     <button class="tab active" onclick="showTab('enqueteur',this)">🔍 Enquêteur</button>
     <button class="tab" onclick="showTab('orchestrateur',this)">⚡ Orchestrateur</button>
-    <button class="tab" onclick="showTab('memoire',this)">🧠 Mémoire</button>
+    <button class="tab" onclick="showTab('journal',this)">📓 Journal</button>
     <button class="tab" onclick="showTab('stats',this)">📈 Stats</button>
   </div>
   <div id="tab-enqueteur">
@@ -112,9 +112,31 @@ button:disabled{opacity:.4;cursor:not-allowed}
     </div>
     <div id="decisionPanel"></div>
   </div>
-  <div id="tab-memoire" style="display:none">
-    <div style="font-size:7px;color:#1a1a30;letter-spacing:3px;margin-bottom:12px">HISTORIQUE</div>
-    <div id="tradesList"></div>
+  <div id="tab-journal" style="display:none">
+    <div style="font-size:7px;color:#1a1a30;letter-spacing:3px;margin-bottom:12px">📓 JOURNAL DE TRADING</div>
+    <div class="card" style="margin-bottom:14px">
+      <div style="font-size:8px;color:#a78bfa;letter-spacing:2px;margin-bottom:10px">AJOUTER UN TRADE MANUEL</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
+        <div><div class="label">PAIRE</div><input id="j_pair" placeholder="EUR/USD" style="width:100%;background:#04040d;border:1px solid #1a1a2e;color:#fff;border-radius:6px;padding:7px 10px;font-size:11px;font-family:monospace"></div>
+        <div><div class="label">TIMEFRAME</div><input id="j_tf" placeholder="H1" style="width:100%;background:#04040d;border:1px solid #1a1a2e;color:#fff;border-radius:6px;padding:7px 10px;font-size:11px;font-family:monospace"></div>
+        <div><div class="label">ENTRY</div><input id="j_entry" placeholder="1.08420" style="width:100%;background:#04040d;border:1px solid #1a1a2e;color:#fff;border-radius:6px;padding:7px 10px;font-size:11px;font-family:monospace"></div>
+        <div><div class="label">STOP LOSS</div><input id="j_sl" placeholder="1.08200" style="width:100%;background:#04040d;border:1px solid #1a1a2e;color:#fff;border-radius:6px;padding:7px 10px;font-size:11px;font-family:monospace"></div>
+        <div><div class="label">TAKE PROFIT</div><input id="j_tp" placeholder="1.08800" style="width:100%;background:#04040d;border:1px solid #1a1a2e;color:#fff;border-radius:6px;padding:7px 10px;font-size:11px;font-family:monospace"></div>
+        <div><div class="label">R:R</div><input id="j_rr" placeholder="3:1" style="width:100%;background:#04040d;border:1px solid #1a1a2e;color:#fff;border-radius:6px;padding:7px 10px;font-size:11px;font-family:monospace"></div>
+        <div><div class="label">RÉSULTAT</div>
+          <select id="j_resultat" style="width:100%;background:#04040d;border:1px solid #1a1a2e;color:#fff;border-radius:6px;padding:7px 10px;font-size:11px">
+            <option value="">En cours</option>
+            <option value="win">✅ Gagné</option>
+            <option value="loss">❌ Perdu</option>
+            <option value="be">➖ Break Even</option>
+          </select>
+        </div>
+        <div><div class="label">P&L (€)</div><input id="j_pnl" placeholder="150" type="number" style="width:100%;background:#04040d;border:1px solid #1a1a2e;color:#fff;border-radius:6px;padding:7px 10px;font-size:11px;font-family:monospace"></div>
+      </div>
+      <div style="margin-bottom:10px"><div class="label">COMMENTAIRE</div><textarea id="j_commentaire" placeholder="Pourquoi ce trade ? Qu'est-ce qui s'est passé ?" style="width:100%;background:#04040d;border:1px solid #1a1a2e;color:#fff;border-radius:6px;padding:8px 10px;font-size:11px;height:60px;resize:none"></textarea></div>
+      <button onclick="addManualTrade()" style="width:100%;background:linear-gradient(135deg,#a78bfa,#7c3aed);color:#fff;border-radius:8px;padding:10px;font-size:11px;font-weight:900;font-family:monospace;cursor:pointer">+ AJOUTER AU JOURNAL</button>
+    </div>
+    <div id="journalList"></div>
   </div>
   <div id="tab-stats" style="display:none">
     <div style="font-size:7px;color:#1a1a30;letter-spacing:3px;margin-bottom:12px">STATISTIQUES</div>
@@ -168,12 +190,12 @@ function initControls(){
 }
 
 function showTab(name,btn){
-  ['enqueteur','orchestrateur','memoire','stats'].forEach(t=>document.getElementById('tab-'+t).style.display='none');
+  ['enqueteur','orchestrateur','journal','stats'].forEach(t=>document.getElementById('tab-'+t).style.display='none');
   document.getElementById('tab-'+name).style.display='block';
   document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');
-  if(name==='memoire') renderTrades();
-  if(name==='stats')   renderStats();
+  if(name==='journal') loadJournal();
+  if(name==='stats')   loadStats();
 }
 
 // ── TELEGRAM (via backend) ───────────────────────────────────
@@ -431,6 +453,14 @@ async function launch(forcePair){
     const t={id:Date.now(),date:new Date().toLocaleString('fr-FR'),pair:targetPair,tf:selectedTf,score:o.score_total,decision:o.decision,bias:o.bias,entry:o.entry,sl:o.sl,tp:o.tp,rr:o.rr,outcome:null};
     trades.unshift(t);lastId=t.id;
     if(trades.length>100) trades=trades.slice(0,100);
+    // Sauvegarde automatique dans le journal backend
+    try{
+      await fetch(BACKEND+'/journal',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
+        date:t.date,pair:targetPair,tf:selectedTf,session:sess(),
+        score:o.score_total,decision:o.decision,bias:o.bias,
+        entry:o.entry,sl:o.sl,tp:o.tp,rr:o.rr
+      })});
+    }catch(e){}
 
   }catch(e){
     const eb=document.getElementById('errorBox');
@@ -487,42 +517,107 @@ function markOutcome(id,outcome){
   renderDecision(trades[0]||{});
 }
 
-function renderTrades(){
-  const DC={ATTENDRE:'#ff4444',SIGNAL:'#f5c518',EXECUTION:'#00ff88'};
-  const OC={win:'#00ff88',loss:'#f87171',be:'#888'};
-  if(!trades.length){document.getElementById('tradesList').innerHTML='<div style="text-align:center;padding:40px;color:#222;font-size:11px">Aucune analyse.</div>';return;}
-  document.getElementById('tradesList').innerHTML=trades.slice(0,50).map(t=>`
-    <div class="trade-item">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
-        <div style="display:flex;gap:7px;align-items:center">
-          <span style="font-size:10px;font-weight:700;color:#fff;font-family:monospace">${t.pair}</span>
-          <span style="font-size:8px;color:#333;font-family:monospace">${t.tf}</span>
-          <span style="font-size:8px;color:#1a1a2e">${t.date}</span>
-        </div>
-        <div style="display:flex;gap:5px;align-items:center">
-          <span style="font-size:11px;font-weight:800;color:${DC[t.decision]||'#888'};font-family:monospace">${t.score}/100</span>
-          <span style="font-size:8px;color:${DC[t.decision]};background:${(DC[t.decision]||'#888')}15;border-radius:3px;padding:1px 5px">${t.decision}</span>
-          ${t.outcome?`<span style="font-size:8px;color:${OC[t.outcome]};background:${OC[t.outcome]}15;border-radius:3px;padding:1px 5px">${t.outcome.toUpperCase()}</span>`:''}
-        </div>
-      </div>
-      ${t.entry&&t.entry!=='—'?`<div style="display:flex;gap:7px;flex-wrap:wrap">
-        <span style="font-size:8px;color:#f5c518;font-family:monospace">E:${t.entry}</span>
-        <span style="font-size:8px;color:#f87171;font-family:monospace">SL:${t.sl}</span>
-        <span style="font-size:8px;color:#00ff88;font-family:monospace">TP:${t.tp}</span>
-        <span style="font-size:8px;color:#a78bfa;font-family:monospace">RR:${t.rr}</span>
-      </div>`:''}
-    </div>`).join('');
+// ── Journal ──────────────────────────────────────────────────
+async function addManualTrade(){
+  const trade={
+    date: new Date().toLocaleString('fr-FR'),
+    pair: document.getElementById('j_pair').value||'—',
+    tf:   document.getElementById('j_tf').value||'—',
+    session: sess(),
+    score: 0, decision: 'MANUEL', bias: '—',
+    entry: document.getElementById('j_entry').value||'—',
+    sl:    document.getElementById('j_sl').value||'—',
+    tp:    document.getElementById('j_tp').value||'—',
+    rr:    document.getElementById('j_rr').value||'—',
+    resultat: document.getElementById('j_resultat').value||'',
+    pnl:   parseFloat(document.getElementById('j_pnl').value)||null,
+    commentaire: document.getElementById('j_commentaire').value||''
+  };
+  try{
+    await fetch(BACKEND+'/journal',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(trade)});
+    document.getElementById('j_pair').value='';
+    document.getElementById('j_tf').value='';
+    document.getElementById('j_entry').value='';
+    document.getElementById('j_sl').value='';
+    document.getElementById('j_tp').value='';
+    document.getElementById('j_rr').value='';
+    document.getElementById('j_resultat').value='';
+    document.getElementById('j_pnl').value='';
+    document.getElementById('j_commentaire').value='';
+    loadJournal();
+  }catch(e){alert('Erreur: '+e.message);}
 }
 
-function renderStats(){
-  if(!trades.length){document.getElementById('statsContent').innerHTML='<div style="text-align:center;padding:40px;color:#222;font-size:11px">Lance des analyses.</div>';return;}
-  const done=trades.filter(t=>t.outcome);
-  const wins=done.filter(t=>t.outcome==='win').length;
-  const wr=done.length>0?Math.round(wins/done.length*100):0;
-  document.getElementById('statsContent').innerHTML=`
-    <div class="stat-grid">
-      ${[['ANALYSES',trades.length,'#fff'],['SIGNAUX',trades.filter(t=>t.decision!=='ATTENDRE').length,'#f5c518'],['GAGNÉS',wins,'#00ff88'],['PERDUS',done.length-wins,'#f87171'],['WINRATE',wr+'%','#00ff88']].map(([k,v,c])=>`<div class="stat-box"><div style="font-size:7px;color:#222;letter-spacing:2px;margin-bottom:5px">${k}</div><div style="font-size:20px;font-weight:900;color:${c};font-family:monospace">${v}</div></div>`).join('')}
-    </div>`;
+async function updateTrade(id){
+  const r=document.getElementById('res_'+id).value;
+  const p=document.getElementById('pnl_'+id).value;
+  const c=document.getElementById('com_'+id).value;
+  try{
+    await fetch(BACKEND+'/journal/'+id,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({resultat:r,pnl:parseFloat(p)||null,commentaire:c})});
+    loadJournal();
+  }catch(e){}
+}
+
+async function loadJournal(){
+  try{
+    const r=await fetch(BACKEND+'/journal');
+    const trades=await r.json();
+    const DC={ATTENDRE:'#ff4444',SIGNAL:'#f5c518',EXECUTION:'#00ff88',MANUEL:'#a78bfa'};
+    const OC={win:'#00ff88',loss:'#f87171',be:'#888'};
+    if(!trades.length){document.getElementById('journalList').innerHTML='<div style="text-align:center;padding:40px;color:#222;font-size:11px">Aucun trade. Lance une analyse ou ajoute un trade manuel.</div>';return;}
+    document.getElementById('journalList').innerHTML=trades.map(t=>`
+      <div class="card" style="margin-bottom:10px;border-color:${t.resultat==='win'?'#00ff8830':t.resultat==='loss'?'#ff444430':'#0c0c1e'}">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+          <div style="display:flex;gap:7px;align-items:center">
+            <span style="font-size:12px;font-weight:900;color:#fff;font-family:monospace">${t.pair}</span>
+            <span style="font-size:8px;color:#333;font-family:monospace">${t.tf}</span>
+            <span style="font-size:8px;color:#1a1a2e">${t.date}</span>
+          </div>
+          <div style="display:flex;gap:5px;align-items:center">
+            ${t.score?`<span style="font-size:11px;font-weight:800;color:${DC[t.decision]||'#888'};font-family:monospace">${t.score}/100</span>`:''}
+            ${t.resultat?`<span style="font-size:10px;font-weight:700;color:${OC[t.resultat]};background:${OC[t.resultat]}15;border-radius:4px;padding:2px 8px">${t.resultat==='win'?'✅ GAGNÉ':t.resultat==='loss'?'❌ PERDU':'➖ BE'}</span>`:''}
+            ${t.pnl!=null?`<span style="font-size:11px;font-weight:800;color:${t.pnl>=0?'#00ff88':'#f87171'};font-family:monospace">${t.pnl>=0?'+':''}${t.pnl}€</span>`:''}
+          </div>
+        </div>
+        ${t.entry&&t.entry!=='—'?`<div style="display:flex;gap:10px;margin-bottom:8px;flex-wrap:wrap">
+          <span style="font-size:9px;color:#f5c518;font-family:monospace">E: ${t.entry}</span>
+          <span style="font-size:9px;color:#f87171;font-family:monospace">SL: ${t.sl}</span>
+          <span style="font-size:9px;color:#00ff88;font-family:monospace">TP: ${t.tp}</span>
+          <span style="font-size:9px;color:#a78bfa;font-family:monospace">RR: ${t.rr}</span>
+        </div>`:''}
+        ${t.commentaire?`<p style="font-size:10px;color:#555;margin-bottom:8px;font-style:italic">"${t.commentaire}"</p>`:''}
+        <div style="background:#04040d;border-radius:8px;padding:10px;border:1px solid #0d0d1f">
+          <div style="font-size:7px;color:#222;letter-spacing:2px;margin-bottom:6px">MISE À JOUR</div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
+            <select id="res_${t.id}" style="background:#07071a;border:1px solid #1a1a2e;color:#fff;border-radius:5px;padding:5px 8px;font-size:10px">
+              <option value="" ${!t.resultat?'selected':''}>En cours</option>
+              <option value="win" ${t.resultat==='win'?'selected':''}>✅ Gagné</option>
+              <option value="loss" ${t.resultat==='loss'?'selected':''}>❌ Perdu</option>
+              <option value="be" ${t.resultat==='be'?'selected':''}>➖ BE</option>
+            </select>
+            <input id="pnl_${t.id}" type="number" placeholder="P&L €" value="${t.pnl||''}" style="width:80px;background:#07071a;border:1px solid #1a1a2e;color:#fff;border-radius:5px;padding:5px 8px;font-size:10px;font-family:monospace">
+            <input id="com_${t.id}" placeholder="Commentaire..." value="${t.commentaire||''}" style="flex:1;min-width:120px;background:#07071a;border:1px solid #1a1a2e;color:#fff;border-radius:5px;padding:5px 8px;font-size:10px">
+            <button onclick="updateTrade(${t.id})" style="background:#00ff8820;border:1px solid #00ff8840;color:#00ff88;border-radius:5px;padding:5px 10px;font-size:10px;font-weight:700;cursor:pointer">💾 Sauver</button>
+          </div>
+        </div>
+      </div>`).join('');
+  }catch(e){document.getElementById('journalList').innerHTML='<div class="error-box">⚠ Impossible de charger le journal</div>';}
+}
+
+async function loadStats(){
+  try{
+    const r=await fetch(BACKEND+'/journal/stats');
+    const s=await r.json();
+    document.getElementById('statsContent').innerHTML=`
+      <div class="stat-grid">
+        ${[['TRADES',s.total,'#fff'],['GAGNÉS',s.wins,'#00ff88'],['PERDUS',s.losses,'#f87171'],['WINRATE',s.winrate+'%',s.winrate>=50?'#00ff88':'#f87171'],['P&L TOTAL',(s.total_pnl>=0?'+':'')+s.total_pnl+'€',s.total_pnl>=0?'#00ff88':'#f87171']].map(([k,v,c])=>`<div class="stat-box"><div style="font-size:7px;color:#222;letter-spacing:2px;margin-bottom:5px">${k}</div><div style="font-size:20px;font-weight:900;color:${c};font-family:monospace">${v}</div></div>`).join('')}
+      </div>`;
+  }catch(e){}
+}
+
+function sess(){
+  const h=new Date().getHours();
+  return h>=7&&h<10?'London Open':h>=13&&h<16?'NY Open':h>=2&&h<6?'Asian Session':'Inter-session';
 }
 
 initControls();
