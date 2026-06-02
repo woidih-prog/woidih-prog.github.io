@@ -423,7 +423,7 @@ async function launch(forcePair){
     renderStepBar(9,'');
     renderDecision(o);
 
-    if((o.score_total||0)>=65&&o.decision!=='ATTENDRE'){
+    if((o.score_total||0)>=50&&o.decision!=='ATTENDRE'){
       const isL=o.bias==='long';
       await sendTelegram(`⚡ <b>SIGNAL TRADING MASTER V5</b>\n━━━━━━━━━━━━━━\n${isL?'🟢 <b>ACHETER</b>':'🔴 <b>VENDRE</b>'} <b>${targetPair}</b>\n📊 ${selectedTf} | Score: <b>${o.score_total}/100</b>\n━━━━━━━━━━━━━━\n📍 Entrée: <b>${o.entry}</b>\n🛡️ SL: <b>${o.sl}</b>\n🎯 TP: <b>${o.tp}</b>\n⚖️ RR: <b>${o.rr}</b>\n━━━━━━━━━━━━━━\n📱 Ouvre MT4 !`);
     }
