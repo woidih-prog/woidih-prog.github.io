@@ -406,7 +406,7 @@ async function launch(forcePair){
         rr:    '2.0:1', bias:isBull?'long':'short'
       };
       const sd=document.getElementById('smcData');
-      sd.innerHTML=`<div style="font-size:7px;color:#10b981;letter-spacing:3px;margin-bottom:8px">📡 DONNÉES LIVE — ${targetPair} ${selectedTf}</div><div class="data-grid">${[['PRIX',smcData.price,'#fff'],['BSL',smcData.bsl,'#00d4ff'],['SSL',smcData.ssl,'#f87171'],['ENTRY',jsLevels.entry,'#f5c518'],['SL',jsLevels.sl,'#f87171'],['TP',jsLevels.tp,'#00ff88'],['TREND',smcData.trend,smcData.trend==='bullish'?'#00ff88':'#f87171'],['ZONE',smcData.zone,smcData.zone==='premium'?'#f87171':'#00ff88']].map(([k,v,c])=>`<div class="data-box"><div style="font-size:7px;color:#222;letter-spacing:1.5px;margin-bottom:2px">${k}</div><div style="font-size:10px;font-weight:700;color:${c};font-family:monospace">${v}</div></div>`).join('')}</div>`;
+     sd.innerHTML=`<div style="font-size:7px;color:#10b981;letter-spacing:3px;margin-bottom:8px">📡 DONNÉES LIVE — ${targetPair} ${selectedTf} <span style="color:#a78bfa">${smcData.source==='MT4'?'● MT4':'● API'}</span></div>
       sd.style.display='block';
     }catch(e){}
 
