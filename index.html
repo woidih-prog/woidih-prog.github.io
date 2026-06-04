@@ -48,6 +48,7 @@ button:disabled{opacity:.4;cursor:not-allowed}
 .decision-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
 .stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:8px;margin-bottom:14px}
 .stat-box{background:#07071a;border:1px solid #0c0c1e;border-radius:8px;padding:12px;text-align:center}
+.trade-item{background:#07071a;border:1px solid #0c0c1e;border-radius:7px;padding:9px 12px;margin-bottom:5px}
 .error-box{background:#ff000010;border:1px solid #ff000030;border-radius:8px;padding:10px 14px;color:#ff4444;font-size:11px;margin-bottom:14px}
 .data-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(80px,1fr));gap:6px}
 .data-box{background:#04040d;border-radius:5px;padding:6px 8px;border:1px solid #0d0d1f}
@@ -59,33 +60,33 @@ button:disabled{opacity:.4;cursor:not-allowed}
 <body>
 <div class="header">
   <div style="display:flex;align-items:center;gap:10px">
-    <div class="logo">V5</div>
+    <div class="logo">⚡</div>
     <div>
       <div class="title">TRADING MASTER V5</div>
-      <div class="subtitle">REDPILLFX SMC - 8 AGENTS SPECIALISES</div>
+      <div class="subtitle">ENQUÊTEUR + ORCHESTRATEUR · 8 AGENTS SMC</div>
     </div>
   </div>
   <div style="display:flex;align-items:center;gap:6px">
-    <button class="btn-tg" id="btnTg" onclick="testTelegram()">Test TG</button>
+    <button class="btn-tg" id="btnTg" onclick="testTelegram()">📱 Test TG</button>
     <div style="display:flex;align-items:center;gap:4px">
       <div id="statusDot" style="width:5px;height:5px;border-radius:50%;background:#00ff88"></div>
-      <span id="statusTxt" style="font-size:8px;color:#333;font-family:monospace">PRET</span>
+      <span id="statusTxt" style="font-size:8px;color:#333;font-family:monospace">PRÊT</span>
     </div>
   </div>
 </div>
 
 <div class="container">
   <div class="tabs">
-    <button class="tab active" onclick="showTab('enqueteur',this)">Enqueteur</button>
-    <button class="tab" onclick="showTab('orchestrateur',this)">Orchestrateur</button>
-    <button class="tab" onclick="showTab('journal',this)">Journal</button>
-    <button class="tab" onclick="showTab('stats',this)">Stats</button>
+    <button class="tab active" onclick="showTab('enqueteur',this)">🔍 Enquêteur</button>
+    <button class="tab" onclick="showTab('orchestrateur',this)">⚡ Orchestrateur</button>
+    <button class="tab" onclick="showTab('journal',this)">📓 Journal</button>
+    <button class="tab" onclick="showTab('stats',this)">📈 Stats</button>
   </div>
   <div id="tab-enqueteur">
     <div class="card" style="border-color:#a78bfa20">
-      <div style="font-size:8px;color:#a78bfa;letter-spacing:3px;margin-bottom:4px">ENQUETEUR - SCAN REDPILLFX</div>
-      <div style="font-size:11px;color:#555;margin-bottom:14px">Identifie les setups TRAP + IDC haute probabilite</div>
-      <button class="btn-enquete" id="btnEnquete" onclick="runEnquete()">LANCER L'ENQUETE</button>
+      <div style="font-size:8px;color:#a78bfa;letter-spacing:3px;margin-bottom:4px">🔍 L'ENQUÊTEUR</div>
+      <div style="font-size:11px;color:#555;margin-bottom:14px">Identifie les meilleures opportunités → clique pour analyser</div>
+      <button class="btn-enquete" id="btnEnquete" onclick="runEnquete()">🔍 LANCER L'ENQUÊTE</button>
       <div id="enqueteResult"></div>
     </div>
   </div>
@@ -98,7 +99,7 @@ button:disabled{opacity:.4;cursor:not-allowed}
           <div class="label">TIMEFRAME</div>
           <div style="display:flex;gap:4px" id="tfContainer"></div>
         </div>
-        <button class="btn-launch" id="btnLaunch" onclick="launch()">LANCER</button>
+        <button class="btn-launch" id="btnLaunch" onclick="launch()">▶ LANCER</button>
       </div>
     </div>
     <div id="stepBar" style="display:none;margin-bottom:16px"></div>
@@ -106,33 +107,33 @@ button:disabled{opacity:.4;cursor:not-allowed}
     <div id="smcData" style="display:none" class="card"></div>
     <div id="signalBanner"></div>
     <div id="agentGrid" style="display:none">
-      <div style="font-size:7px;color:#1a1a30;letter-spacing:3px;margin-bottom:10px">RAPPORTS DES 8 AGENTS</div>
+      <div style="font-size:7px;color:#1a1a30;letter-spacing:3px;margin-bottom:10px">RAPPORTS DES AGENTS</div>
       <div class="agent-grid" id="agentCards"></div>
     </div>
     <div id="decisionPanel"></div>
   </div>
   <div id="tab-journal" style="display:none">
-    <div style="font-size:7px;color:#1a1a30;letter-spacing:3px;margin-bottom:12px">JOURNAL DE TRADING</div>
+    <div style="font-size:7px;color:#1a1a30;letter-spacing:3px;margin-bottom:12px">📓 JOURNAL DE TRADING</div>
     <div class="card" style="margin-bottom:14px">
       <div style="font-size:8px;color:#a78bfa;letter-spacing:2px;margin-bottom:10px">AJOUTER UN TRADE MANUEL</div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
-        <div><div class="label">PAIRE</div><input id="j_pair" placeholder="NAS100" style="width:100%;background:#04040d;border:1px solid #1a1a2e;color:#fff;border-radius:6px;padding:7px 10px;font-size:11px;font-family:monospace"></div>
+        <div><div class="label">PAIRE</div><input id="j_pair" placeholder="EUR/USD" style="width:100%;background:#04040d;border:1px solid #1a1a2e;color:#fff;border-radius:6px;padding:7px 10px;font-size:11px;font-family:monospace"></div>
         <div><div class="label">TIMEFRAME</div><input id="j_tf" placeholder="H1" style="width:100%;background:#04040d;border:1px solid #1a1a2e;color:#fff;border-radius:6px;padding:7px 10px;font-size:11px;font-family:monospace"></div>
-        <div><div class="label">ENTRY</div><input id="j_entry" placeholder="28900" style="width:100%;background:#04040d;border:1px solid #1a1a2e;color:#fff;border-radius:6px;padding:7px 10px;font-size:11px;font-family:monospace"></div>
-        <div><div class="label">STOP LOSS</div><input id="j_sl" placeholder="28850" style="width:100%;background:#04040d;border:1px solid #1a1a2e;color:#fff;border-radius:6px;padding:7px 10px;font-size:11px;font-family:monospace"></div>
-        <div><div class="label">TAKE PROFIT</div><input id="j_tp" placeholder="29050" style="width:100%;background:#04040d;border:1px solid #1a1a2e;color:#fff;border-radius:6px;padding:7px 10px;font-size:11px;font-family:monospace"></div>
+        <div><div class="label">ENTRY</div><input id="j_entry" placeholder="1.08420" style="width:100%;background:#04040d;border:1px solid #1a1a2e;color:#fff;border-radius:6px;padding:7px 10px;font-size:11px;font-family:monospace"></div>
+        <div><div class="label">STOP LOSS</div><input id="j_sl" placeholder="1.08200" style="width:100%;background:#04040d;border:1px solid #1a1a2e;color:#fff;border-radius:6px;padding:7px 10px;font-size:11px;font-family:monospace"></div>
+        <div><div class="label">TAKE PROFIT</div><input id="j_tp" placeholder="1.08800" style="width:100%;background:#04040d;border:1px solid #1a1a2e;color:#fff;border-radius:6px;padding:7px 10px;font-size:11px;font-family:monospace"></div>
         <div><div class="label">R:R</div><input id="j_rr" placeholder="3:1" style="width:100%;background:#04040d;border:1px solid #1a1a2e;color:#fff;border-radius:6px;padding:7px 10px;font-size:11px;font-family:monospace"></div>
-        <div><div class="label">RESULTAT</div>
+        <div><div class="label">RÉSULTAT</div>
           <select id="j_resultat" style="width:100%;background:#04040d;border:1px solid #1a1a2e;color:#fff;border-radius:6px;padding:7px 10px;font-size:11px">
             <option value="">En cours</option>
-            <option value="win">Gagne</option>
-            <option value="loss">Perdu</option>
-            <option value="be">Break Even</option>
+            <option value="win">✅ Gagné</option>
+            <option value="loss">❌ Perdu</option>
+            <option value="be">➖ Break Even</option>
           </select>
         </div>
-        <div><div class="label">P&L</div><input id="j_pnl" placeholder="150" type="number" style="width:100%;background:#04040d;border:1px solid #1a1a2e;color:#fff;border-radius:6px;padding:7px 10px;font-size:11px;font-family:monospace"></div>
+        <div><div class="label">P&L (€)</div><input id="j_pnl" placeholder="150" type="number" style="width:100%;background:#04040d;border:1px solid #1a1a2e;color:#fff;border-radius:6px;padding:7px 10px;font-size:11px;font-family:monospace"></div>
       </div>
-      <div style="margin-bottom:10px"><div class="label">COMMENTAIRE</div><textarea id="j_commentaire" placeholder="Setup TRAP+IDC ? IPA identifie ? MSU confirme ?" style="width:100%;background:#04040d;border:1px solid #1a1a2e;color:#fff;border-radius:6px;padding:8px 10px;font-size:11px;height:60px;resize:none"></textarea></div>
+      <div style="margin-bottom:10px"><div class="label">COMMENTAIRE</div><textarea id="j_commentaire" placeholder="Pourquoi ce trade ? Qu'est-ce qui s'est passé ?" style="width:100%;background:#04040d;border:1px solid #1a1a2e;color:#fff;border-radius:6px;padding:8px 10px;font-size:11px;height:60px;resize:none"></textarea></div>
       <button onclick="addManualTrade()" style="width:100%;background:linear-gradient(135deg,#a78bfa,#7c3aed);color:#fff;border-radius:8px;padding:10px;font-size:11px;font-weight:900;font-family:monospace;cursor:pointer">+ AJOUTER AU JOURNAL</button>
     </div>
     <div id="journalList"></div>
@@ -141,649 +142,482 @@ button:disabled{opacity:.4;cursor:not-allowed}
     <div style="font-size:7px;color:#1a1a30;letter-spacing:3px;margin-bottom:12px">STATISTIQUES</div>
     <div id="statsContent"></div>
   </div>
-  <div class="footer">Outil educatif uniquement - Methodologie REDPILLFX SMC</div>
+  <div class="footer">⚠️ Outil éducatif uniquement. Ne constitue pas un conseil en investissement.</div>
 </div>
 
 <script>
-var BACKEND = "https://trading-master-backend.onrender.com";
-var API_URL = BACKEND + "/anthropic";
-var TD_KEY  = "767259bc7ee84bac8f54f97f888a3bd0";
+// ── CONFIG ────────────────────────────────────────────────────
+const BACKEND   = "https://trading-master-backend.onrender.com";
+const API_URL   = BACKEND + "/anthropic";
+const TD_KEY    = "767259bc7ee84bac8f54f97f888a3bd0";
 
-var ALL_PAIRS = ["NAS100","SPX500","XAU/USD","EUR/USD","GBP/USD","USD/JPY","GBP/JPY","EUR/GBP","EUR/JPY","USD/CAD","USD/CHF","AUD/USD","NZD/USD","GBP/CHF","XAG/USD","WTI","BRENT","BTC/USD","ETH/USD","DAX40"];
-var TFS = ["M15","H1","H4","Daily"];
-var COLORS = {liquidite:"#00d4ff",structure:"#a78bfa",zones:"#f59e0b",timing:"#34d399",risk:"#f87171",memoire:"#fb923c",backtest:"#e879f9",eco:"#10b981"};
-var ICONS  = {liquidite:"BSL",structure:"STR",zones:"OB",timing:"KZ",risk:"RSK",memoire:"MEM",backtest:"BT",eco:"ECO"};
-var AGENT_KEYS = ["liquidite","structure","zones","timing","risk","memoire","backtest","eco"];
-var STEPS = ["Liquidite","Structure","Zones","Timing","Risk","Memoire","Backtest","Eco","Synthese"];
+// ── CONSTANTES ───────────────────────────────────────────────
+const ALL_PAIRS = ["EUR/USD","GBP/USD","USD/JPY","GBP/JPY","EUR/GBP","EUR/JPY","USD/CAD","USD/CHF","AUD/USD","NZD/USD","GBP/CHF","XAU/USD","XAG/USD","WTI","BRENT","BTC/USD","ETH/USD","BNB/USD","SOL/USD","XRP/USD","ADA/USD","NAS100","SPX500","DAX40"];
+const TFS       = ["M15","H1","H4","Daily"];
+const COLORS    = {liquidite:"#00d4ff",structure:"#a78bfa",zones:"#f59e0b",timing:"#34d399",risk:"#f87171",memoire:"#fb923c",backtest:"#e879f9",eco:"#10b981"};
+const ICONS     = {liquidite:"💧",structure:"📊",zones:"🎯",timing:"⏰",risk:"🛡️",memoire:"🧠",backtest:"📈",eco:"🌍"};
+const AGENT_KEYS= ["liquidite","structure","zones","timing","risk","memoire","backtest","eco"];
+const STEPS     = ["Liquidité","Structure","Zones","Timing","Risk","Mémoire","Backtest","Éco","Synthèse"];
 
-var selectedPair = "NAS100";
-var selectedTf   = "H1";
-var loading      = false;
-var trades       = [];
-var lastId       = null;
+let selectedPair = "EUR/USD";
+let selectedTf   = "H1";
+let loading      = false;
+let trades       = [];
+let lastId       = null;
 
+// ── PIP & FORMAT ─────────────────────────────────────────────
 function getPip(p){ return p>10000?50:p>1000?2:p>100?0.01:0.0001; }
 function fmtLevel(p,v){ return p>1000?v.toFixed(2):p>100?v.toFixed(3):v.toFixed(5); }
 
-function sess(){
-  var h=new Date().getHours();
-  return h>=7&&h<10?"London Open":h>=13&&h<16?"NY Open":h>=2&&h<6?"Asian Session":"Inter-session";
-}
-
+// ── CONTRÔLES ────────────────────────────────────────────────
 function initControls(){
-  var pc=document.getElementById("pairsContainer");
-  ALL_PAIRS.forEach(function(p){
-    var b=document.createElement("button");
-    b.className="pair-btn"+(p===selectedPair?" active":"");
+  const pc=document.getElementById('pairsContainer');
+  ALL_PAIRS.forEach(p=>{
+    const b=document.createElement('button');
+    b.className='pair-btn'+(p===selectedPair?' active':'');
     b.textContent=p;
-    b.onclick=function(){selectedPair=p;document.querySelectorAll(".pair-btn").forEach(function(x){x.classList.remove("active")});b.classList.add("active");};
+    b.onclick=()=>{selectedPair=p;document.querySelectorAll('.pair-btn').forEach(x=>x.classList.remove('active'));b.classList.add('active');};
     pc.appendChild(b);
   });
-  var tc=document.getElementById("tfContainer");
-  TFS.forEach(function(t){
-    var b=document.createElement("button");
-    b.className="tf-btn"+(t===selectedTf?" active":"");
+  const tc=document.getElementById('tfContainer');
+  TFS.forEach(t=>{
+    const b=document.createElement('button');
+    b.className='tf-btn'+(t===selectedTf?' active':'');
     b.textContent=t;
-    b.onclick=function(){selectedTf=t;document.querySelectorAll(".tf-btn").forEach(function(x){x.classList.remove("active")});b.classList.add("active");};
+    b.onclick=()=>{selectedTf=t;document.querySelectorAll('.tf-btn').forEach(x=>x.classList.remove('active'));b.classList.add('active');};
     tc.appendChild(b);
   });
 }
 
 function showTab(name,btn){
-  ["enqueteur","orchestrateur","journal","stats"].forEach(function(t){document.getElementById("tab-"+t).style.display="none";});
-  document.getElementById("tab-"+name).style.display="block";
-  document.querySelectorAll(".tab").forEach(function(b){b.classList.remove("active");});
-  btn.classList.add("active");
-  if(name==="journal") loadJournal();
-  if(name==="stats")   loadStats();
+  ['enqueteur','orchestrateur','journal','stats'].forEach(t=>document.getElementById('tab-'+t).style.display='none');
+  document.getElementById('tab-'+name).style.display='block';
+  document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  if(name==='journal') loadJournal();
+  if(name==='stats')   loadStats();
 }
 
+// ── TELEGRAM (via backend) ───────────────────────────────────
 async function sendTelegram(msg){
   try{
-    await fetch(BACKEND+"/telegram",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({text:msg})});
+    await fetch(BACKEND+"/telegram",{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({text:msg})
+    });
   }catch(e){}
 }
 
 async function testTelegram(){
-  var btn=document.getElementById("btnTg");
-  btn.textContent="...";btn.className="btn-tg";
+  const btn=document.getElementById('btnTg');
+  btn.textContent='📡...';btn.className='btn-tg';
   try{
-    var r=await fetch(BACKEND+"/telegram",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({text:"Trading Master V5 - REDPILLFX SMC - Backend OK"})});
-    var d=await r.json();
-    btn.textContent=d.ok?"OK":"ERR";
-    btn.className=d.ok?"btn-tg ok":"btn-tg err";
-  }catch(e){btn.textContent="ERR";btn.className="btn-tg err";}
-  setTimeout(function(){btn.textContent="Test TG";btn.className="btn-tg";},4000);
+    const r=await fetch(BACKEND+"/telegram",{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({text:'✅ <b>Trading Master V5</b>\n\nBackend + Telegram opérationnels 🚀'})
+    });
+    const d=await r.json();
+    btn.textContent=d.ok?'✅ OK':'❌ ERR';
+    btn.className=d.ok?'btn-tg ok':'btn-tg err';
+  }catch(e){btn.textContent='❌ ERR';btn.className='btn-tg err';}
+  setTimeout(()=>{btn.textContent='📱 Test TG';btn.className='btn-tg';},4000);
 }
 
-async function aiCall(sys,prompt,maxT){
-  maxT=maxT||800;
-  var r=await fetch(API_URL,{
-    method:"POST",headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({model:"claude-sonnet-4-5",max_tokens:maxT,system:sys,messages:[{role:"user",content:prompt}]})
+// ── API CLAUDE (via backend) ─────────────────────────────────
+async function aiCall(sys,prompt,maxT=800){
+  const r=await fetch(API_URL,{
+    method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({model:'claude-sonnet-4-5',max_tokens:maxT,system:sys,messages:[{role:'user',content:prompt}]})
   });
-  var d=await r.json();
+  const d=await r.json();
   if(d.error) throw new Error(d.error.message);
-  var text=(d.content||[]).map(function(b){return b.text||"";}).join("");
-  var t=text.trim().replace(/^```\w*\n?/m,"").replace(/\n?```$/m,"").trim();
-  var s=t.indexOf("{"),e=t.lastIndexOf("}");
-  if(s===-1||e===-1) throw new Error("Pas de JSON valide dans la reponse");
-  var raw=t.slice(s,e+1).replace(/[\u0000-\u001F\u007F]/g," ").replace(/,\s*}/g,"}").replace(/,\s*]/g,"]");
+  const text=(d.content||[]).map(b=>b.text||'').join('');
+  const t=text.trim().replace(/^```\w*\n?/m,'').replace(/\n?```$/m,'').trim();
+  const s=t.indexOf('{'),e=t.lastIndexOf('}');
+  if(s===-1||e===-1) throw new Error('Pas de JSON');
+  let raw=t.slice(s,e+1).replace(/[\u0000-\u001F\u007F]/g,' ').replace(/,\s*}/g,'}').replace(/,\s*]/g,']');
   try{return JSON.parse(raw);}
   catch(x){
-    var ex=function(k){var m=raw.match(new RegExp('"'+k+'"\\s*:\\s*"([^"]*)"'));return m?m[1]:"";};
-    var exN=function(k){var m=raw.match(new RegExp('"'+k+'"\\s*:\\s*([0-9.]+)'));return m?+m[1]:0;};
-    return{nom:ex("nom")||"Agent",analyse:ex("analyse")||"--",verdict:ex("verdict")||"--",
-      score:exN("score"),score_max:exN("score_max")||20,
-      direction:ex("direction"),trap_confirme:raw.includes('"trap_confirme":true'),
-      kill_zone:raw.includes('"kill_zone":true'),biais_fondamental:ex("biais_fondamental"),
-      bias:ex("bias"),raisonnement:ex("raisonnement"),
-      confluence:ex("confluence"),invalidation:ex("invalidation"),message:ex("message")};
+    const ex=k=>{const m=raw.match(new RegExp('"'+k+'"\\s*:\\s*"([^"]*)"'));return m?m[1]:'';};
+    const exN=k=>{const m=raw.match(new RegExp('"'+k+'"\\s*:\\s*([0-9.]+)'));return m?+m[1]:0;};
+    return{nom:ex('nom')||'Agent',analyse:ex('analyse')||'—',verdict:ex('verdict')||'—',
+      score:exN('score'),score_max:exN('score_max')||20,
+      direction:ex('direction'),trend_htf:ex('trend_htf'),biais_fondamental:ex('biais_fondamental'),
+      kill_zone:raw.includes('"kill_zone":true'),rr:ex('rr'),sl:ex('sl'),
+      bsl:ex('bsl'),ssl:ex('ssl'),bias:ex('bias'),raisonnement:ex('raisonnement'),
+      confluence:ex('confluence'),invalidation:ex('invalidation'),message:ex('message')};
   }
 }
 
-// ── ENQUETEUR - REDPILLFX ───────────────────────────────────
-var ENQUETEUR_SYS = "Reponds UNIQUEMENT avec un objet JSON brut. Zero texte avant ou apres. Pas de markdown."
-  +" Tu es L'ENQUETEUR REDPILLFX. Tu scannes les marches avec la methodologie SMC REDPILLFX."
-  +" REGLES FONDAMENTALES REDPILLFX:"
-  +" 1. Le setup ideal est toujours: IPA (Impulsion Premier Appel) -> TRAP (faux breakout) -> IDC/OB (zone entree) -> Move directionnel"
-  +" 2. Un TRAP est un faux BO au-dessus d'un BSL ou en dessous d'un SSL, suivi d'un retour immmediat dans le range"
-  +" 3. Sans TRAP confirme = pas de setup haute probabilite"
-  +" 4. Sessions: Asian = accumulation liquidite, London Open et NY Open = declenchement des moves"
-  +" 5. MSU (Market Structure Shift) dans un FVG HTF = confluence maximale, score eleve"
-  +" 6. FAKE BOS = invalide, ne pas trader. Attendre confirmation du vrai BOS"
-  +" 7. BE (Break Even) obligatoire sur la premiere cause atteinte"
-  +" Format JSON: {\"session_actuelle\":\"...\",\"sentiment\":\"risk-on\",\"dxy\":\"hausse\",\"resume_macro\":\"2 phrases\","
-  +"\"top_opportunites\":[{\"rang\":1,\"paire\":\"NAS100\",\"direction\":\"ACHETER\",\"raison\":\"TRAP+IDC identifie\","
-  +"\"session_ideale\":\"NY Open\",\"score_opportunite\":82,\"setup_type\":\"TRAP+IDC\"}],"
-  +"\"paires_eviter\":[{\"paire\":\"EUR/USD\",\"raison\":\"FAKE BOS non confirme\"}],"
-  +"\"conseil_du_jour\":\"1 phrase methodologie REDPILLFX\"}";
+// ── ENQUÊTEUR ────────────────────────────────────────────────
+const ENQUETEUR_SYS=`Réponds UNIQUEMENT avec un objet JSON brut. Zéro texte avant ou après. Pas de markdown. Tu es L'ENQUÊTEUR. Format: {"session_actuelle":"...","sentiment":"risk-on","dxy":"hausse","resume_macro":"2 phrases max","top_opportunites":[{"rang":1,"paire":"EUR/USD","direction":"ACHETER","raison":"1 phrase","session_ideale":"London Open","score_opportunite":82}],"paires_eviter":[{"paire":"USD/JPY","raison":"texte"}],"conseil_du_jour":"1 phrase"}`;
 
 async function runEnquete(){
-  var btn=document.getElementById("btnEnquete");
-  btn.disabled=true;btn.textContent="SCAN EN COURS...";
-  document.getElementById("enqueteResult").innerHTML="";
-  var now=new Date();
-  var session=sess();
-  var days=["Dimanche","Lundi","Mardi","Mercredi","Jeudi","Vendredi","Samedi"];
+  const btn=document.getElementById('btnEnquete');
+  btn.disabled=true;btn.textContent='🔍 ENQUÊTE...';
+  document.getElementById('enqueteResult').innerHTML='';
+  const now=new Date(),h=now.getHours();
+  const sess=h>=7&&h<10?'London Open':h>=13&&h<16?'NY Open':h>=2&&h<6?'Asian Session':'Inter-session';
+  const days=['Dimanche','Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi'];
   try{
-    var r=await aiCall(ENQUETEUR_SYS,
-      "Date:"+now.toLocaleDateString("fr-FR")+" Heure:"+now.toLocaleTimeString("fr-FR")
-      +" Session:"+session+" Jour:"+days[now.getDay()]
-      +"\nPaires a scanner: "+ALL_PAIRS.join(", ")
-      +"\nApplique la methodologie REDPILLFX: cherche les TRAPs formes, les IPA recentes, les FVG HTF non combles.",
-      2000);
+    const r=await aiCall(ENQUETEUR_SYS,'Date:'+now.toLocaleDateString('fr-FR')+' Heure:'+now.toLocaleTimeString('fr-FR')+' Session:'+sess+' Jour:'+days[now.getDay()]+'\nPaires: '+ALL_PAIRS.join(', '),2000);
     renderEnquete(r);
-  }catch(e){
-    document.getElementById("enqueteResult").innerHTML="<div class='error-box'>Erreur: "+e.message+"</div>";
-  }
-  btn.disabled=false;btn.textContent="LANCER L'ENQUETE";
+  }catch(e){document.getElementById('enqueteResult').innerHTML=`<div class="error-box">⚠ ${e.message}</div>`;}
+  btn.disabled=false;btn.textContent='🔍 LANCER L\'ENQUÊTE';
 }
 
 function renderEnquete(r){
-  var sc=r.sentiment==="risk-on"?"#00ff88":r.sentiment==="risk-off"?"#ff4444":"#f5c518";
-  var html="<div class='card' style='margin-bottom:14px;border-color:#a78bfa20'>"
-    +"<div style='display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap'>"
-    +"<span class='chip' style='background:"+sc+"20;border:1px solid "+sc+"40;color:"+sc+"'>"+(r.session_actuelle||"--")+"</span>"
-    +"<span class='chip' style='background:"+sc+"20;border:1px solid "+sc+"40;color:"+sc+"'>"+r.sentiment+"</span>"
-    +"<span class='chip' style='background:#88888820;border:1px solid #88888840;color:#888'>DXY: "+(r.dxy||"--")+"</span>"
-    +"</div><p style='font-size:11px;color:#777;line-height:1.6'>"+(r.resume_macro||"")+"</p></div>";
-  if(r.top_opportunites&&r.top_opportunites.length){
-    html+="<div style='font-size:8px;color:#a78bfa;letter-spacing:3px;margin-bottom:10px'>TOP SETUPS REDPILLFX</div>";
-    r.top_opportunites.forEach(function(op){
-      var isL=op.direction==="ACHETER",dc=isL?"#00ff88":"#ff4444";
-      html+="<div style='background:#07071a;border:2px solid "+dc+"30;border-left:4px solid "+dc+";border-radius:11px;padding:14px 16px;margin-bottom:10px'>"
-        +"<div style='display:flex;justify-content:space-between;align-items:center;margin-bottom:6px'>"
-        +"<span style='font-size:15px;font-weight:900;color:#fff;font-family:monospace'>"+op.paire+"</span>"
-        +"<div style='display:flex;gap:6px;align-items:center'>"
-        +(op.setup_type?"<span class='chip' style='background:#a78bfa20;border:1px solid #a78bfa40;color:#a78bfa'>"+op.setup_type+"</span>":"")
-        +"<span style='font-size:12px;font-weight:900;color:"+dc+"'>"+op.direction+" "+op.score_opportunite+"/100</span>"
-        +"</div></div>"
-        +"<p style='font-size:11px;color:#777;margin:0 0 10px'>"+(op.raison||"")+"</p>"
-        +"<button onclick=\"analyzeFromEnquete('"+op.paire+"')\" style='width:100%;background:"+dc+"20;border:2px solid "+dc+"40;color:"+dc+";border-radius:7px;padding:9px;font-size:11px;font-weight:700;font-family:monospace;cursor:pointer'>Analyser "+op.paire+"</button>"
-        +"</div>";
+  const sc=r.sentiment==='risk-on'?'#00ff88':r.sentiment==='risk-off'?'#ff4444':'#f5c518';
+  let html=`<div class="card" style="margin-bottom:14px">
+    <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap">
+      <span class="chip" style="background:${sc}20;border:1px solid ${sc}40;color:${sc}">${r.session_actuelle||'—'}</span>
+      <span class="chip" style="background:${sc}20;border:1px solid ${sc}40;color:${sc}">Sentiment: ${r.sentiment||'—'}</span>
+      <span class="chip" style="background:#88888820;border:1px solid #88888840;color:#888">DXY: ${r.dxy||'—'}</span>
+    </div>
+    <p style="font-size:11px;color:#777;line-height:1.6">${r.resume_macro||''}</p>
+  </div>`;
+  if(r.top_opportunites?.length){
+    html+=`<div style="font-size:8px;color:#2a2a40;letter-spacing:3px;margin-bottom:10px">🎯 TOP OPPORTUNITÉS</div>`;
+    r.top_opportunites.forEach(op=>{
+      const isL=op.direction==='ACHETER',dc=isL?'#00ff88':'#ff4444';
+      html+=`<div style="background:#07071a;border:2px solid ${dc}30;border-left:4px solid ${dc};border-radius:11px;padding:14px 16px;margin-bottom:10px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+          <span style="font-size:15px;font-weight:900;color:#fff;font-family:monospace">${op.paire}</span>
+          <span style="font-size:12px;font-weight:900;color:${dc}">${isL?'🟢':'🔴'} ${op.direction} — ${op.score_opportunite}/100</span>
+        </div>
+        <p style="font-size:11px;color:#777;margin:0 0 10px">${op.raison||''}</p>
+        <button onclick="analyzeFromEnquete('${op.paire}')" style="width:100%;background:${dc}20;border:2px solid ${dc}40;color:${dc};border-radius:7px;padding:9px;font-size:11px;font-weight:700;font-family:monospace;cursor:pointer">⚡ Analyser ${op.paire}</button>
+      </div>`;
     });
   }
-  if(r.paires_eviter&&r.paires_eviter.length){
-    html+="<div style='background:#ff444410;border:1px solid #ff444430;border-radius:10px;padding:12px 16px;margin-bottom:10px'>"
-      +"<div style='font-size:8px;color:#ff4444;letter-spacing:2px;margin-bottom:6px'>PAIRES A EVITER</div>"
-      +r.paires_eviter.map(function(p){return "<span style='font-size:10px;color:#ff4444bb'>"+p.paire+": "+p.raison+"</span>";}).join("<br>")
-      +"</div>";
-  }
-  if(r.conseil_du_jour){
-    html+="<div style='background:#a78bfa10;border:1px solid #a78bfa25;border-radius:10px;padding:12px 16px'>"
-      +"<p style='font-size:11px;color:#a78bfacc;margin:0;font-style:italic'>\""+r.conseil_du_jour+"\"</p></div>";
-  }
-  document.getElementById("enqueteResult").innerHTML=html;
+  if(r.conseil_du_jour) html+=`<div style="background:#a78bfa10;border:1px solid #a78bfa25;border-radius:10px;padding:12px 16px"><p style="font-size:11px;color:#a78bfacc;margin:0;font-style:italic">💡 "${r.conseil_du_jour}"</p></div>`;
+  document.getElementById('enqueteResult').innerHTML=html;
 }
 
 function analyzeFromEnquete(pair){
   selectedPair=pair;
-  document.querySelectorAll(".pair-btn").forEach(function(b){b.classList.remove("active");if(b.textContent===pair)b.classList.add("active");});
-  showTab("orchestrateur",document.querySelectorAll(".tab")[1]);
-  setTimeout(function(){launch();},100);
+  document.querySelectorAll('.pair-btn').forEach(b=>{b.classList.remove('active');if(b.textContent===pair)b.classList.add('active');});
+  showTab('orchestrateur',document.querySelectorAll('.tab')[1]);
+  setTimeout(()=>launch(),100);
 }
 
-// ── PROMPTS AGENTS REDPILLFX ─────────────────────────────────
+// ── AGENTS ───────────────────────────────────────────────────
 function getSys(key){
-  var base = "Reponds UNIQUEMENT avec un objet JSON brut. Zero texte avant ou apres. Pas de markdown. ";
-  var methodology = "Methodologie REDPILLFX SMC: "
-    +"Sequence valide = IPA -> TRAP (faux BO sur BSL/SSL) -> IDC/OB (zone entree) -> Move. "
-    +"Sans TRAP confirme, score max 50% des points disponibles. "
-    +"MSU dans FVG HTF = confluence maximale. "
-    +"FAKE BOS ne pas scorer positivement. "
-    +"BE obligatoire sur premiere cause. ";
-
-  var agents = {
-    liquidite: base + methodology
-      +"Tu es l'Agent Liquidite REDPILLFX. Analyse: BSL (Buy Side Liquidity) au-dessus des highs, SSL (Sell Side Liquidity) sous les lows. "
-      +"REGLES DE SCORING: "
-      +"- BSL ou SSL clairement identifie ET non encore sweep: +8pts "
-      +"- Sweep de liquidite confirme (prix a teste et rejete): +8pts "
-      +"- TRAP confirme (faux BO suivi retour immediat): +4pts (BONUS critique) "
-      +"- Liquidite asiatique accumulee presente: +2pts bonus "
-      +"- Aucun sweep recent = setup incomplet: score max 10/20 "
-      +"Format: {\"nom\":\"Agent Liquidite\",\"analyse\":\"texte\",\"bsl\":\"niveau\",\"ssl\":\"niveau\","
-      +"\"trap_confirme\":true,\"sweep_confirme\":true,\"direction\":\"bullish\","
-      +"\"score\":15,\"score_max\":20,\"verdict\":\"texte\"}",
-
-    structure: base + methodology
-      +"Tu es l'Agent Structure REDPILLFX. Analyse la structure de marche multi-timeframe. "
-      +"REGLES DE SCORING: "
-      +"- Trend HTF (H4/Daily) clairement bullish ou bearish: +6pts "
-      +"- Alignement LTF avec HTF: +5pts "
-      +"- MSU (Market Structure Shift) confirme sur le TF analyse: +5pts "
-      +"- MSU dans un FVG HTF = confluence maximale: +4pts BONUS "
-      +"- Phase Wyckoff identifiable (accumulation/distribution): +2pts "
-      +"- BOS confirme (pas FAKE): +2pts. FAKE BOS = 0pt "
-      +"- Absence de structure claire = score max 8/20 "
-      +"Format: {\"nom\":\"Agent Structure\",\"analyse\":\"texte\",\"trend_htf\":\"bullish\","
-      +"\"trend_ltf\":\"bearish\",\"msu_confirme\":true,\"msu_dans_fvg\":false,"
-      +"\"bos_type\":\"vrai\",\"score\":14,\"score_max\":20,\"verdict\":\"texte\"}",
-
-    zones: base + methodology
-      +"Tu es l'Agent Zones REDPILLFX. Analyse les Order Blocks, FVG, IDC et zones de confluence. "
-      +"REGLES DE SCORING: "
-      +"- OB (Order Block) non mitigue sur le chemin du prix: +6pts "
-      +"- FVG (Fair Value Gap) non comble = liquidite a collecter: +5pts "
-      +"- IDC (Inversion De Continuation) identifie apres TRAP: +5pts "
-      +"- FVG HTF (H4 ou Daily) non comble = zone premium: +4pts BONUS "
-      +"- IFMG (Inversion FVG) present: +2pts "
-      +"- Zone en zone premium (au-dessus 50% range) pour short, discount pour long: +2pts "
-      +"- OB deja mitigue ou FVG comble = zone invalide "
-      +"Format: {\"nom\":\"Agent Zones\",\"analyse\":\"texte\",\"ob_type\":\"bearish\","
-      +"\"fvg_htf_present\":true,\"idc_identifie\":false,\"zone_type\":\"premium\","
-      +"\"score\":13,\"score_max\":20,\"verdict\":\"texte\"}",
-
-    timing: base + methodology
-      +"Tu es l'Agent Timing REDPILLFX. Analyse le timing sessionnel et les Kill Zones ICT. "
-      +"REGLES DE SCORING: "
-      +"- Kill Zone active (London 7h-10h ou NY 13h-16h): +6pts "
-      +"- Session Asian identifiee comme accumulation (range defini): +4pts "
-      +"- London Open ou NY Open = declenchement optimal: +3pts "
-      +"- Jour de semaine optimal (Mardi/Mercredi/Jeudi): +2pts "
-      +"- Heure de retournement connue (17h NY, 9h30 US): +2pts "
-      +"- Vendredi apres 16h ou weekend = score max 5/15 "
-      +"- Inter-session (hors KZ) = reduire score de 40% "
-      +"Format: {\"nom\":\"Agent Timing\",\"analyse\":\"texte\",\"kill_zone\":true,"
-      +"\"session\":\"London Open\",\"asian_range_defini\":true,\"jour_ok\":true,"
-      +"\"score\":11,\"score_max\":15,\"verdict\":\"texte\"}",
-
-    risk: base + methodology
-      +"Tu es l'Agent Risk REDPILLFX. Evalue la qualite risk management du setup. "
-      +"REGLES DE SCORING: "
-      +"- SL place correctement sous/au-dessus du TRAP ou OB: +5pts "
-      +"- RR minimum 2:1 respecte: +4pts. RR 3:1 et plus: +5pts "
-      +"- Taille de position adaptee (1% max du capital): +3pts "
-      +"- BE prevu sur premiere cause: +2pts "
-      +"- Setup 1 SL / 1 TP propre (pas de TP partiel): +1pt "
-      +"- RR inferieur a 1.5:1 = disqualification, score max 5/15 "
-      +"- SL au-dela de 2x l'ATR = penalite -3pts "
-      +"Format: {\"nom\":\"Agent Risk\",\"analyse\":\"texte\",\"rr_calcule\":\"3:1\","
-      +"\"sl_positionne\":true,\"be_prevu\":true,\"taille\":\"1%\","
-      +"\"score\":11,\"score_max\":15,\"verdict\":\"texte\"}",
-
-    memoire: base + methodology
-      +"Tu es l'Agent Memoire REDPILLFX. Evalue la coherence avec l'historique des setups similaires. "
-      +"REGLES DE SCORING: "
-      +"- Setup TRAP+IDC historiquement performant sur cette paire: +2pts "
-      +"- Session actuelle historiquement favorable: +1pt "
-      +"- Pattern identifie dans le backtest personnel: +2pts "
-      +"- Paire reactive aux FVG HTF historiquement: +1pt bonus "
-      +"- Pas d'historique disponible: score neutre 3/5 "
-      +"Format: {\"nom\":\"Agent Memoire\",\"analyse\":\"texte\",\"winrate_estime\":\"68%\","
-      +"\"pattern_connu\":true,\"score\":3,\"score_max\":5,\"verdict\":\"texte\"}",
-
-    backtest: base + methodology
-      +"Tu es l'Agent Backtest REDPILLFX. Evalue la robustesse statistique du setup base sur la methodologie. "
-      +"REGLES DE SCORING: "
-      +"- Setup TRAP+IDC+MSU = configuration backtest la plus robuste: +2pts "
-      +"- Sequence complete IPA->TRAP->IDC presente: +1pt "
-      +"- Confluence avec FVG HTF = surperformance historique: +1pt "
-      +"- Kill Zone alignee = winrate superieur a 65%: +1pt "
-      +"- Setup incomplet (TRAP manquant): score max 2/5 "
-      +"Format: {\"nom\":\"Agent Backtest\",\"analyse\":\"texte\",\"sequence_complete\":true,"
-      +"\"winrate_backtest\":\"71%\",\"score\":4,\"score_max\":5,\"verdict\":\"texte\"}",
-
-    eco: base + methodology
-      +"Tu es l'Agent Macro REDPILLFX. Evalue le contexte macro-fondamental et le sentiment de marche. "
-      +"REGLES DE SCORING: "
-      +"- Biais fondamental aligne avec la direction du trade: +4pts "
-      +"- Sentiment risk-on/risk-off coherent: +3pts "
-      +"- DXY aligne (fort = bearish paires, faible = bullish): +2pts "
-      +"- Pas d'evenement macro majeur dans les 2h: +1pt "
-      +"- NFP, FOMC, CPI dans la session = score max 4/10 "
-      +"- Biais fondamental oppose = penalite -2pts "
-      +"Format: {\"nom\":\"Agent Macro\",\"analyse\":\"texte\",\"risk_mode\":\"risk-off\","
-      +"\"biais_fondamental\":\"bearish\",\"dxy_aligne\":true,"
-      +"\"score\":7,\"score_max\":10,\"verdict\":\"texte\"}"
+  const pre=`Réponds UNIQUEMENT avec un objet JSON brut. Zéro texte avant ou après. Pas de markdown. `;
+  const m={
+    liquidite:pre+`Expert SMC liquidité. Format: {"nom":"Agent Liquidite","analyse":"texte","bsl":"niveau","ssl":"niveau","direction":"bullish","score":15,"score_max":20,"verdict":"texte"}`,
+    structure:pre+`Expert SMC structure. Format: {"nom":"Agent Structure","analyse":"texte","trend_htf":"bullish","trend_ltf":"bearish","wyckoff":"phase","score":14,"score_max":20,"verdict":"texte"}`,
+    zones:    pre+`Expert SMC zones. Format: {"nom":"Agent Zones","analyse":"texte","ob_type":"bearish","zone_type":"premium","score":13,"score_max":20,"verdict":"texte"}`,
+    timing:   pre+`Expert ICT timing. Format: {"nom":"Agent Timing","analyse":"texte","kill_zone":true,"session":"London Open","jour_ok":true,"score":11,"score_max":15,"verdict":"texte"}`,
+    risk:     pre+`Expert risk management. Format: {"nom":"Agent Risk","analyse":"texte","taille":"1%","score":11,"score_max":15,"verdict":"texte"}`,
+    memoire:  pre+`Expert trading mémoire. Format: {"nom":"Agent Memoire","analyse":"texte","winrate":"68%","score":3,"score_max":5,"verdict":"texte"}`,
+    backtest: pre+`Expert backtest SMC. Format: {"nom":"Agent Backtest","analyse":"texte","succes":"71%","score":4,"score_max":5,"verdict":"texte"}`,
+    eco:      pre+`Expert macro fondamental. Format: {"nom":"Agent Eco","analyse":"texte","risk_mode":"risk-off","biais_fondamental":"bearish","score":7,"score_max":10,"verdict":"texte"}`
   };
-  return agents[key] || agents.memoire;
+  return m[key]||m.memoire;
 }
 
+// ── LOADING ──────────────────────────────────────────────────
 function setLoading(val){
   loading=val;
-  document.getElementById("btnLaunch").disabled=val;
-  document.getElementById("btnLaunch").textContent=val?"ANALYSE...":"LANCER";
-  var dot=document.getElementById("statusDot");
-  dot.style.animation=val?"pulse 1.4s ease infinite":"none";
-  document.getElementById("statusTxt").textContent=val?"ANALYSE...":"PRET";
+  document.getElementById('btnLaunch').disabled=val;
+  document.getElementById('btnLaunch').textContent=val?'⟳ ANALYSE...':'▶ LANCER';
+  const dot=document.getElementById('statusDot');
+  dot.style.animation=val?'pulse 1.4s ease infinite':'none';
+  document.getElementById('statusTxt').textContent=val?'ANALYSE...':'PRÊT';
 }
 
 function renderStepBar(step,label){
-  var colors=Object.values(COLORS);
-  var html="<div class='step-bar'>";
-  STEPS.forEach(function(lbl,i){
-    var done=i<step,active=i===step,col=colors[i]||"#00ff88";
-    html+="<div class='step'><div class='step-circle' style='background:"+(done?col:active?col+"30":"#0d0d1f")+";border:2px solid "+(done||active?col:"#1a1a2e")+";color:"+(done?"#000":active?col:"#333")+";box-shadow:"+(active?"0 0 8px "+col:"none")+"'>"+(done?"V":i+1)+"</div>"
-      +"<span class='step-label' style='color:"+(done||active?col:"#222")+"'>"+lbl+"</span></div>";
-    if(i<STEPS.length-1) html+="<div class='step-line' style='background:"+(done?col:"#0d0d1f")+"'></div>";
+  const colors=Object.values(COLORS);
+  let html='<div class="step-bar">';
+  STEPS.forEach((lbl,i)=>{
+    const done=i<step,active=i===step,col=colors[i]||'#00ff88';
+    html+=`<div class="step"><div class="step-circle" style="background:${done?col:active?col+'30':'#0d0d1f'};border:2px solid ${done||active?col:'#1a1a2e'};color:${done?'#000':active?col:'#333'};box-shadow:${active?'0 0 8px '+col:'none'}">${done?'✓':i+1}</div><span class="step-label" style="color:${done||active?col:'#222'}">${lbl}</span></div>`;
+    if(i<STEPS.length-1) html+=`<div class="step-line" style="background:${done?col:'#0d0d1f'}"></div>`;
   });
-  html+="</div>";
-  if(label) html+="<p style='text-align:center;font-size:9px;color:#444;font-family:monospace;margin-top:5px'>"+label+"</p>";
-  var sb=document.getElementById("stepBar");
-  sb.innerHTML=html;sb.style.display="block";
+  html+='</div>';
+  if(label) html+=`<p style="text-align:center;font-size:9px;color:#444;font-family:monospace;margin-top:5px">${label}</p>`;
+  const sb=document.getElementById('stepBar');
+  sb.innerHTML=html;sb.style.display='block';
 }
 
 function renderAgentCard(key,data){
-  var color=COLORS[key]||"#888",icon=ICONS[key]||"?";
-  var pct=data.score_max>0?Math.round(data.score/data.score_max*100):0;
-  var chips="";
-  if(key==="liquidite"&&data.trap_confirme) chips="<span class='chip' style='background:#00ff8820;border:1px solid #00ff8840;color:#00ff88'>TRAP OK</span>";
-  if(key==="structure"&&data.msu_dans_fvg) chips="<span class='chip' style='background:#a78bfa20;border:1px solid #a78bfa40;color:#a78bfa'>MSU+FVG HTF</span>";
-  if(key==="zones"&&data.fvg_htf_present) chips="<span class='chip' style='background:#f59e0b20;border:1px solid #f59e0b40;color:#f59e0b'>FVG HTF</span>";
-  if(key==="timing") chips="<span class='chip' style='background:"+(data.kill_zone?"#34d39920":"#55555520")+";border:1px solid "+(data.kill_zone?"#34d39940":"#55555540")+";color:"+(data.kill_zone?"#34d399":"#555")+"'>"+(data.kill_zone?"Kill Zone OK":"Hors Kill Zone")+"</span>";
-  if(key==="eco") chips="<span class='chip' style='background:#10b98120;border:1px solid #10b98140;color:#10b981'>"+( data.biais_fondamental||"--")+"</span>";
-  return "<div class='agent-card' style='border:1px solid "+color+"22'>"
-    +"<div style='display:flex;justify-content:space-between;align-items:center;margin-bottom:8px'>"
-    +"<div style='display:flex;align-items:center;gap:7px'>"
-    +"<span style='font-size:9px;font-weight:800;color:"+color+";font-family:monospace;background:"+color+"20;padding:2px 6px;border-radius:4px'>"+icon+"</span>"
-    +"<span style='font-size:10px;font-weight:700;color:"+color+";font-family:monospace'>"+(data.nom||key)+"</span></div>"
-    +"<span style='font-size:13px;font-weight:800;color:"+color+";font-family:monospace'>"+data.score+"<span style='font-size:9px;color:#333'>/"+data.score_max+"</span></span></div>"
-    +"<div class='agent-bar'><div class='agent-fill' style='width:"+pct+"%;background:"+color+"'></div></div>"
-    +"<p style='font-size:10px;color:#777;line-height:1.5;margin:0 0 8px;font-style:italic'>"+(data.analyse||"")+"</p>"
-    +"<div style='background:"+color+"12;border:1px solid "+color+"25;border-radius:6px;padding:5px 9px;font-size:10px;color:"+color+"cc'>"+(data.verdict||"")+"</div>"
-    +(chips?"<div style='margin-top:7px;display:flex;gap:4px;flex-wrap:wrap'>"+chips+"</div>":"")
-    +"</div>";
+  const color=COLORS[key]||'#888',icon=ICONS[key]||'🤖';
+  const pct=data.score_max>0?Math.round(data.score/data.score_max*100):0;
+  let chips='';
+  if(key==='timing') chips=`<span class="chip" style="background:${data.kill_zone?'#34d39920':'#55555520'};border:1px solid ${data.kill_zone?'#34d39940':'#55555540'};color:${data.kill_zone?'#34d399':'#555'}">${data.kill_zone?'Kill Zone ✓':'Hors Kill Zone'}</span>`;
+  if(key==='eco')    chips=`<span class="chip" style="background:#10b98120;border:1px solid #10b98140;color:#10b981">Biais: ${data.biais_fondamental||'—'}</span>`;
+  return `<div class="agent-card" style="border:1px solid ${color}22">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+      <div style="display:flex;align-items:center;gap:7px"><span style="font-size:14px">${icon}</span><span style="font-size:10px;font-weight:700;color:${color};font-family:monospace">${data.nom||key}</span></div>
+      <span style="font-size:13px;font-weight:800;color:${color};font-family:monospace">${data.score}<span style="font-size:9px;color:#333">/${data.score_max}</span></span>
+    </div>
+    <div class="agent-bar"><div class="agent-fill" style="width:${pct}%;background:${color}"></div></div>
+    <p style="font-size:10px;color:#777;line-height:1.5;margin:0 0 8px;font-style:italic">${data.analyse||''}</p>
+    <div style="background:${color}12;border:1px solid ${color}25;border-radius:6px;padding:5px 9px;font-size:10px;color:${color}cc">▸ ${data.verdict||''}</div>
+    ${chips?`<div style="margin-top:7px;display:flex;gap:4px;flex-wrap:wrap">${chips}</div>`:''}
+  </div>`;
 }
 
+// ── LAUNCH ───────────────────────────────────────────────────
 async function launch(forcePair){
-  var targetPair=forcePair||selectedPair;
+  const targetPair=forcePair||selectedPair;
   if(loading) return;
   setLoading(true);
-  document.getElementById("errorBox").style.display="none";
-  document.getElementById("smcData").style.display="none";
-  document.getElementById("signalBanner").innerHTML="";
-  document.getElementById("agentGrid").style.display="none";
-  document.getElementById("agentCards").innerHTML="";
-  document.getElementById("decisionPanel").innerHTML="";
+  document.getElementById('errorBox').style.display='none';
+  document.getElementById('smcData').style.display='none';
+  document.getElementById('signalBanner').innerHTML='';
+  document.getElementById('agentGrid').style.display='none';
+  document.getElementById('agentCards').innerHTML='';
+  document.getElementById('decisionPanel').innerHTML='';
 
-  var now=new Date();
-  var session=sess();
-  var days=["Dimanche","Lundi","Mardi","Mercredi","Jeudi","Vendredi","Samedi"];
-  var results={};
-  var smcData=null;
-  var jsLevels=null;
+  const now=new Date(),h=now.getHours();
+  const sess=h>=7&&h<10?'London Open':h>=13&&h<16?'NY Open':h>=2&&h<6?'Asian Session':'Inter-session';
+  const days=['Dimanche','Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi'];
+  const results={};
+  let smcData=null;
+  let jsLevels=null;
 
   try{
-    renderStepBar(0,"Donnees marche...");
+    renderStepBar(0,'📡 Données marché...');
     try{
-      var PAIR_SRC={"EUR/USD":{s:"EUR/USD",t:"td"},"GBP/USD":{s:"GBP/USD",t:"td"},"USD/JPY":{s:"USD/JPY",t:"td"},"GBP/JPY":{s:"GBP/JPY",t:"td"},"EUR/GBP":{s:"EUR/GBP",t:"td"},"EUR/JPY":{s:"EUR/JPY",t:"td"},"USD/CAD":{s:"USD/CAD",t:"td"},"USD/CHF":{s:"USD/CHF",t:"td"},"AUD/USD":{s:"AUD/USD",t:"td"},"NZD/USD":{s:"NZD/USD",t:"td"},"GBP/CHF":{s:"GBP/CHF",t:"td"},"XAU/USD":{s:"XAUUSDT",t:"bnb"},"XAG/USD":{s:"XAGUSDT",t:"bnb"},"WTI":{s:"WTI/USD",t:"td"},"BRENT":{s:"BRENT/USD",t:"td"},"NAS100":{s:"NDX",t:"td"},"SPX500":{s:"SPX",t:"td"},"DAX40":{s:"DAX",t:"td"},"BTC/USD":{s:"BTCUSDT",t:"bnb"},"ETH/USD":{s:"ETHUSDT",t:"bnb"}};
-      var TF_SRC={"M15":{td:"15min",bnb:"15m"},"H1":{td:"1h",bnb:"1h"},"H4":{td:"4h",bnb:"4h"},"Daily":{td:"1day",bnb:"1d"}};
-      var pc=PAIR_SRC[targetPair],tc=TF_SRC[selectedTf];
-      var candles;
-      if(!pc) throw new Error("Paire non mappee");
-      if(pc.t==="bnb"){
-        var rb=await fetch("https://api.binance.com/api/v3/klines?symbol="+pc.s+"&interval="+tc.bnb+"&limit=50");
-        var db=await rb.json();
-        candles=db.map(function(c){return{open:+c[1],high:+c[2],low:+c[3],close:+c[4]};});
+      const PAIR_SRC={"EUR/USD":{s:"EUR/USD",t:"td"},"GBP/USD":{s:"GBP/USD",t:"td"},"USD/JPY":{s:"USD/JPY",t:"td"},"GBP/JPY":{s:"GBP/JPY",t:"td"},"EUR/GBP":{s:"EUR/GBP",t:"td"},"EUR/JPY":{s:"EUR/JPY",t:"td"},"USD/CAD":{s:"USD/CAD",t:"td"},"USD/CHF":{s:"USD/CHF",t:"td"},"AUD/USD":{s:"AUD/USD",t:"td"},"NZD/USD":{s:"NZD/USD",t:"td"},"GBP/CHF":{s:"GBP/CHF",t:"td"},"XAU/USD":{s:"XAUUSDT",t:"bnb"},"XAG/USD":{s:"XAGUSDT",t:"bnb"},"WTI":{s:"WTI/USD",t:"td"},"BRENT":{s:"BRENT/USD",t:"td"},"NAS100":{s:"NDX",t:"td"},"SPX500":{s:"SPX",t:"td"},"DAX40":{s:"DAX",t:"td"},"BTC/USD":{s:"BTCUSDT",t:"bnb"},"ETH/USD":{s:"ETHUSDT",t:"bnb"},"BNB/USD":{s:"BNBUSDT",t:"bnb"},"SOL/USD":{s:"SOLUSDT",t:"bnb"},"XRP/USD":{s:"XRPUSDT",t:"bnb"},"ADA/USD":{s:"ADAUSDT",t:"bnb"}};
+      const TF_SRC={"M15":{td:"15min",bnb:"15m"},"H1":{td:"1h",bnb:"1h"},"H4":{td:"4h",bnb:"4h"},"Daily":{td:"1day",bnb:"1d"}};
+      const pc=PAIR_SRC[targetPair],tc=TF_SRC[selectedTf];
+      let candles;
+      if(pc.t==='bnb'){
+        const r=await fetch('https://api.binance.com/api/v3/klines?symbol='+pc.s+'&interval='+tc.bnb+'&limit=50');
+        const d=await r.json();
+        candles=d.map(c=>({open:+c[1],high:+c[2],low:+c[3],close:+c[4]}));
       } else {
-        var rt=await fetch("https://api.twelvedata.com/time_series?symbol="+encodeURIComponent(pc.s)+"&interval="+tc.td+"&outputsize=50&apikey="+TD_KEY);
-        var dt=await rt.json();
-        if(dt.status==="error") throw new Error(dt.message);
-        candles=dt.values.slice().reverse().map(function(c){return{open:+c.open,high:+c.high,low:+c.low,close:+c.close};});
+        const r=await fetch('https://api.twelvedata.com/time_series?symbol='+encodeURIComponent(pc.s)+'&interval='+tc.td+'&outputsize=50&apikey='+TD_KEY);
+        const d=await r.json();
+        if(d.status==='error') throw new Error(d.message);
+        candles=d.values.slice().reverse().map(c=>({open:+c.open,high:+c.high,low:+c.low,close:+c.close}));
       }
-      var w=candles.slice(-20),last=w[w.length-1];
-      var hi=Math.max.apply(null,w.map(function(c){return c.high;}));
-      var lo=Math.min.apply(null,w.map(function(c){return c.low;}));
-      var mid=(hi+lo)/2;
-      var range=hi-lo;
-      smcData={
-        price:fmtLevel(last.close,last.close),
-        bsl:fmtLevel(last.close,hi),
-        ssl:fmtLevel(last.close,lo),
-        trend:last.close>w[0].open?"bullish":"bearish",
-        zone:last.close>mid?"premium":"discount",
-        range:fmtLevel(last.close,range),
-        fvg_approx:fmtLevel(last.close,(hi+lo)/2)
-      };
-      var pip=getPip(last.close),isBull=last.close>w[0].open;
+      const w=candles.slice(-20),last=w[w.length-1];
+      const hi=Math.max(...w.map(c=>c.high)),lo=Math.min(...w.map(c=>c.low)),mid=(hi+lo)/2;
+      smcData={price:fmtLevel(last.close,last.close),bsl:fmtLevel(last.close,hi),ssl:fmtLevel(last.close,lo),trend:last.close>w[0].open?'bullish':'bearish',zone:last.close>mid?'premium':'discount'};
+      const pip=getPip(last.close),isBull=last.close>w[0].open;
       jsLevels={
-        entry:fmtLevel(last.close,last.close),
-        sl:fmtLevel(last.close,isBull?last.close-pip*20:last.close+pip*20),
-        tp:fmtLevel(last.close,isBull?last.close+pip*60:last.close-pip*60),
-        rr:"3.0:1",bias:isBull?"long":"short"
+        entry: fmtLevel(last.close,last.close),
+        sl:    fmtLevel(last.close,isBull?last.close-pip*20:last.close+pip*20),
+        tp:    fmtLevel(last.close,isBull?last.close+pip*40:last.close-pip*40),
+        rr:    '2.0:1', bias:isBull?'long':'short'
       };
-      var sd=document.getElementById("smcData");
-      sd.innerHTML="<div style='font-size:7px;color:#10b981;letter-spacing:3px;margin-bottom:8px'>DONNEES LIVE - "+targetPair+" "+selectedTf+" - REDPILLFX</div>"
-        +"<div class='data-grid'>"
-        +"<div class='data-box'><div style='font-size:7px;color:#333;margin-bottom:3px'>PRIX</div><div style='font-size:12px;font-weight:800;color:#fff;font-family:monospace'>"+smcData.price+"</div></div>"
-        +"<div class='data-box'><div style='font-size:7px;color:#00ff88;margin-bottom:3px'>BSL</div><div style='font-size:12px;font-weight:800;color:#00ff88;font-family:monospace'>"+smcData.bsl+"</div></div>"
-        +"<div class='data-box'><div style='font-size:7px;color:#f87171;margin-bottom:3px'>SSL</div><div style='font-size:12px;font-weight:800;color:#f87171;font-family:monospace'>"+smcData.ssl+"</div></div>"
-        +"<div class='data-box'><div style='font-size:7px;color:#333;margin-bottom:3px'>TREND</div><div style='font-size:11px;font-weight:800;color:"+(smcData.trend==="bullish"?"#00ff88":"#f87171")+";font-family:monospace'>"+smcData.trend+"</div></div>"
-        +"<div class='data-box'><div style='font-size:7px;color:#333;margin-bottom:3px'>ZONE</div><div style='font-size:11px;font-weight:800;color:#f59e0b;font-family:monospace'>"+smcData.zone+"</div></div>"
-        +"<div class='data-box'><div style='font-size:7px;color:#333;margin-bottom:3px'>FVG MID</div><div style='font-size:11px;font-weight:800;color:#a78bfa;font-family:monospace'>"+smcData.fvg_approx+"</div></div>"
-        +"</div>";
-      sd.style.display="block";
-    }catch(e){console.warn("Donnees marche:",e.message);}
+      const sd=document.getElementById('smcData');
+      sd.innerHTML=`<div style="font-size:7px;color:#10b981;letter-spacing:3px;margin-bottom:8px">📡 DONNÉES LIVE — ${targetPair} ${selectedTf}</div><div class="data-grid">${[['PRIX',smcData.price,'#fff'],['BSL',smcData.bsl,'#00d4ff'],['SSL',smcData.ssl,'#f87171'],['ENTRY',jsLevels.entry,'#f5c518'],['SL',jsLevels.sl,'#f87171'],['TP',jsLevels.tp,'#00ff88'],['TREND',smcData.trend,smcData.trend==='bullish'?'#00ff88':'#f87171'],['ZONE',smcData.zone,smcData.zone==='premium'?'#f87171':'#00ff88']].map(([k,v,c])=>`<div class="data-box"><div style="font-size:7px;color:#222;letter-spacing:1.5px;margin-bottom:2px">${k}</div><div style="font-size:10px;font-weight:700;color:${c};font-family:monospace">${v}</div></div>`).join('')}</div>`;
+      sd.style.display='block';
+    }catch(e){}
 
-    for(var i=0;i<AGENT_KEYS.length;i++){
-      var key=AGENT_KEYS[i];
-      renderStepBar(i,"["+ICONS[key]+"] Agent "+(i+1)+"/8...");
+    for(let i=0;i<AGENT_KEYS.length;i++){
+      const key=AGENT_KEYS[i];
+      renderStepBar(i,ICONS[key]+' Agent '+(i+1)+'/8...');
       try{
-        var ctx="Paire:"+targetPair+" TF:"+selectedTf+" Session:"+session+" Jour:"+days[now.getDay()]
-          +(smcData?" | prix="+smcData.price+" BSL="+smcData.bsl+" SSL="+smcData.ssl+" trend="+smcData.trend+" zone="+smcData.zone+" FVGmid="+smcData.fvg_approx:"")
-          +" | Applique la methodologie REDPILLFX. JSON uniquement.";
+        const ctx='Paire:'+targetPair+' TF:'+selectedTf+' Session:'+sess+' Jour:'+days[now.getDay()]+(smcData?' prix='+smcData.price+' trend='+smcData.trend+' zone='+smcData.zone:'')+' JSON uniquement.';
         results[key]=await aiCall(getSys(key),ctx);
-      }catch(e){
-        results[key]={nom:ICONS[key],analyse:"Erreur: "+e.message,score:0,score_max:20,verdict:"Indisponible"};
-      }
-      document.getElementById("agentCards").innerHTML+=renderAgentCard(key,results[key]);
-      document.getElementById("agentGrid").style.display="block";
-      await new Promise(function(r){setTimeout(r,200);});
+      }catch(e){results[key]={nom:key,analyse:'Erreur: '+e.message,score:0,score_max:20,verdict:'Indisponible'};}
+      document.getElementById('agentCards').innerHTML+=renderAgentCard(key,results[key]);
+      document.getElementById('agentGrid').style.display='block';
+      await new Promise(r=>setTimeout(r,200));
     }
 
-    renderStepBar(8,"Synthese REDPILLFX...");
-    var total=Object.values(results).reduce(function(s,a){return s+(a.score||0);},0);
-    var dec=total>=86?"EXECUTION":total>=61?"SIGNAL":"ATTENDRE";
-    var sum=Object.values(results).map(function(a){return (a.nom||"?")+"="+( a.score||0);}).join(" ");
-
-    var sysFinal="Reponds UNIQUEMENT avec un objet JSON brut. Tu es l'Orchestrateur REDPILLFX SMC. "
-      +"REGLES: Sans TRAP confirme = decision ATTENDRE meme si score eleve. "
-      +"MSU dans FVG HTF = signal fort, privilegier EXECUTION. "
-      +"Kill Zone inactive = reduire d'un niveau (EXECUTION->SIGNAL, SIGNAL->ATTENDRE). "
-      +"Format: {\"score_total\":"+total+",\"decision\":\""+dec+"\",\"bias\":\"short\","
-      +"\"trap_present\":true,\"sequence_complete\":false,"
-      +"\"raisonnement\":\"texte\",\"confluence\":\"texte\",\"invalidation\":\"texte\",\"message\":\"texte\"}";
-
-    var oRaw=await aiCall(sysFinal,targetPair+" "+selectedTf+" | Scores: "+sum+" | Session: "+session,800);
-    var o={
-      score_total:total,
-      decision:dec,
-      bias:jsLevels?jsLevels.bias:(oRaw.bias||"long"),
-      trap_present:oRaw.trap_present||false,
-      sequence_complete:oRaw.sequence_complete||false,
-      raisonnement:oRaw.raisonnement||"Analyse REDPILLFX completee.",
-      confluence:oRaw.confluence||"--",
-      invalidation:oRaw.invalidation||"--",
-      message:oRaw.message||"--",
-      entry:jsLevels?jsLevels.entry:"--",
-      sl:jsLevels?jsLevels.sl:"--",
-      tp:jsLevels?jsLevels.tp:"--",
-      rr:jsLevels?jsLevels.rr:"--",
-      pair:targetPair,tf:selectedTf
+    renderStepBar(8,'⚡ Synthèse...');
+    const total=Object.values(results).reduce((s,a)=>s+(a.score||0),0);
+    const dec=total>=86?'EXECUTION':total>=61?'SIGNAL':'ATTENDRE';
+    const sum=Object.values(results).map(a=>(a.nom||'?')+':'+(a.score||0)).join(' ');
+    const sys=`Réponds UNIQUEMENT avec un objet JSON brut. Orchestrateur SMC. Format: {"score_total":${total},"decision":"${dec}","bias":"short","raisonnement":"texte","confluence":"texte","invalidation":"texte","message":"texte"}`;
+    const oRaw=await aiCall(sys,targetPair+' '+selectedTf+' | '+sum,800);
+    const o={
+      score_total:total, decision:dec,
+      bias:        jsLevels?jsLevels.bias:(oRaw.bias||'long'),
+      raisonnement:oRaw.raisonnement||'Analyse complétée.',
+      confluence:  oRaw.confluence||'—',
+      invalidation:oRaw.invalidation||'—',
+      message:     oRaw.message||'—',
+      entry: jsLevels?jsLevels.entry:'—',
+      sl:    jsLevels?jsLevels.sl:'—',
+      tp:    jsLevels?jsLevels.tp:'—',
+      rr:    jsLevels?jsLevels.rr:'—',
+      pair:targetPair, tf:selectedTf
     };
 
-    renderStepBar(9,"");
+    renderStepBar(9,'');
     renderDecision(o);
 
-    if((o.score_total||0)>=65&&o.decision!=="ATTENDRE"){
-      var isL=o.bias==="long";
-      await sendTelegram(
-        "SIGNAL TRADING MASTER V5 - REDPILLFX\n"
-        +(isL?"ACHETER":"VENDRE")+" "+targetPair+"\n"
-        +selectedTf+" | Score: "+o.score_total+"/100\n"
-        +(o.trap_present?"TRAP confirme":"TRAP non confirme - prudence")+"\n"
-        +"Entree: "+o.entry+" | SL: "+o.sl+" | TP: "+o.tp+" | RR: "+o.rr+"\n"
-        +"Session: "+session+"\nOuvre MT4 !"
-      );
+    if((o.score_total||0)>=50&&o.decision!=='ATTENDRE'){
+      const isL=o.bias==='long';
+      await sendTelegram(`⚡ <b>SIGNAL TRADING MASTER V5</b>\n━━━━━━━━━━━━━━\n${isL?'🟢 <b>ACHETER</b>':'🔴 <b>VENDRE</b>'} <b>${targetPair}</b>\n📊 ${selectedTf} | Score: <b>${o.score_total}/100</b>\n━━━━━━━━━━━━━━\n📍 Entrée: <b>${o.entry}</b>\n🛡️ SL: <b>${o.sl}</b> (${smcData?.slPips||'—'} pips)\n🎯 TP: <b>${o.tp}</b>\n⚖️ RR: <b>${o.rr}</b>\n📦 Lot recommandé: <b>${smcData?.lotSize||'—'}</b>\n💰 Risque max: <b>1% (1000€)</b>\n━━━━━━━━━━━━━━\n📱 Ouvre MT4 !`);
     }
 
-    var t={id:Date.now(),date:new Date().toLocaleString("fr-FR"),pair:targetPair,tf:selectedTf,score:o.score_total,decision:o.decision,bias:o.bias,entry:o.entry,sl:o.sl,tp:o.tp,rr:o.rr,outcome:null};
+    const t={id:Date.now(),date:new Date().toLocaleString('fr-FR'),pair:targetPair,tf:selectedTf,score:o.score_total,decision:o.decision,bias:o.bias,entry:o.entry,sl:o.sl,tp:o.tp,rr:o.rr,outcome:null};
     trades.unshift(t);lastId=t.id;
     if(trades.length>100) trades=trades.slice(0,100);
+    // Sauvegarde automatique dans le journal backend
     try{
-      await fetch(BACKEND+"/journal",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({
-        date:t.date,pair:targetPair,tf:selectedTf,session:session,
+      await fetch(BACKEND+'/journal',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
+        date:t.date,pair:targetPair,tf:selectedTf,session:sess(),
         score:o.score_total,decision:o.decision,bias:o.bias,
-        entry:o.entry,sl:o.sl,tp:o.tp,rr:o.rr,
-        commentaire:"TRAP:"+o.trap_present+" SEQ:"+o.sequence_complete
+        entry:o.entry,sl:o.sl,tp:o.tp,rr:o.rr
       })});
     }catch(e){}
 
   }catch(e){
-    var eb=document.getElementById("errorBox");
-    eb.textContent="Erreur: "+e.message;eb.style.display="block";
-    document.getElementById("stepBar").style.display="none";
+    const eb=document.getElementById('errorBox');
+    eb.textContent='⚠ '+e.message;eb.style.display='block';
+    document.getElementById('stepBar').style.display='none';
   }
   setLoading(false);
 }
 
+// ── DÉCISION ─────────────────────────────────────────────────
 function renderDecision(o){
-  var cfg={
-    ATTENDRE:{icon:"X",color:"#ff4444",label:"ATTENDRE",sub:"Setup insuffisant"},
-    SIGNAL:{icon:"!",color:"#f5c518",label:"SIGNAL DETECTE",sub:"Attendre confirmation"},
-    EXECUTION:{icon:"V",color:"#00ff88",label:"EXECUTION POSSIBLE",sub:"Setup haute probabilite"}
-  };
-  var c=cfg[o.decision]||cfg.ATTENDRE;
-
-  // Badges REDPILLFX
-  var badges="";
-  if(o.trap_present) badges+="<span class='chip' style='background:#00ff8820;border:1px solid #00ff8840;color:#00ff88'>TRAP OK</span> ";
-  if(o.sequence_complete) badges+="<span class='chip' style='background:#a78bfa20;border:1px solid #a78bfa40;color:#a78bfa'>IPA->TRAP->IDC OK</span> ";
-  if(!o.trap_present) badges+="<span class='chip' style='background:#ff444420;border:1px solid #ff444440;color:#ff4444'>TRAP MANQUANT</span> ";
-
-  if((o.score_total||0)>=65&&o.decision!=="ATTENDRE"){
-    var isL=o.bias==="long",cl=isL?"#00ff88":"#ff4444";
-    document.getElementById("signalBanner").innerHTML="<div class='signal-banner' style='background:"+cl+"15;border:3px solid "+cl+";box-shadow:0 0 30px "+cl+"20'>"
-      +"<div style='text-align:center;margin-bottom:12px'>"
-      +"<div style='font-size:28px;font-weight:900;color:"+cl+";font-family:monospace'>"+(isL?"ACHETER":"VENDRE")+" "+o.pair+"</div>"
-      +"<div style='font-size:9px;color:#555;margin-top:4px'>"+badges+"</div>"
-      +"</div>"
-      +"<div class='signal-grid'>"
-      +[["ENTREE",o.entry,"#f5c518"],["STOP LOSS",o.sl,"#ff4444"],["TAKE PROFIT",o.tp,"#00ff88"],["R:R",o.rr,"#a78bfa"]].map(function(x){
-        return "<div class='signal-box' style='background:#06060f;border:2px solid "+x[2]+"30'><div style='font-size:8px;color:"+x[2]+";letter-spacing:2px;margin-bottom:4px'>"+x[0]+"</div><div style='font-size:18px;font-weight:900;color:"+x[2]+";font-family:monospace'>"+(x[1]||"--")+"</div></div>";
-      }).join("")
-      +"</div>"
-      +"<div style='text-align:center;font-size:9px;color:#555;margin-top:8px'>BE obligatoire sur premiere cause atteinte</div>"
-      +"</div>";
-  } else {
-    document.getElementById("signalBanner").innerHTML="";
+  const cfg={ATTENDRE:{icon:'⏳',color:'#ff4444',label:'ATTENDRE',sub:'Setup insuffisant'},SIGNAL:{icon:'👁️',color:'#f5c518',label:'SIGNAL DÉTECTÉ',sub:'Attendre confirmation'},EXECUTION:{icon:'⚡',color:'#00ff88',label:'EXÉCUTION POSSIBLE',sub:'Setup haute probabilité'}};
+  const c=cfg[o.decision]||cfg.ATTENDRE;
+  if((o.score_total||0)>=65&&o.decision!=='ATTENDRE'){
+    const isL=o.bias==='long',cl=isL?'#00ff88':'#ff4444';
+    document.getElementById('signalBanner').innerHTML=`<div class="signal-banner" style="background:${cl}15;border:3px solid ${cl};box-shadow:0 0 30px ${cl}20">
+      <div style="text-align:center;margin-bottom:16px"><div style="font-size:28px;font-weight:900;color:${cl};font-family:monospace">${isL?'🟢 ACHETER':'🔴 VENDRE'}</div></div>
+      <div class="signal-grid">
+        ${[['📍 ENTRÉE',o.entry,'#f5c518'],['🛡️ STOP LOSS',o.sl,'#ff4444'],['🎯 TAKE PROFIT',o.tp,'#00ff88'],['⚖️ R:R',o.rr,'#a78bfa']].map(([k,v,col])=>`<div class="signal-box" style="background:#06060f;border:2px solid ${col}30"><div style="font-size:8px;color:${col};letter-spacing:2px;margin-bottom:4px">${k}</div><div style="font-size:18px;font-weight:900;color:${col};font-family:monospace">${v||'—'}</div></div>`).join('')}
+      </div>
+    </div>`;
   }
-
-  document.getElementById("decisionPanel").innerHTML="<div style='font-size:7px;color:#1a1a30;letter-spacing:3px;margin-bottom:10px'>DECISION FINALE - REDPILLFX SMC</div>"
-    +"<div class='decision-panel' style='background:"+c.color+"06;border:2px solid "+c.color+"40'>"
-    +"<div style='display:flex;align-items:center;gap:14px;margin-bottom:14px;flex-wrap:wrap'>"
-    +"<div style='width:48px;height:48px;border-radius:11px;background:"+c.color+"18;border:2px solid "+c.color+"30;display:flex;align-items:center;justify-content:center;font-size:22px'>"+c.icon+"</div>"
-    +"<div style='flex:1'><div style='font-size:8px;color:#333;letter-spacing:3px;margin-bottom:2px'>DECISION</div><div style='font-size:17px;font-weight:900;color:"+c.color+";font-family:monospace'>"+c.label+"</div><div style='margin-top:5px'>"+badges+"</div></div>"
-    +"<div style='font-size:32px;font-weight:900;color:"+c.color+";font-family:monospace'>"+(o.score_total||0)+"<span style='font-size:14px;color:#333'>/100</span></div></div>"
-    +"<div style='background:#06060f;border-radius:9px;padding:11px 13px;margin-bottom:10px'>"
-    +"<div style='font-size:8px;color:#222;letter-spacing:2px;margin-bottom:4px'>RAISONNEMENT REDPILLFX</div>"
-    +"<p style='font-size:11px;color:#999;line-height:1.7;margin:0'>"+(o.raisonnement||"")+"</p></div>"
-    +"<div class='decision-row'>"
-    +"<div style='padding:9px 11px;background:#00ff8806;border:1px solid #00ff8820;border-radius:7px'><div style='font-size:7px;color:#00ff8866;letter-spacing:2px;margin-bottom:3px'>CONFLUENCE</div><div style='font-size:10px;color:#00ff88bb'>"+(o.confluence||"")+"</div></div>"
-    +"<div style='padding:9px 11px;background:#ff444406;border:1px solid #ff444420;border-radius:7px'><div style='font-size:7px;color:#ff444466;letter-spacing:2px;margin-bottom:3px'>INVALIDATION</div><div style='font-size:10px;color:#ff4444bb'>"+(o.invalidation||"")+"</div></div>"
-    +"</div>"
-    +(o.message?"<div style='margin-top:10px;padding:9px 13px;background:"+c.color+"08;border:1px solid "+c.color+"20;border-radius:7px'><p style='font-size:11px;color:"+c.color+"bb;margin:0;font-style:italic'>\""+o.message+"\"</p></div>":"")
-    +(lastId?"<div style='margin-top:14px;padding:12px;background:#07071a;border:1px solid #00ff8830;border-radius:10px'>"
-      +"<div style='font-size:8px;color:#00ff88;letter-spacing:2px;margin-bottom:8px'>RESULTAT ?</div>"
-      +"<div style='display:flex;gap:7px;flex-wrap:wrap'>"
-      +"<button onclick='markOutcome("+lastId+",\"win\")' style='background:#00ff8818;border:1px solid #00ff8840;color:#00ff88;border-radius:6px;padding:7px 12px;font-size:10px;font-weight:700;cursor:pointer'>Gagne</button>"
-      +"<button onclick='markOutcome("+lastId+",\"loss\")' style='background:#f8717118;border:1px solid #f8717140;color:#f87171;border-radius:6px;padding:7px 12px;font-size:10px;font-weight:700;cursor:pointer'>Perdu</button>"
-      +"<button onclick='markOutcome("+lastId+",\"be\")' style='background:#88888818;border:1px solid #88888840;color:#888;border-radius:6px;padding:7px 12px;font-size:10px;font-weight:700;cursor:pointer'>BE</button>"
-      +"</div></div>":"")
-    +"</div>";
+  document.getElementById('decisionPanel').innerHTML=`
+  <div style="font-size:7px;color:#1a1a30;letter-spacing:3px;margin-bottom:10px">DÉCISION FINALE</div>
+  <div class="decision-panel" style="background:${c.color}06;border:2px solid ${c.color}40">
+    <div style="display:flex;align-items:center;gap:14px;margin-bottom:14px;flex-wrap:wrap">
+      <div style="width:48px;height:48px;border-radius:11px;background:${c.color}18;border:2px solid ${c.color}30;display:flex;align-items:center;justify-content:center;font-size:22px">${c.icon}</div>
+      <div style="flex:1"><div style="font-size:8px;color:#333;letter-spacing:3px;margin-bottom:2px">DÉCISION</div><div style="font-size:17px;font-weight:900;color:${c.color};font-family:monospace">${c.label}</div></div>
+      <div style="font-size:32px;font-weight:900;color:${c.color};font-family:monospace">${o.score_total||0}<span style="font-size:14px;color:#333">/100</span></div>
+    </div>
+    <div style="background:#06060f;border-radius:9px;padding:11px 13px;margin-bottom:10px">
+      <div style="font-size:8px;color:#222;letter-spacing:2px;margin-bottom:4px">RAISONNEMENT</div>
+      <p style="font-size:11px;color:#999;line-height:1.7;margin:0">${o.raisonnement||''}</p>
+    </div>
+    <div class="decision-row">
+      <div style="padding:9px 11px;background:#00ff8806;border:1px solid #00ff8820;border-radius:7px"><div style="font-size:7px;color:#00ff8866;letter-spacing:2px;margin-bottom:3px">CONFLUENCE</div><div style="font-size:10px;color:#00ff88bb">${o.confluence||''}</div></div>
+      <div style="padding:9px 11px;background:#ff444406;border:1px solid #ff444420;border-radius:7px"><div style="font-size:7px;color:#ff444466;letter-spacing:2px;margin-bottom:3px">INVALIDATION</div><div style="font-size:10px;color:#ff4444bb">${o.invalidation||''}</div></div>
+    </div>
+    ${o.message?`<div style="margin-top:10px;padding:9px 13px;background:${c.color}08;border:1px solid ${c.color}20;border-radius:7px"><p style="font-size:11px;color:${c.color}bb;margin:0;font-style:italic">"${o.message}"</p></div>`:''}
+    ${lastId?`<div style="margin-top:14px;padding:12px;background:#07071a;border:1px solid #00ff8830;border-radius:10px">
+      <div style="font-size:8px;color:#00ff88;letter-spacing:2px;margin-bottom:8px">RÉSULTAT ?</div>
+      <div style="display:flex;gap:7px;flex-wrap:wrap">
+        <button onclick="markOutcome(${lastId},'win')" style="background:#00ff8818;border:1px solid #00ff8840;color:#00ff88;border-radius:6px;padding:7px 12px;font-size:10px;font-weight:700;cursor:pointer">✅ Gagné</button>
+        <button onclick="markOutcome(${lastId},'loss')" style="background:#f8717118;border:1px solid #f8717140;color:#f87171;border-radius:6px;padding:7px 12px;font-size:10px;font-weight:700;cursor:pointer">❌ Perdu</button>
+        <button onclick="markOutcome(${lastId},'be')" style="background:#88888818;border:1px solid #88888840;color:#888;border-radius:6px;padding:7px 12px;font-size:10px;font-weight:700;cursor:pointer">➖ BE</button>
+      </div>
+    </div>`:''}
+  </div>`;
 }
 
 function markOutcome(id,outcome){
-  var t=trades.find(function(x){return x.id===id;});
+  const t=trades.find(x=>x.id===id);
   if(t){t.outcome=outcome;lastId=null;}
-  if(trades[0]) renderDecision(trades[0]);
+  renderDecision(trades[0]||{});
 }
 
+// ── Journal ──────────────────────────────────────────────────
 async function addManualTrade(){
-  var trade={
-    date:new Date().toLocaleString("fr-FR"),
-    pair:document.getElementById("j_pair").value||"--",
-    tf:document.getElementById("j_tf").value||"--",
-    session:sess(),score:0,decision:"MANUEL",bias:"--",
-    entry:document.getElementById("j_entry").value||"--",
-    sl:document.getElementById("j_sl").value||"--",
-    tp:document.getElementById("j_tp").value||"--",
-    rr:document.getElementById("j_rr").value||"--",
-    resultat:document.getElementById("j_resultat").value||"",
-    pnl:parseFloat(document.getElementById("j_pnl").value)||null,
-    commentaire:document.getElementById("j_commentaire").value||""
+  const trade={
+    date: new Date().toLocaleString('fr-FR'),
+    pair: document.getElementById('j_pair').value||'—',
+    tf:   document.getElementById('j_tf').value||'—',
+    session: sess(),
+    score: 0, decision: 'MANUEL', bias: '—',
+    entry: document.getElementById('j_entry').value||'—',
+    sl:    document.getElementById('j_sl').value||'—',
+    tp:    document.getElementById('j_tp').value||'—',
+    rr:    document.getElementById('j_rr').value||'—',
+    resultat: document.getElementById('j_resultat').value||'',
+    pnl:   parseFloat(document.getElementById('j_pnl').value)||null,
+    commentaire: document.getElementById('j_commentaire').value||''
   };
   try{
-    await fetch(BACKEND+"/journal",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(trade)});
-    ["j_pair","j_tf","j_entry","j_sl","j_tp","j_rr","j_pnl","j_commentaire"].forEach(function(id){document.getElementById(id).value="";});
-    document.getElementById("j_resultat").value="";
+    await fetch(BACKEND+'/journal',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(trade)});
+    document.getElementById('j_pair').value='';
+    document.getElementById('j_tf').value='';
+    document.getElementById('j_entry').value='';
+    document.getElementById('j_sl').value='';
+    document.getElementById('j_tp').value='';
+    document.getElementById('j_rr').value='';
+    document.getElementById('j_resultat').value='';
+    document.getElementById('j_pnl').value='';
+    document.getElementById('j_commentaire').value='';
     loadJournal();
-  }catch(e){alert("Erreur: "+e.message);}
+  }catch(e){alert('Erreur: '+e.message);}
 }
 
 async function updateTrade(id){
-  var r=document.getElementById("res_"+id).value;
-  var p=document.getElementById("pnl_"+id).value;
-  var c=document.getElementById("com_"+id).value;
+  const r=document.getElementById('res_'+id).value;
+  const p=document.getElementById('pnl_'+id).value;
+  const c=document.getElementById('com_'+id).value;
   try{
-    await fetch(BACKEND+"/journal/"+id,{method:"PUT",headers:{"Content-Type":"application/json"},body:JSON.stringify({resultat:r,pnl:parseFloat(p)||null,commentaire:c})});
+    await fetch(BACKEND+'/journal/'+id,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({resultat:r,pnl:parseFloat(p)||null,commentaire:c})});
     loadJournal();
   }catch(e){}
 }
 
 async function loadJournal(){
   try{
-    var r=await fetch(BACKEND+"/journal");
-    var tl=await r.json();
-    var DC={ATTENDRE:"#ff4444",SIGNAL:"#f5c518",EXECUTION:"#00ff88",MANUEL:"#a78bfa"};
-    var OC={win:"#00ff88",loss:"#f87171",be:"#888"};
-    if(!tl.length){document.getElementById("journalList").innerHTML="<div style='text-align:center;padding:40px;color:#222;font-size:11px'>Aucun trade.</div>";return;}
-    document.getElementById("journalList").innerHTML=tl.map(function(t){
-      return "<div class='card' style='margin-bottom:10px;border-color:"+(t.resultat==="win"?"#00ff8830":t.resultat==="loss"?"#ff444430":"#0c0c1e")+"'>"
-        +"<div style='display:flex;justify-content:space-between;align-items:center;margin-bottom:8px'>"
-        +"<div style='display:flex;gap:7px;align-items:center'>"
-        +"<span style='font-size:12px;font-weight:900;color:#fff;font-family:monospace'>"+t.pair+"</span>"
-        +"<span style='font-size:8px;color:#333;font-family:monospace'>"+t.tf+"</span>"
-        +"<span style='font-size:8px;color:#1a1a2e'>"+t.date+"</span></div>"
-        +"<div style='display:flex;gap:5px;align-items:center'>"
-        +(t.score?"<span style='font-size:11px;font-weight:800;color:"+(DC[t.decision]||"#888")+";font-family:monospace'>"+t.score+"/100</span>":"")
-        +(t.resultat?"<span style='font-size:10px;font-weight:700;color:"+(OC[t.resultat]||"#888")+";background:"+(OC[t.resultat]||"#888")+"15;border-radius:4px;padding:2px 8px'>"+(t.resultat==="win"?"GAGNE":t.resultat==="loss"?"PERDU":"BE")+"</span>":"")
-        +(t.pnl!=null?"<span style='font-size:11px;font-weight:800;color:"+(t.pnl>=0?"#00ff88":"#f87171")+";font-family:monospace'>"+(t.pnl>=0?"+":"")+t.pnl+"</span>":"")
-        +"</div></div>"
-        +(t.entry&&t.entry!=="--"?"<div style='display:flex;gap:10px;margin-bottom:8px;flex-wrap:wrap'>"
-          +"<span style='font-size:9px;color:#f5c518;font-family:monospace'>E:"+t.entry+"</span>"
-          +"<span style='font-size:9px;color:#f87171;font-family:monospace'>SL:"+t.sl+"</span>"
-          +"<span style='font-size:9px;color:#00ff88;font-family:monospace'>TP:"+t.tp+"</span>"
-          +"<span style='font-size:9px;color:#a78bfa;font-family:monospace'>RR:"+t.rr+"</span></div>":"")
-        +(t.commentaire?"<p style='font-size:10px;color:#555;margin-bottom:8px;font-style:italic'>"+t.commentaire+"</p>":"")
-        +"<div style='background:#04040d;border-radius:8px;padding:10px;border:1px solid #0d0d1f'>"
-        +"<div style='display:flex;gap:6px;flex-wrap:wrap;align-items:center'>"
-        +"<select id='res_"+t.id+"' style='background:#07071a;border:1px solid #1a1a2e;color:#fff;border-radius:5px;padding:5px 8px;font-size:10px'>"
-        +"<option value='' "+(t.resultat?"":"selected")+">En cours</option>"
-        +"<option value='win' "+(t.resultat==="win"?"selected":"")+">Gagne</option>"
-        +"<option value='loss' "+(t.resultat==="loss"?"selected":"")+">Perdu</option>"
-        +"<option value='be' "+(t.resultat==="be"?"selected":"")+">BE</option>"
-        +"</select>"
-        +"<input id='pnl_"+t.id+"' type='number' placeholder='P&L' value='"+(t.pnl||"")+"' style='width:70px;background:#07071a;border:1px solid #1a1a2e;color:#fff;border-radius:5px;padding:5px 8px;font-size:10px;font-family:monospace'>"
-        +"<input id='com_"+t.id+"' placeholder='Commentaire...' value='"+(t.commentaire||"")+"' style='flex:1;min-width:100px;background:#07071a;border:1px solid #1a1a2e;color:#fff;border-radius:5px;padding:5px 8px;font-size:10px'>"
-        +"<button onclick='updateTrade("+t.id+")' style='background:#00ff8820;border:1px solid #00ff8840;color:#00ff88;border-radius:5px;padding:5px 10px;font-size:10px;font-weight:700;cursor:pointer'>Sauver</button>"
-        +"</div></div></div>";
-    }).join("");
-  }catch(e){document.getElementById("journalList").innerHTML="<div class='error-box'>Erreur chargement journal</div>";}
+    const r=await fetch(BACKEND+'/journal');
+    const trades=await r.json();
+    const DC={ATTENDRE:'#ff4444',SIGNAL:'#f5c518',EXECUTION:'#00ff88',MANUEL:'#a78bfa'};
+    const OC={win:'#00ff88',loss:'#f87171',be:'#888'};
+    if(!trades.length){document.getElementById('journalList').innerHTML='<div style="text-align:center;padding:40px;color:#222;font-size:11px">Aucun trade. Lance une analyse ou ajoute un trade manuel.</div>';return;}
+    document.getElementById('journalList').innerHTML=trades.map(t=>`
+      <div class="card" style="margin-bottom:10px;border-color:${t.resultat==='win'?'#00ff8830':t.resultat==='loss'?'#ff444430':'#0c0c1e'}">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+          <div style="display:flex;gap:7px;align-items:center">
+            <span style="font-size:12px;font-weight:900;color:#fff;font-family:monospace">${t.pair}</span>
+            <span style="font-size:8px;color:#333;font-family:monospace">${t.tf}</span>
+            <span style="font-size:8px;color:#1a1a2e">${t.date}</span>
+          </div>
+          <div style="display:flex;gap:5px;align-items:center">
+            ${t.score?`<span style="font-size:11px;font-weight:800;color:${DC[t.decision]||'#888'};font-family:monospace">${t.score}/100</span>`:''}
+            ${t.resultat?`<span style="font-size:10px;font-weight:700;color:${OC[t.resultat]};background:${OC[t.resultat]}15;border-radius:4px;padding:2px 8px">${t.resultat==='win'?'✅ GAGNÉ':t.resultat==='loss'?'❌ PERDU':'➖ BE'}</span>`:''}
+            ${t.pnl!=null?`<span style="font-size:11px;font-weight:800;color:${t.pnl>=0?'#00ff88':'#f87171'};font-family:monospace">${t.pnl>=0?'+':''}${t.pnl}€</span>`:''}
+          </div>
+        </div>
+        ${t.entry&&t.entry!=='—'?`<div style="display:flex;gap:10px;margin-bottom:8px;flex-wrap:wrap">
+          <span style="font-size:9px;color:#f5c518;font-family:monospace">E: ${t.entry}</span>
+          <span style="font-size:9px;color:#f87171;font-family:monospace">SL: ${t.sl}</span>
+          <span style="font-size:9px;color:#00ff88;font-family:monospace">TP: ${t.tp}</span>
+          <span style="font-size:9px;color:#a78bfa;font-family:monospace">RR: ${t.rr}</span>
+        </div>`:''}
+        ${t.commentaire?`<p style="font-size:10px;color:#555;margin-bottom:8px;font-style:italic">"${t.commentaire}"</p>`:''}
+        <div style="background:#04040d;border-radius:8px;padding:10px;border:1px solid #0d0d1f">
+          <div style="font-size:7px;color:#222;letter-spacing:2px;margin-bottom:6px">MISE À JOUR</div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
+            <select id="res_${t.id}" style="background:#07071a;border:1px solid #1a1a2e;color:#fff;border-radius:5px;padding:5px 8px;font-size:10px">
+              <option value="" ${!t.resultat?'selected':''}>En cours</option>
+              <option value="win" ${t.resultat==='win'?'selected':''}>✅ Gagné</option>
+              <option value="loss" ${t.resultat==='loss'?'selected':''}>❌ Perdu</option>
+              <option value="be" ${t.resultat==='be'?'selected':''}>➖ BE</option>
+            </select>
+            <input id="pnl_${t.id}" type="number" placeholder="P&L €" value="${t.pnl||''}" style="width:80px;background:#07071a;border:1px solid #1a1a2e;color:#fff;border-radius:5px;padding:5px 8px;font-size:10px;font-family:monospace">
+            <input id="com_${t.id}" placeholder="Commentaire..." value="${t.commentaire||''}" style="flex:1;min-width:120px;background:#07071a;border:1px solid #1a1a2e;color:#fff;border-radius:5px;padding:5px 8px;font-size:10px">
+            <button onclick="updateTrade(${t.id})" style="background:#00ff8820;border:1px solid #00ff8840;color:#00ff88;border-radius:5px;padding:5px 10px;font-size:10px;font-weight:700;cursor:pointer">💾 Sauver</button>
+          </div>
+        </div>
+      </div>`).join('');
+  }catch(e){document.getElementById('journalList').innerHTML='<div class="error-box">⚠ Impossible de charger le journal</div>';}
 }
 
 async function loadStats(){
   try{
-    var r=await fetch(BACKEND+"/journal/stats");
-    var s=await r.json();
-    document.getElementById("statsContent").innerHTML="<div class='stat-grid'>"
-      +[["TRADES",s.total,"#fff"],["GAGNES",s.wins,"#00ff88"],["PERDUS",s.losses,"#f87171"],["WINRATE",s.winrate+"%",s.winrate>=50?"#00ff88":"#f87171"],["P&L",(s.total_pnl>=0?"+":"")+s.total_pnl,s.total_pnl>=0?"#00ff88":"#f87171"]].map(function(x){
-        return "<div class='stat-box'><div style='font-size:7px;color:#222;letter-spacing:2px;margin-bottom:5px'>"+x[0]+"</div><div style='font-size:20px;font-weight:900;color:"+x[2]+";font-family:monospace'>"+x[1]+"</div></div>";
-      }).join("")
-      +"</div>";
+    const r=await fetch(BACKEND+'/journal/stats');
+    const s=await r.json();
+    document.getElementById('statsContent').innerHTML=`
+      <div class="stat-grid">
+        ${[['TRADES',s.total,'#fff'],['GAGNÉS',s.wins,'#00ff88'],['PERDUS',s.losses,'#f87171'],['WINRATE',s.winrate+'%',s.winrate>=50?'#00ff88':'#f87171'],['P&L TOTAL',(s.total_pnl>=0?'+':'')+s.total_pnl+'€',s.total_pnl>=0?'#00ff88':'#f87171']].map(([k,v,c])=>`<div class="stat-box"><div style="font-size:7px;color:#222;letter-spacing:2px;margin-bottom:5px">${k}</div><div style="font-size:20px;font-weight:900;color:${c};font-family:monospace">${v}</div></div>`).join('')}
+      </div>`;
   }catch(e){}
+}
+
+function sess(){
+  const h=new Date().getHours();
+  return h>=7&&h<10?'London Open':h>=13&&h<16?'NY Open':h>=2&&h<6?'Asian Session':'Inter-session';
 }
 
 initControls();
