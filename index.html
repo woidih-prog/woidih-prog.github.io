@@ -52,6 +52,7 @@ button:disabled{opacity:.4;cursor:not-allowed}
 .error-box{background:#ff000010;border:1px solid #ff000030;border-radius:8px;padding:10px 14px;color:#ff4444;font-size:11px;margin-bottom:14px}
 .data-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(80px,1fr));gap:6px}
 .data-box{background:#04040d;border-radius:5px;padding:6px 8px;border:1px solid #0d0d1f}
+.mt4-badge{background:#00ff8815;border:1px solid #00ff8840;border-radius:5px;padding:3px 8px;font-size:8px;color:#00ff88;font-family:monospace;letter-spacing:1px}
 .footer{margin-top:36px;padding:10px 14px;background:#06060f;border-radius:6px;text-align:center;font-size:8px;color:#151525}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.2}}
 .pulse{animation:pulse 1.4s ease infinite}
@@ -63,7 +64,7 @@ button:disabled{opacity:.4;cursor:not-allowed}
     <div class="logo">⚡</div>
     <div>
       <div class="title">TRADING MASTER V5</div>
-      <div class="subtitle">ENQUÊTEUR + ORCHESTRATEUR · 8 AGENTS SMC</div>
+      <div class="subtitle">ENQUÊTEUR + ORCHESTRATEUR · 8 AGENTS SMC · MSU LIT CYCLE</div>
     </div>
   </div>
   <div style="display:flex;align-items:center;gap:6px">
@@ -147,9 +148,8 @@ button:disabled{opacity:.4;cursor:not-allowed}
 
 <script>
 // ── CONFIG ────────────────────────────────────────────────────
-const BACKEND   = "https://trading-master-backend.onrender.com";
-const API_URL   = BACKEND + "/anthropic";
-const TD_KEY    = "767259bc7ee84bac8f54f97f888a3bd0";
+const BACKEND = "https://trading-master-backend.onrender.com";
+const API_URL  = BACKEND + "/anthropic";
 
 // ── CONSTANTES ───────────────────────────────────────────────
 const ALL_PAIRS = ["EUR/USD","GBP/USD","USD/JPY","GBP/JPY","EUR/GBP","EUR/JPY","USD/CAD","USD/CHF","AUD/USD","NZD/USD","GBP/CHF","XAU/USD","XAG/USD","WTI","BRENT","BTC/USD","ETH/USD","BNB/USD","SOL/USD","XRP/USD","ADA/USD","NAS100","SPX500","DAX40"];
@@ -159,15 +159,40 @@ const ICONS     = {liquidite:"💧",structure:"📊",zones:"🎯",timing:"⏰",r
 const AGENT_KEYS= ["liquidite","structure","zones","timing","risk","memoire","backtest","eco"];
 const STEPS     = ["Liquidité","Structure","Zones","Timing","Risk","Mémoire","Backtest","Éco","Synthèse"];
 
+// Mapping paire → symbole MT4
+const MT4_SYMBOLS = {
+  "EUR/USD":"EURUSD","GBP/USD":"GBPUSD","USD/JPY":"USDJPY","GBP/JPY":"GBPJPY",
+  "EUR/GBP":"EURGBP","EUR/JPY":"EURJPY","USD/CAD":"USDCAD","USD/CHF":"USDCHF",
+  "AUD/USD":"AUDUSD","NZD/USD":"NZDUSD","GBP/CHF":"GBPCHF","XAU/USD":"XAUUSD",
+  "XAG/USD":"XAGUSD","BTC/USD":"BTCUSD"
+};
+
 let selectedPair = "EUR/USD";
 let selectedTf   = "H1";
 let loading      = false;
 let trades       = [];
 let lastId       = null;
 
-// ── PIP & FORMAT ─────────────────────────────────────────────
 function getPip(p){ return p>10000?50:p>1000?2:p>100?0.01:0.0001; }
 function fmtLevel(p,v){ return p>1000?v.toFixed(2):p>100?v.toFixed(3):v.toFixed(5); }
+
+// ── PRIX MT4 (priorité sur toute autre source) ───────────────
+async function getPriceMT4(pair) {
+  const sym = MT4_SYMBOLS[pair];
+  if (!sym) return null;
+  try {
+    const r = await fetch(BACKEND + "/price/" + sym);
+    if (!r.ok) return null;
+    const d = await r.json();
+    // Vérifier fraîcheur : prix < 2 minutes
+    if (d && d.bid && d.ask) {
+      const ts = new Date(d.time.replace(" ","T") + "Z");
+      const age = (Date.now() - ts.getTime()) / 1000;
+      if (age < 120) return d;
+    }
+    return null;
+  } catch(e) { return null; }
+}
 
 // ── CONTRÔLES ────────────────────────────────────────────────
 function initControls(){
@@ -198,7 +223,7 @@ function showTab(name,btn){
   if(name==='stats')   loadStats();
 }
 
-// ── TELEGRAM (via backend) ───────────────────────────────────
+// ── TELEGRAM ─────────────────────────────────────────────────
 async function sendTelegram(msg){
   try{
     await fetch(BACKEND+"/telegram",{
@@ -214,7 +239,7 @@ async function testTelegram(){
   try{
     const r=await fetch(BACKEND+"/telegram",{
       method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({text:'✅ <b>Trading Master V5</b>\n\nBackend + Telegram opérationnels 🚀'})
+      body:JSON.stringify({text:'✅ <b>Trading Master V5</b>\n\nBackend + Telegram + MT4 Live opérationnels 🚀'})
     });
     const d=await r.json();
     btn.textContent=d.ok?'✅ OK':'❌ ERR';
@@ -223,8 +248,8 @@ async function testTelegram(){
   setTimeout(()=>{btn.textContent='📱 Test TG';btn.className='btn-tg';},4000);
 }
 
-// ── API CLAUDE (via backend) ─────────────────────────────────
-async function aiCall(sys,prompt,maxT=800){
+// ── API CLAUDE ────────────────────────────────────────────────
+async function aiCall(sys,prompt,maxT=900){
   const r=await fetch(API_URL,{
     method:'POST',headers:{'Content-Type':'application/json'},
     body:JSON.stringify({model:'claude-sonnet-4-5',max_tokens:maxT,system:sys,messages:[{role:'user',content:prompt}]})
@@ -250,7 +275,7 @@ async function aiCall(sys,prompt,maxT=800){
 }
 
 // ── ENQUÊTEUR ────────────────────────────────────────────────
-const ENQUETEUR_SYS=`Réponds UNIQUEMENT avec un objet JSON brut. Zéro texte avant ou après. Pas de markdown. Tu es L'ENQUÊTEUR. Format: {"session_actuelle":"...","sentiment":"risk-on","dxy":"hausse","resume_macro":"2 phrases max","top_opportunites":[{"rang":1,"paire":"EUR/USD","direction":"ACHETER","raison":"1 phrase","session_ideale":"London Open","score_opportunite":82}],"paires_eviter":[{"paire":"USD/JPY","raison":"texte"}],"conseil_du_jour":"1 phrase"}`;
+const ENQUETEUR_SYS=`Réponds UNIQUEMENT avec un objet JSON brut. Zéro texte avant ou après. Pas de markdown. Tu es L'ENQUÊTEUR SMC. Format: {"session_actuelle":"...","sentiment":"risk-on","dxy":"hausse","resume_macro":"2 phrases max","top_opportunites":[{"rang":1,"paire":"EUR/USD","direction":"ACHETER","raison":"1 phrase","session_ideale":"London Open","score_opportunite":82}],"paires_eviter":[{"paire":"USD/JPY","raison":"texte"}],"conseil_du_jour":"1 phrase"}`;
 
 async function runEnquete(){
   const btn=document.getElementById('btnEnquete');
@@ -301,18 +326,37 @@ function analyzeFromEnquete(pair){
   setTimeout(()=>launch(),100);
 }
 
-// ── AGENTS ───────────────────────────────────────────────────
+// ── SYSTEM PROMPTS AGENTS (avec MSU LIT CYCLE) ───────────────
 function getSys(key){
   const pre=`Réponds UNIQUEMENT avec un objet JSON brut. Zéro texte avant ou après. Pas de markdown. `;
+
+  // COUCHE 1 REDPILLFX — contexte commun injecté dans tous les agents
+  const couche1=`
+MÉTHODOLOGIE REDPILLFX (COUCHE 1):
+Séquence valide: IPA → TRAP (faux BO sur BSL/SSL) → IDC/OB → Move directionnel.
+MSU AKA LIT CYCLE — 3 phases: BUILD UP (création TRAPs, faux BOS, faux Breaker) → INDUCEMENT (prix récupère les lots des piégés) → MITIGATION (création BPL avec IDC/FVP/BPR).
+MSU Forme 1: Fake BOS puis True BOS (continuation tendance).
+MSU Forme 2: Uniquement faux BOS pour piéger les contre-tendance → True BOS.
+MSU Continuation: HTF liquidity en vue + IPA à devenir EPA + Market Maker confirmé.
+RÈGLES CRITIQUES: Sans TRAP confirmé = score plafonné 50% max. FAKE BOS seul = invalide (0pt structure). MSU dans FVG HTF = confluence maximale. Kill Zone obligatoire (London 7h-10h / NY 13h-16h). BE sur première cause atteinte. RR minimum 3:1. Session Asian = accumulation/build up uniquement.
+`;
+
   const m={
-    liquidite:pre+`Expert SMC liquidité. Format: {"nom":"Agent Liquidite","analyse":"texte","bsl":"niveau","ssl":"niveau","direction":"bullish","score":15,"score_max":20,"verdict":"texte"}`,
-    structure:pre+`Expert SMC structure. Format: {"nom":"Agent Structure","analyse":"texte","trend_htf":"bullish","trend_ltf":"bearish","wyckoff":"phase","score":14,"score_max":20,"verdict":"texte"}`,
-    zones:    pre+`Expert SMC zones. Format: {"nom":"Agent Zones","analyse":"texte","ob_type":"bearish","zone_type":"premium","score":13,"score_max":20,"verdict":"texte"}`,
-    timing:   pre+`Expert ICT timing. Format: {"nom":"Agent Timing","analyse":"texte","kill_zone":true,"session":"London Open","jour_ok":true,"score":11,"score_max":15,"verdict":"texte"}`,
-    risk:     pre+`Expert risk management. Format: {"nom":"Agent Risk","analyse":"texte","taille":"1%","score":11,"score_max":15,"verdict":"texte"}`,
-    memoire:  pre+`Expert trading mémoire. Format: {"nom":"Agent Memoire","analyse":"texte","winrate":"68%","score":3,"score_max":5,"verdict":"texte"}`,
-    backtest: pre+`Expert backtest SMC. Format: {"nom":"Agent Backtest","analyse":"texte","succes":"71%","score":4,"score_max":5,"verdict":"texte"}`,
-    eco:      pre+`Expert macro fondamental. Format: {"nom":"Agent Eco","analyse":"texte","risk_mode":"risk-off","biais_fondamental":"bearish","score":7,"score_max":10,"verdict":"texte"}`
+    liquidite: pre+couche1+`Tu es Agent Liquidité SMC. Analyse BSL/SSL, sweeps de liquidité, TRAPs. Un TRAP confirmé = sweep + réaction immédiate + IDC visible. Sans TRAP = score max 10/20. Format: {"nom":"Agent Liquidite","analyse":"texte","bsl":"niveau","ssl":"niveau","trap_confirme":true,"direction":"bullish","score":15,"score_max":20,"verdict":"texte"}`,
+
+    structure: pre+couche1+`Tu es Agent Structure SMC. Analyse BOS/CHoCH HTF et LTF. FAKE BOS = invalide (pas de score structure). True BOS après Fake BOS = MSU Continuation. Wyckoff phase si identifiable. Format: {"nom":"Agent Structure","analyse":"texte","trend_htf":"bullish","trend_ltf":"bearish","msu_detecte":false,"msu_type":"continuation","wyckoff":"phase","score":14,"score_max":20,"verdict":"texte"}`,
+
+    zones: pre+couche1+`Tu es Agent Zones SMC. Analyse OB, FVG, BPR, zones premium/discount. MSU dans FVG HTF = confluence maximale (+5pts). Format: {"nom":"Agent Zones","analyse":"texte","ob_type":"bearish","zone_type":"premium","fvg_htf":false,"score":13,"score_max":20,"verdict":"texte"}`,
+
+    timing: pre+couche1+`Tu es Agent Timing ICT. Kill Zone London 7h-10h / NY 13h-16h obligatoire. Session Asian = build up uniquement, pas d'entrée. Frankfurt Open (6h-8h) = MSU souvent en formation. Format: {"nom":"Agent Timing","analyse":"texte","kill_zone":true,"session":"London Open","jour_ok":true,"asian_buildip":false,"score":11,"score_max":15,"verdict":"texte"}`,
+
+    risk: pre+couche1+`Tu es Agent Risk. RR minimum 3:1 (mathématique: 50% winrate + 3:1 = profitable). BE sur première cause atteinte obligatoire. Lot size basé sur 1% du capital. Format: {"nom":"Agent Risk","analyse":"texte","rr_valide":true,"taille":"1%","be_niveau":"texte","score":11,"score_max":15,"verdict":"texte"}`,
+
+    memoire: pre+`Tu es Agent Mémoire. Analyse patterns récurrents sur cette paire/session. Format: {"nom":"Agent Memoire","analyse":"texte","winrate":"68%","score":3,"score_max":5,"verdict":"texte"}`,
+
+    backtest: pre+couche1+`Tu es Agent Backtest. Évalue la qualité du setup selon la séquence REDPILLFX: IPA→TRAP→IDC/OB→Move. Setup incomplet = score faible. Format: {"nom":"Agent Backtest","analyse":"texte","sequence_complete":false,"succes":"71%","score":4,"score_max":5,"verdict":"texte"}`,
+
+    eco: pre+`Tu es Agent Économique. Analyse macro, risk-on/off, DXY, événements calendrier. Format: {"nom":"Agent Eco","analyse":"texte","risk_mode":"risk-off","biais_fondamental":"bearish","evenement_majeur":false,"score":7,"score_max":10,"verdict":"texte"}`
   };
   return m[key]||m.memoire;
 }
@@ -347,6 +391,8 @@ function renderAgentCard(key,data){
   let chips='';
   if(key==='timing') chips=`<span class="chip" style="background:${data.kill_zone?'#34d39920':'#55555520'};border:1px solid ${data.kill_zone?'#34d39940':'#55555540'};color:${data.kill_zone?'#34d399':'#555'}">${data.kill_zone?'Kill Zone ✓':'Hors Kill Zone'}</span>`;
   if(key==='eco')    chips=`<span class="chip" style="background:#10b98120;border:1px solid #10b98140;color:#10b981">Biais: ${data.biais_fondamental||'—'}</span>`;
+  if(key==='liquidite'&&data.trap_confirme) chips=`<span class="chip" style="background:#00d4ff20;border:1px solid #00d4ff40;color:#00d4ff">TRAP ✓</span>`;
+  if(key==='structure'&&data.msu_detecte) chips+=`<span class="chip" style="background:#a78bfa20;border:1px solid #a78bfa40;color:#a78bfa">MSU ${data.msu_type||''}</span>`;
   return `<div class="agent-card" style="border:1px solid ${color}22">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
       <div style="display:flex;align-items:center;gap:7px"><span style="font-size:14px">${icon}</span><span style="font-size:10px;font-weight:700;color:${color};font-family:monospace">${data.nom||key}</span></div>
@@ -372,65 +418,113 @@ async function launch(forcePair){
   document.getElementById('decisionPanel').innerHTML='';
 
   const now=new Date(),h=now.getHours();
-  const sess=h>=7&&h<10?'London Open':h>=13&&h<16?'NY Open':h>=2&&h<6?'Asian Session':'Inter-session';
+  const session=h>=7&&h<10?'London Open':h>=13&&h<16?'NY Open':h>=2&&h<6?'Asian Session':'Inter-session';
   const days=['Dimanche','Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi'];
   const results={};
   let smcData=null;
   let jsLevels=null;
+  let mt4Source=false;
 
   try{
-    renderStepBar(0,'📡 Données marché...');
-    try{
-      const PAIR_SRC={"EUR/USD":{s:"EUR/USD",t:"td"},"GBP/USD":{s:"GBP/USD",t:"td"},"USD/JPY":{s:"USD/JPY",t:"td"},"GBP/JPY":{s:"GBP/JPY",t:"td"},"EUR/GBP":{s:"EUR/GBP",t:"td"},"EUR/JPY":{s:"EUR/JPY",t:"td"},"USD/CAD":{s:"USD/CAD",t:"td"},"USD/CHF":{s:"USD/CHF",t:"td"},"AUD/USD":{s:"AUD/USD",t:"td"},"NZD/USD":{s:"NZD/USD",t:"td"},"GBP/CHF":{s:"GBP/CHF",t:"td"},"XAU/USD":{s:"XAUUSDT",t:"bnb"},"XAG/USD":{s:"XAGUSDT",t:"bnb"},"WTI":{s:"WTI/USD",t:"td"},"BRENT":{s:"BRENT/USD",t:"td"},"NAS100":{s:"NDX",t:"td"},"SPX500":{s:"SPX",t:"td"},"DAX40":{s:"DAX",t:"td"},"BTC/USD":{s:"BTCUSDT",t:"bnb"},"ETH/USD":{s:"ETHUSDT",t:"bnb"},"BNB/USD":{s:"BNBUSDT",t:"bnb"},"SOL/USD":{s:"SOLUSDT",t:"bnb"},"XRP/USD":{s:"XRPUSDT",t:"bnb"},"ADA/USD":{s:"ADAUSDT",t:"bnb"}};
-      const TF_SRC={"M15":{td:"15min",bnb:"15m"},"H1":{td:"1h",bnb:"1h"},"H4":{td:"4h",bnb:"4h"},"Daily":{td:"1day",bnb:"1d"}};
-      const pc=PAIR_SRC[targetPair],tc=TF_SRC[selectedTf];
-      let candles;
-      if(pc.t==='bnb'){
-        const r=await fetch('https://api.binance.com/api/v3/klines?symbol='+pc.s+'&interval='+tc.bnb+'&limit=50');
-        const d=await r.json();
-        candles=d.map(c=>({open:+c[1],high:+c[2],low:+c[3],close:+c[4]}));
-      } else {
-        const r=await fetch('https://api.twelvedata.com/time_series?symbol='+encodeURIComponent(pc.s)+'&interval='+tc.td+'&outputsize=50&apikey='+TD_KEY);
-        const d=await r.json();
-        if(d.status==='error') throw new Error(d.message);
-        candles=d.values.slice().reverse().map(c=>({open:+c.open,high:+c.high,low:+c.low,close:+c.close}));
-      }
-      const w=candles.slice(-20),last=w[w.length-1];
-      const hi=Math.max(...w.map(c=>c.high)),lo=Math.min(...w.map(c=>c.low)),mid=(hi+lo)/2;
-      smcData={price:fmtLevel(last.close,last.close),bsl:fmtLevel(last.close,hi),ssl:fmtLevel(last.close,lo),trend:last.close>w[0].open?'bullish':'bearish',zone:last.close>mid?'premium':'discount'};
-      const pip=getPip(last.close),isBull=last.close>w[0].open;
-      jsLevels={
-        entry: fmtLevel(last.close,last.close),
-        sl:    fmtLevel(last.close,isBull?last.close-pip*20:last.close+pip*20),
-        tp:    fmtLevel(last.close,isBull?last.close+pip*40:last.close-pip*40),
-        rr:    '2.0:1', bias:isBull?'long':'short'
-      };
-      const sd=document.getElementById('smcData');
-      sd.innerHTML=`<div style="font-size:7px;color:#10b981;letter-spacing:3px;margin-bottom:8px">📡 DONNÉES LIVE — ${targetPair} ${selectedTf}</div><div class="data-grid">${[['PRIX',smcData.price,'#fff'],['BSL',smcData.bsl,'#00d4ff'],['SSL',smcData.ssl,'#f87171'],['ENTRY',jsLevels.entry,'#f5c518'],['SL',jsLevels.sl,'#f87171'],['TP',jsLevels.tp,'#00ff88'],['TREND',smcData.trend,smcData.trend==='bullish'?'#00ff88':'#f87171'],['ZONE',smcData.zone,smcData.zone==='premium'?'#f87171':'#00ff88']].map(([k,v,c])=>`<div class="data-box"><div style="font-size:7px;color:#222;letter-spacing:1.5px;margin-bottom:2px">${k}</div><div style="font-size:10px;font-weight:700;color:${c};font-family:monospace">${v}</div></div>`).join('')}</div>`;
-      sd.style.display='block';
-    }catch(e){}
+    renderStepBar(0,'📡 Prix MT4 live...');
 
+    // ── PRIORITÉ 1 : Prix MT4 via backend ──
+    const mt4=await getPriceMT4(targetPair);
+    if(mt4){
+      mt4Source=true;
+      const price=mt4.bid;
+      const pip=getPip(price);
+      const isBull=true; // sera affiné par les agents
+      smcData={
+        price: fmtLevel(price,price),
+        bid:   fmtLevel(price,mt4.bid),
+        ask:   fmtLevel(price,mt4.ask),
+        bsl:   fmtLevel(price,price+pip*30),
+        ssl:   fmtLevel(price,price-pip*30),
+        spread: mt4.ask-mt4.bid,
+        trend: 'à confirmer',
+        zone:  'à confirmer',
+        source:'MT4 LIVE'
+      };
+      jsLevels={
+        entry: fmtLevel(price,mt4.ask),
+        sl:    fmtLevel(price,mt4.bid-pip*20),
+        tp:    fmtLevel(price,mt4.ask+pip*60),
+        rr:    '3.0:1',
+        bias:  'long'
+      };
+    } else {
+      // ── FALLBACK : Binance pour crypto ──
+      try{
+        const PAIR_SRC={"EUR/USD":{s:"EUR/USD",t:"td"},"GBP/USD":{s:"GBP/USD",t:"td"},"USD/JPY":{s:"USD/JPY",t:"td"},"GBP/JPY":{s:"GBP/JPY",t:"td"},"EUR/GBP":{s:"EUR/GBP",t:"td"},"EUR/JPY":{s:"EUR/JPY",t:"td"},"USD/CAD":{s:"USD/CAD",t:"td"},"USD/CHF":{s:"USD/CHF",t:"td"},"AUD/USD":{s:"AUD/USD",t:"td"},"NZD/USD":{s:"NZD/USD",t:"td"},"GBP/CHF":{s:"GBP/CHF",t:"td"},"XAU/USD":{s:"XAUUSDT",t:"bnb"},"XAG/USD":{s:"XAGUSDT",t:"bnb"},"BTC/USD":{s:"BTCUSDT",t:"bnb"},"ETH/USD":{s:"ETHUSDT",t:"bnb"},"BNB/USD":{s:"BNBUSDT",t:"bnb"},"SOL/USD":{s:"SOLUSDT",t:"bnb"},"XRP/USD":{s:"XRPUSDT",t:"bnb"},"ADA/USD":{s:"ADAUSDT",t:"bnb"}};
+        const TF_SRC={"M15":{td:"15min",bnb:"15m"},"H1":{td:"1h",bnb:"1h"},"H4":{td:"4h",bnb:"4h"},"Daily":{td:"1day",bnb:"1d"}};
+        const pc=PAIR_SRC[targetPair],tc=TF_SRC[selectedTf];
+        if(pc&&pc.t==='bnb'){
+          const r=await fetch('https://api.binance.com/api/v3/klines?symbol='+pc.s+'&interval='+tc.bnb+'&limit=50');
+          const d=await r.json();
+          const candles=d.map(c=>({open:+c[1],high:+c[2],low:+c[3],close:+c[4]}));
+          const w=candles.slice(-20),last=w[w.length-1];
+          const hi=Math.max(...w.map(c=>c.high)),lo=Math.min(...w.map(c=>c.low)),mid=(hi+lo)/2;
+          const pip=getPip(last.close),isBull=last.close>w[0].open;
+          smcData={price:fmtLevel(last.close,last.close),bsl:fmtLevel(last.close,hi),ssl:fmtLevel(last.close,lo),trend:isBull?'bullish':'bearish',zone:last.close>mid?'premium':'discount',source:'Binance'};
+          jsLevels={entry:fmtLevel(last.close,last.close),sl:fmtLevel(last.close,isBull?last.close-pip*20:last.close+pip*20),tp:fmtLevel(last.close,isBull?last.close+pip*60:last.close-pip*60),rr:'3.0:1',bias:isBull?'long':'short'};
+        }
+      }catch(e){}
+    }
+
+    if(smcData){
+      const sourceBadge=mt4Source?`<span class="mt4-badge">📡 MT4 LIVE</span>`:`<span style="font-size:8px;color:#444;font-family:monospace">${smcData.source||'fallback'}</span>`;
+      const sd=document.getElementById('smcData');
+      sd.innerHTML=`<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px"><div style="font-size:7px;color:#10b981;letter-spacing:3px">📡 DONNÉES — ${targetPair} ${selectedTf}</div>${sourceBadge}</div><div class="data-grid">${[['BID',smcData.bid||smcData.price,'#fff'],['ASK',smcData.ask||smcData.price,'#aaa'],['BSL',smcData.bsl,'#00d4ff'],['SSL',smcData.ssl,'#f87171'],['ENTRY',jsLevels.entry,'#f5c518'],['SL',jsLevels.sl,'#f87171'],['TP',jsLevels.tp,'#00ff88'],['RR',jsLevels.rr,'#a78bfa']].map(([k,v,c])=>`<div class="data-box"><div style="font-size:7px;color:#222;letter-spacing:1.5px;margin-bottom:2px">${k}</div><div style="font-size:10px;font-weight:700;color:${c};font-family:monospace">${v||'—'}</div></div>`).join('')}</div>`;
+      sd.style.display='block';
+    }
+
+    // ── 8 AGENTS ──
     for(let i=0;i<AGENT_KEYS.length;i++){
       const key=AGENT_KEYS[i];
       renderStepBar(i,ICONS[key]+' Agent '+(i+1)+'/8...');
       try{
-        const ctx='Paire:'+targetPair+' TF:'+selectedTf+' Session:'+sess+' Jour:'+days[now.getDay()]+(smcData?' prix='+smcData.price+' trend='+smcData.trend+' zone='+smcData.zone:'')+' JSON uniquement.';
-        results[key]=await aiCall(getSys(key),ctx);
+        let ctx=`Paire:${targetPair} TF:${selectedTf} Session:${session} Jour:${days[now.getDay()]}`;
+        if(smcData){
+          ctx+=` | Prix LIVE: ${smcData.price} (${smcData.source||'live'})`;
+          if(smcData.bid) ctx+=` Bid:${smcData.bid} Ask:${smcData.ask}`;
+          if(smcData.trend&&smcData.trend!=='à confirmer') ctx+=` Trend:${smcData.trend} Zone:${smcData.zone}`;
+        }
+        ctx+=' | JSON uniquement.';
+        results[key]=await aiCall(getSys(key),ctx,900);
       }catch(e){results[key]={nom:key,analyse:'Erreur: '+e.message,score:0,score_max:20,verdict:'Indisponible'};}
       document.getElementById('agentCards').innerHTML+=renderAgentCard(key,results[key]);
       document.getElementById('agentGrid').style.display='block';
       await new Promise(r=>setTimeout(r,200));
     }
 
+    // ── SYNTHÈSE ──
     renderStepBar(8,'⚡ Synthèse...');
     const total=Object.values(results).reduce((s,a)=>s+(a.score||0),0);
     const dec=total>=86?'EXECUTION':total>=61?'SIGNAL':'ATTENDRE';
     const sum=Object.values(results).map(a=>(a.nom||'?')+':'+(a.score||0)).join(' ');
-    const sys=`Réponds UNIQUEMENT avec un objet JSON brut. Orchestrateur SMC. Format: {"score_total":${total},"decision":"${dec}","bias":"short","raisonnement":"texte","confluence":"texte","invalidation":"texte","message":"texte"}`;
+    const trapOk=results.liquidite?.trap_confirme;
+    const msuOk=results.structure?.msu_detecte;
+    const sys=`Réponds UNIQUEMENT avec un objet JSON brut. Orchestrateur SMC avec MSU LIT CYCLE. ${trapOk?'TRAP confirmé.':''} ${msuOk?'MSU détecté type '+results.structure.msu_type+'.':''} Format: {"score_total":${total},"decision":"${dec}","bias":"short","raisonnement":"texte","confluence":"texte","invalidation":"texte","message":"texte"}`;
     const oRaw=await aiCall(sys,targetPair+' '+selectedTf+' | '+sum,800);
+
+    // Recalcul SL/TP sur prix MT4 réels si disponible
+    if(mt4Source&&smcData){
+      const price=parseFloat(smcData.bid||smcData.price);
+      const pip=getPip(price);
+      const isBull=(oRaw.bias||jsLevels.bias)==='long';
+      jsLevels={
+        entry: fmtLevel(price,isBull?mt4.ask:mt4.bid),
+        sl:    fmtLevel(price,isBull?price-pip*20:price+pip*20),
+        tp:    fmtLevel(price,isBull?price+pip*60:price-pip*60),
+        rr:    '3.0:1',
+        bias:  isBull?'long':'short'
+      };
+    }
+
     const o={
       score_total:total, decision:dec,
-      bias:        jsLevels?jsLevels.bias:(oRaw.bias||'long'),
+      bias:        oRaw.bias||jsLevels?.bias||'long',
       raisonnement:oRaw.raisonnement||'Analyse complétée.',
       confluence:  oRaw.confluence||'—',
       invalidation:oRaw.invalidation||'—',
@@ -445,18 +539,18 @@ async function launch(forcePair){
     renderStepBar(9,'');
     renderDecision(o);
 
-    if((o.score_total||0)>=50&&o.decision!=='ATTENDRE'){
+    if((o.score_total||0)>=65&&o.decision!=='ATTENDRE'){
       const isL=o.bias==='long';
-      await sendTelegram(`⚡ <b>SIGNAL TRADING MASTER V5</b>\n━━━━━━━━━━━━━━\n${isL?'🟢 <b>ACHETER</b>':'🔴 <b>VENDRE</b>'} <b>${targetPair}</b>\n📊 ${selectedTf} | Score: <b>${o.score_total}/100</b>\n━━━━━━━━━━━━━━\n📍 Entrée: <b>${o.entry}</b>\n🛡️ SL: <b>${o.sl}</b> (${smcData?.slPips||'—'} pips)\n🎯 TP: <b>${o.tp}</b>\n⚖️ RR: <b>${o.rr}</b>\n📦 Lot recommandé: <b>${smcData?.lotSize||'—'}</b>\n💰 Risque max: <b>1% (1000€)</b>\n━━━━━━━━━━━━━━\n📱 Ouvre MT4 !`);
+      const srcLabel=mt4Source?'📡 MT4 Live':'📊 Calculé';
+      await sendTelegram(`⚡ <b>SIGNAL TRADING MASTER V5</b>\n━━━━━━━━━━━━━━\n${isL?'🟢 <b>ACHETER</b>':'🔴 <b>VENDRE</b>'} <b>${targetPair}</b>\n📊 ${selectedTf} | Score: <b>${o.score_total}/100</b>\n${srcLabel}\n━━━━━━━━━━━━━━\n📍 Entrée: <b>${o.entry}</b>\n🛡️ SL: <b>${o.sl}</b>\n🎯 TP: <b>${o.tp}</b>\n⚖️ RR: <b>${o.rr}</b>\n💰 Risque: <b>1% capital</b>\n${trapOk?'✅ TRAP confirmé\n':''}${msuOk?'🔄 MSU '+results.structure.msu_type+'\n':''}━━━━━━━━━━━━━━\n📱 Ouvre MT4 !`);
     }
 
     const t={id:Date.now(),date:new Date().toLocaleString('fr-FR'),pair:targetPair,tf:selectedTf,score:o.score_total,decision:o.decision,bias:o.bias,entry:o.entry,sl:o.sl,tp:o.tp,rr:o.rr,outcome:null};
     trades.unshift(t);lastId=t.id;
     if(trades.length>100) trades=trades.slice(0,100);
-    // Sauvegarde automatique dans le journal backend
     try{
       await fetch(BACKEND+'/journal',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
-        date:t.date,pair:targetPair,tf:selectedTf,session:sess(),
+        date:t.date,pair:targetPair,tf:selectedTf,session:session,
         score:o.score_total,decision:o.decision,bias:o.bias,
         entry:o.entry,sl:o.sl,tp:o.tp,rr:o.rr
       })});
@@ -517,13 +611,13 @@ function markOutcome(id,outcome){
   renderDecision(trades[0]||{});
 }
 
-// ── Journal ──────────────────────────────────────────────────
+// ── JOURNAL ──────────────────────────────────────────────────
 async function addManualTrade(){
   const trade={
     date: new Date().toLocaleString('fr-FR'),
     pair: document.getElementById('j_pair').value||'—',
     tf:   document.getElementById('j_tf').value||'—',
-    session: sess(),
+    session: getSession(),
     score: 0, decision: 'MANUEL', bias: '—',
     entry: document.getElementById('j_entry').value||'—',
     sl:    document.getElementById('j_sl').value||'—',
@@ -535,15 +629,9 @@ async function addManualTrade(){
   };
   try{
     await fetch(BACKEND+'/journal',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(trade)});
-    document.getElementById('j_pair').value='';
-    document.getElementById('j_tf').value='';
-    document.getElementById('j_entry').value='';
-    document.getElementById('j_sl').value='';
-    document.getElementById('j_tp').value='';
-    document.getElementById('j_rr').value='';
+    ['j_pair','j_tf','j_entry','j_sl','j_tp','j_rr','j_commentaire'].forEach(id=>document.getElementById(id).value='');
     document.getElementById('j_resultat').value='';
     document.getElementById('j_pnl').value='';
-    document.getElementById('j_commentaire').value='';
     loadJournal();
   }catch(e){alert('Erreur: '+e.message);}
 }
@@ -564,7 +652,7 @@ async function loadJournal(){
     const trades=await r.json();
     const DC={ATTENDRE:'#ff4444',SIGNAL:'#f5c518',EXECUTION:'#00ff88',MANUEL:'#a78bfa'};
     const OC={win:'#00ff88',loss:'#f87171',be:'#888'};
-    if(!trades.length){document.getElementById('journalList').innerHTML='<div style="text-align:center;padding:40px;color:#222;font-size:11px">Aucun trade. Lance une analyse ou ajoute un trade manuel.</div>';return;}
+    if(!trades.length){document.getElementById('journalList').innerHTML='<div style="text-align:center;padding:40px;color:#222;font-size:11px">Aucun trade.</div>';return;}
     document.getElementById('journalList').innerHTML=trades.map(t=>`
       <div class="card" style="margin-bottom:10px;border-color:${t.resultat==='win'?'#00ff8830':t.resultat==='loss'?'#ff444430':'#0c0c1e'}">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
@@ -615,7 +703,7 @@ async function loadStats(){
   }catch(e){}
 }
 
-function sess(){
+function getSession(){
   const h=new Date().getHours();
   return h>=7&&h<10?'London Open':h>=13&&h<16?'NY Open':h>=2&&h<6?'Asian Session':'Inter-session';
 }
