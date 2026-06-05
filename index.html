@@ -761,8 +761,8 @@ async function loadChart(){
     document.getElementById('chartSource').style.display='inline';
     drawCandles(candles.slice(-60), pair);
   }catch(e){
-    const cv=document.getElementById('candleChart');
-    const ctx=cv.getContext('2d');
+    
+
    function drawCandles(candles, pair){
   const cv=document.getElementById('candleChart');
   cv.style.width=(cv.offsetWidth||800)+'px';
