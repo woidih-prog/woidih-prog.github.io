@@ -202,7 +202,8 @@ const MT4_SYMBOLS = {
   "DAX40":"DAX40","WTI":"WTIUSD","BRENT":"BRENTUSD"
 };
 
-let selectedPair="EUR/USD",selectedTf="H1",loading=false,trades=[],lastId=null,enqueteurContext=null,jsLevels=null;
+let selectedPair="EUR/USD",selectedTf="H1",loading=false,trades=[],lastId=null,enqueteurContext=null;
+
 function getPip(p){return p>10000?50:p>1000?2:p>100?0.01:0.0001;}
 function fmtLevel(p,v){return p>1000?v.toFixed(2):p>100?v.toFixed(3):v.toFixed(5);}
 
@@ -761,17 +762,27 @@ async function loadChart(){
     document.getElementById('chartSource').style.display='inline';
     drawCandles(candles.slice(-60), pair);
   }catch(e){
-    
+    const cv=document.getElementById('candleChart');
+    const ctx=cv.getContext('2d');
+    cv.width=cv.offsetWidth; cv.height=380;
+    ctx.fillStyle='#040d04'; ctx.fillRect(0,0,cv.width,cv.height);
+    ctx.fillStyle='#ff6666'; ctx.font='14px monospace'; ctx.textAlign='center';
+    ctx.fillText('⚠ '+e.message, cv.width/2, cv.height/2);
+  }
+}
 
-   function drawCandles(candles, pair){
+function drawCandles(candles, pair){
   const cv=document.getElementById('candleChart');
-  cv.style.width=(cv.offsetWidth||800)+'px';
-  cv.style.height='380px';
-  cv.width=(cv.offsetWidth||800)*(window.devicePixelRatio||1);
-  cv.height=380*(window.devicePixelRatio||1);
+  const dpr=window.devicePixelRatio||1;
+  const displayW=cv.offsetWidth||800;
+  const displayH=380;
+  cv.style.width=displayW+'px';
+  cv.style.height=displayH+'px';
+  cv.width=displayW*dpr;
+  cv.height=displayH*dpr;
   const ctx=cv.getContext('2d');
-  ctx.scale(window.devicePixelRatio||1,window.devicePixelRatio||1);
-  const W=cv.offsetWidth||800, H=380;
+  ctx.scale(dpr,dpr);
+  const W=displayW, H=displayH;
   const PAD={t:30,b:40,l:10,r:70};
   const cW=W-PAD.l-PAD.r, cH=H-PAD.t-PAD.b;
 
