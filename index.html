@@ -467,7 +467,7 @@ async function launch(forcePair){
   document.getElementById('decisionPanel').innerHTML='';
 
   const now=new Date(),h=now.getHours();
-  const session=h>=7&&h<16?'London Active':h>=13&&h<16?'NY Open':h>=7&&h<10?'London Open':h>=2&&h<6?'Asian Session':'Inter-session';
+ const session=h>=7&&h<10?'London Open':h>=13&&h<22?'NY Active':h>=10&&h<13?'London Afternoon':h>=2&&h<6?'Asian Session':'Inter-session';
   const days=['Dimanche','Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi'];
   const results={};let smcData=null,jsLevels=null,mt4Source=false,mt4=null,candleContext='';
 
