@@ -72,6 +72,7 @@ button:disabled{opacity:.4;cursor:not-allowed}
   </div>
   <div style="display:flex;align-items:center;gap:8px">
     <button class="btn-tg" id="btnTg" onclick="testTelegram()">📱 Test TG</button>
+    <button id="schedulerBtn" onclick="toggleScheduler()" style="background:#FFD70015;border:1px solid #FFD700;color:#FFD700;border-radius:6px;padding:5px 10px;font-size:9px;font-family:monospace;font-weight:700;cursor:pointer">▶ Scheduler OFF</button>
     <div style="display:flex;align-items:center;gap:4px">
       <div id="statusDot" style="width:6px;height:6px;border-radius:50%;background:#00C853;box-shadow:0 0 6px #00C853"></div>
       <span id="statusTxt" style="font-size:8px;color:#3a5a2a;font-family:monospace">PRÊT</span>
@@ -1077,7 +1078,125 @@ function renderGlossaire(){
     </div>`).join('');
 }
 
+// ── SCHEDULER AUTOMATIQUE ───────────────────────────────────
+let schedulerActive = false;
+let schedulerInterval = null;
+let lastAutoAnalysis = {london: null, ny: null};
+
+function startScheduler(){
+  if(schedulerActive) return;
+  schedulerActive = true;
+  console.log('Scheduler démarré');
+  
+  schedulerInterval = setInterval(async()=>{
+    const now = new Date();
+    const h = now.getHours();
+    const m = now.getMinutes();
+    const day = now.getDay(); // 0=dim, 6=sam
+    
+    // Pas le weekend
+    if(day === 0 || day === 6) return;
+    
+    const todayStr = now.toDateString();
+    
+    // London Open — 7h00
+    if(h === 7 && m === 0 && lastAutoAnalysis.london !== todayStr){
+      lastAutoAnalysis.london = todayStr;
+      console.log('Scheduler: London Open analyse auto');
+      await sendTelegram('🔔 <b>Trading Master V5</b>\n⏰ London Open détecté — Analyse automatique en cours...');
+      await runAutoAnalysis('London Open');
+    }
+    
+    // NY Open — 13h30
+    if(h === 13 && m === 30 && lastAutoAnalysis.ny !== todayStr){
+      lastAutoAnalysis.ny = todayStr;
+      console.log('Scheduler: NY Open analyse auto');
+      await sendTelegram('🔔 <b>Trading Master V5</b>\n⏰ NY Open détecté — Analyse automatique en cours...');
+      await runAutoAnalysis('NY Open');
+    }
+    
+  }, 30000); // Vérifie toutes les 30 secondes
+  
+  document.getElementById('schedulerBtn').textContent = '⏸ Scheduler ON';
+  document.getElementById('schedulerBtn').style.background = '#00C85320';
+  document.getElementById('schedulerBtn').style.borderColor = '#00C853';
+  document.getElementById('schedulerBtn').style.color = '#00C853';
+}
+
+function stopScheduler(){
+  schedulerActive = false;
+  if(schedulerInterval) clearInterval(schedulerInterval);
+  schedulerInterval = null;
+  document.getElementById('schedulerBtn').textContent = '▶ Scheduler OFF';
+  document.getElementById('schedulerBtn').style.background = '#FFD70015';
+  document.getElementById('schedulerBtn').style.borderColor = '#FFD700';
+  document.getElementById('schedulerBtn').style.color = '#FFD700';
+}
+
+function toggleScheduler(){
+  if(schedulerActive) stopScheduler();
+  else startScheduler();
+}
+
+async function runAutoAnalysis(sessionName){
+  // Analyser les paires prioritaires selon la session
+  const pairesLondon = ['EUR/USD','GBP/USD','XAU/USD'];
+  const pairesNY     = ['EUR/USD','GBP/USD','USD/CAD','XAU/USD'];
+  const paires = sessionName === 'London Open' ? pairesLondon : pairesNY;
+  
+  for(const pair of paires){
+    try{
+      selectedPair = pair;
+      // Lancer l'analyse silencieusement
+      const now=new Date(),h=now.getHours();
+      const session=sessionName;
+      const days=['Dimanche','Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi'];
+      const sym=MT4_SYMBOLS[pair];
+      
+      // Récupérer prix et bougies
+      const mt4=await getPriceMT4(pair);
+      let price = mt4?mt4.bid:null;
+      
+      if(!price && sym){
+        try{
+          const rc=await fetch(BACKEND+'/candles/'+sym);
+          if(rc.ok){const dc=await rc.json();const c=dc.candles||[];if(c.length)price=parseFloat(c[c.length-1].c);}
+        }catch(e){}
+      }
+      
+      // Appel rapide à l'orchestrateur
+      const avCandles = await getAlphaVantageDaily(pair);
+      let dailyCtx='';
+      if(avCandles&&avCandles.length>=10){
+        const last10=avCandles.slice(-10);
+        const dh=Math.max(...last10.map(c=>c.h));
+        const dl=Math.min(...last10.map(c=>c.l));
+        const dc=last10[last10.length-1].c;
+        const dt=dc>last10[0].c?'bullish':'bearish';
+        dailyCtx=` Daily_HTF: Trend=${dt} High=${dh.toFixed(5)} Low=${dl.toFixed(5)} Close=${dc.toFixed(5)}`;
+      }
+      
+      const prompt=`Paire:${pair} TF:H1 Session:${session} Jour:${days[now.getDay()]} Heure:${h}h${price?` Prix:${price.toFixed(5)}`:''}${dailyCtx}`;
+      const sys=`Réponds UNIQUEMENT avec un objet JSON brut. Orchestrateur SMC rapide. Format: {"score":75,"decision":"SIGNAL","bias":"long","resume":"1 phrase","entry":"niveau","sl":"niveau","tp":"niveau"}`;
+      
+      const r=await aiCall(sys,prompt,500);
+      const score=r.score||0;
+      
+      if(score>=65){
+        const isL=r.bias==='long';
+        await sendTelegram(`⚡ <b>SIGNAL AUTO — ${sessionName}</b>\n━━━━━━━━━━━━━━\n${isL?'🟢 ACHETER':'🔴 VENDRE'} <b>${pair}</b>\n📊 H1 | Score: <b>${score}/100</b>\n━━━━━━━━━━━━━━\n📍 Entrée: <b>${r.entry||'—'}</b>\n🛡️ SL: <b>${r.sl||'—'}</b>\n🎯 TP: <b>${r.tp||'—'}</b>\n━━━━━━━━━━━━━━\n📱 Ouvre Trading Master V5 !`);
+      }
+      
+      await new Promise(res=>setTimeout(res,2000)); // 2s entre chaque paire
+    }catch(e){}
+  }
+  
+  await sendTelegram(`✅ <b>Analyse ${sessionName} terminée</b>\nProchaine analyse: ${sessionName==='London Open'?'NY Open 13h30':'London Open demain 7h00'}`);
+}
+
 initControls();
+// Démarrer le scheduler automatiquement
+startScheduler();
 </script>
 </body>
 </html>
