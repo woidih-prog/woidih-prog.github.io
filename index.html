@@ -427,6 +427,30 @@ async function launch(forcePair){
               else bearCount++;
             }
             candleContext=` | BOUGIES MT4 RÉELLES (10 dernières H1): High=${recentHigh.toFixed(5)} Low=${recentLow.toFixed(5)} LastClose=${lastClose.toFixed(5)} Trend=${trend10} Momentum=${momentum} Bougies_haussières=${bullCount}/9 Bougies_baissières=${bearCount}/9. Utilise ces niveaux réels pour identifier BSL/SSL/OB/FVG.`;
+
+            // Calculer smcData et jsLevels depuis les bougies si MT4 non disponible
+            if(!mt4){
+              const pip=getPip(lastClose);
+              const mid=(recentHigh+recentLow)/2;
+              const isBull=trend10==='bullish';
+              smcData={
+                price:lastClose.toFixed(5),
+                bid:lastClose.toFixed(5),
+                ask:(lastClose+pip).toFixed(5),
+                bsl:recentHigh.toFixed(5),
+                ssl:recentLow.toFixed(5),
+                trend:trend10,
+                zone:lastClose>mid?'premium':'discount',
+                source:'Bougies MT4'
+              };
+              jsLevels={
+                entry:lastClose.toFixed(5),
+                sl:(isBull?lastClose-pip*20:lastClose+pip*20).toFixed(5),
+                tp:(isBull?lastClose+pip*60:lastClose-pip*60).toFixed(5),
+                rr:'3.0:1',
+                bias:isBull?'long':'short'
+              };
+            }
           }
         }
       }catch(e){}
