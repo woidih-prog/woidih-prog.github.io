@@ -763,23 +763,15 @@ async function loadChart(){
   }catch(e){
     const cv=document.getElementById('candleChart');
     const ctx=cv.getContext('2d');
-    cv.width=cv.offsetWidth; cv.height=380;
-    ctx.fillStyle='#040d04'; ctx.fillRect(0,0,cv.width,cv.height);
-    ctx.fillStyle='#ff6666'; ctx.font='14px monospace'; ctx.textAlign='center';
-    ctx.fillText('⚠ '+e.message, cv.width/2, cv.height/2);
-  }
-}
-
-function drawCandles(candles, pair){
+   function drawCandles(candles, pair){
   const cv=document.getElementById('candleChart');
-const dpr=window.devicePixelRatio||1;
-cv.width=(cv.offsetWidth||800)*dpr;
-cv.height=380*dpr;
-ctx.scale(dpr,dpr);
-cv.style.width=(cv.offsetWidth||800)+'px';
-cv.style.height='380px';
+  cv.style.width=(cv.offsetWidth||800)+'px';
+  cv.style.height='380px';
+  cv.width=(cv.offsetWidth||800)*(window.devicePixelRatio||1);
+  cv.height=380*(window.devicePixelRatio||1);
   const ctx=cv.getContext('2d');
-  const W=cv.width, H=cv.height;
+  ctx.scale(window.devicePixelRatio||1,window.devicePixelRatio||1);
+  const W=cv.offsetWidth||800, H=380;
   const PAD={t:30,b:40,l:10,r:70};
   const cW=W-PAD.l-PAD.r, cH=H-PAD.t-PAD.b;
 
