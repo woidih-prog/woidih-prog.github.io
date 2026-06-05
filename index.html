@@ -186,6 +186,34 @@ button:disabled{opacity:.4;cursor:not-allowed}
 <script>
 const BACKEND = "https://trading-master-backend.onrender.com";
 const API_URL  = BACKEND + "/anthropic";
+const AV_KEY   = "UCP44WUC4UHAJ2I8";
+
+// Récupérer données historiques Alpha Vantage (fallback si pas de Daily MT4)
+async function getAlphaVantageDaily(pair){
+  const AV_SYMBOLS={
+    "EUR/USD":"EUR","GBP/USD":"GBP","USD/JPY":"JPY","GBP/JPY":"GBP",
+    "XAU/USD":"XAU","USD/CAD":"CAD","AUD/USD":"AUD","NZD/USD":"NZD",
+    "EUR/JPY":"EUR","USD/CHF":"CHF","EUR/GBP":"EUR"
+  };
+  const from=AV_SYMBOLS[pair];
+  if(!from) return null;
+  try{
+    const to=pair.includes('/USD')||pair.includes('/JPY')||pair.includes('/CHF')||pair.includes('/CAD')?'USD':'USD';
+    const url=`https://www.alphavantage.co/query?function=FX_DAILY&from_symbol=${from}&to_symbol=USD&outputsize=compact&apikey=${AV_KEY}`;
+    const r=await fetch(url);
+    const d=await r.json();
+    const ts=d['Time Series FX (Daily)'];
+    if(!ts) return null;
+    const candles=Object.entries(ts).slice(0,60).reverse().map(([date,v])=>({
+      t:date,
+      o:parseFloat(v['1. open']),
+      h:parseFloat(v['2. high']),
+      l:parseFloat(v['3. low']),
+      c:parseFloat(v['4. close'])
+    }));
+    return candles;
+  }catch(e){return null;}
+}
 
 const ALL_PAIRS = ["EUR/USD","GBP/USD","USD/JPY","GBP/JPY","EUR/GBP","EUR/JPY","USD/CAD","USD/CHF","AUD/USD","NZD/USD","GBP/CHF","XAU/USD","XAG/USD","WTI","BRENT","BTC/USD","ETH/USD","BNB/USD","SOL/USD","XRP/USD","ADA/USD","NAS100","SPX500","DAX40"];
 const TFS       = ["M15","H1","H4","Daily"];
@@ -342,8 +370,25 @@ async function runEnquete(){
       }
     }catch(e){}
   }
-  try{
-    let prompt='Date:'+now.toLocaleDateString('fr-FR')+' Heure:'+now.toLocaleTimeString('fr-FR')+' Session:'+sess+' Jour:'+days[now.getDay()]+'\nPaires disponibles: '+ALL_PAIRS.join(', ');
+  // Fallback Alpha Vantage pour les Daily si MT4 non disponible
+  if(!dailyResume){
+    for(const pair of ['EUR/USD','GBP/USD','XAU/USD','USD/JPY']){
+      try{
+        const avC=await getAlphaVantageDaily(pair);
+        if(avC&&avC.length>=5){
+          const last5=avC.slice(-5);
+          const dlast=last5[last5.length-1].c;
+          const dfirst=last5[0].c;
+          const dh=Math.max(...last5.map(c=>c.h));
+          const dl=Math.min(...last5.map(c=>c.l));
+          const dt=dlast>dfirst?'↑':'↓';
+          const sym2=MT4_SYMBOLS[pair]||pair.replace('/','');
+          dailyResume+=`${sym2}_AV: ${dt} H=${dh.toFixed(5)} L=${dl.toFixed(5)} | `;
+        }
+      }catch(e){}
+    }
+  }
+  try{+' Heure:'+now.toLocaleTimeString('fr-FR')+' Session:'+sess+' Jour:'+days[now.getDay()]+'\nPaires disponibles: '+ALL_PAIRS.join(', ');
     if(candlesResume) prompt+='\nBOUGIES MT4 RÉELLES (5 dernières H1): '+candlesResume;
     if(dailyResume) prompt+='\nBOUGIES DAILY HTF (5 derniers jours): '+dailyResume;
     const r=await aiCall(ENQUETEUR_SYS,prompt,2000);
@@ -467,7 +512,7 @@ async function launch(forcePair){
   document.getElementById('decisionPanel').innerHTML='';
 
   const now=new Date(),h=now.getHours();
- const session=h>=7&&h<10?'London Open':h>=13&&h<22?'NY Active':h>=10&&h<13?'London Afternoon':h>=2&&h<6?'Asian Session':'Inter-session';
+  const session=h>=7&&h<16?'London Active':h>=13&&h<16?'NY Open':h>=7&&h<10?'London Open':h>=2&&h<6?'Asian Session':'Inter-session';
   const days=['Dimanche','Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi'];
   const results={};let smcData=null,jsLevels=null,mt4Source=false,mt4=null,candleContext='';
 
@@ -500,6 +545,28 @@ async function launch(forcePair){
             }
             dailyContext=` | BOUGIES DAILY HTF (20 derniers jours): High=${dmaxP.toFixed(5)} Low=${dminP.toFixed(5)} LastClose=${dlastClose.toFixed(5)} Trend_HTF=${dtrend} Bougies_haussières=${dbullCount}/19 Bougies_baissières=${dbearCount}/19. Utilise ces données HTF pour valider la direction macro.`;
           }
+        }
+      }catch(e){}
+    }
+    // Fallback Alpha Vantage si Daily MT4 non disponible
+    if(!dailyContext){
+      try{
+        const avCandles=await getAlphaVantageDaily(targetPair);
+        if(avCandles&&avCandles.length>=20){
+          const last20=avCandles.slice(-20);
+          const dhighs=last20.map(c=>c.h);
+          const dlows=last20.map(c=>c.l);
+          const dcloses=last20.map(c=>c.c);
+          const dmaxP=Math.max(...dhighs);
+          const dminP=Math.min(...dlows);
+          const dlastClose=dcloses[dcloses.length-1];
+          const dtrend=dlastClose>dcloses[0]?'bullish':'bearish';
+          let dbullCount=0,dbearCount=0;
+          for(let i=1;i<last20.length;i++){
+            if(last20[i].c>last20[i].o) dbullCount++;
+            else dbearCount++;
+          }
+          dailyContext=` | DONNÉES DAILY HTF Alpha Vantage (20 derniers jours): High=${dmaxP.toFixed(5)} Low=${dminP.toFixed(5)} LastClose=${dlastClose.toFixed(5)} Trend_HTF=${dtrend} Bougies_haussières=${dbullCount}/19 Bougies_baissières=${dbearCount}/19.`;
         }
       }catch(e){}
     }
