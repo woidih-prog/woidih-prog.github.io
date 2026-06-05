@@ -604,24 +604,18 @@ async function launch(forcePair){
         if(smcData){ctx+=` | Prix LIVE: ${smcData.price} Bid:${smcData.bid||smcData.price} Ask:${smcData.ask||smcData.price}`;}
         if(candleContext) ctx+=candleContext;
         if(dailyContext) ctx+=dailyContext;
-        // Description visuelle du chart
-        const chartDesc=generateChartDescription(
-          candleContext?JSON.parse('{"c":'+candleContext.match(/LastClose=([\d.]+)/)?.[1]+'}'):null,
-          null
-        );
-        // Injecter description visuelle depuis les vraies bougies
+        // Description visuelle du chart depuis bougies MT4
         try{
-          const rawC=await fetch(BACKEND+'/candles/'+(MT4_SYMBOLS[targetPair]||''));
-          const rawD=await fetch(BACKEND+'/daily/'+(MT4_SYMBOLS[targetPair]||''));
-          if(rawC.ok&&rawD.ok){
-            const dc=await rawC.json();
-            const dd=await rawD.json();
-            const visual=generateChartDescription(dc.candles||[],dd.candles||[]);
-            if(visual) ctx+=visual;
-          } else if(rawC.ok){
-            const dc=await rawC.json();
-            const visual=generateChartDescription(dc.candles||[],[]);
-            if(visual) ctx+=visual;
+          const mt4sym=MT4_SYMBOLS[targetPair];
+          if(mt4sym){
+            const rawC=await fetch(BACKEND+'/candles/'+mt4sym);
+            const rawD=await fetch(BACKEND+'/daily/'+mt4sym);
+            if(rawC.ok){
+              const dc=await rawC.json();
+              const dd=rawD.ok?await rawD.json():{candles:[]};
+              const visual=generateChartDescription(dc.candles||[],dd.candles||[]);
+              if(visual) ctx+=visual;
+            }
           }
         }catch(e){}
         if(enqueteurContext&&enqueteurContext.pair===targetPair){
