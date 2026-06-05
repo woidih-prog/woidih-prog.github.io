@@ -83,11 +83,36 @@ button:disabled{opacity:.4;cursor:not-allowed}
   <div class="tabs">
     <button class="tab active" onclick="showTab('enqueteur',this)">🔍 Enquêteur</button>
     <button class="tab" onclick="showTab('orchestrateur',this)">⚡ Orchestrateur</button>
+    <button class="tab" onclick="showTab('chart',this)">📊 Chart</button>
     <button class="tab" onclick="showTab('journal',this)">📓 Journal</button>
     <button class="tab" onclick="showTab('stats',this)">📈 Stats</button>
   </div>
 
-  <div id="tab-enqueteur">
+  <div id="tab-chart" style="display:none">
+    <div class="card" style="border-color:#FFD70020">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:8px">
+        <div class="gold-title">📊 CHART MT4 LIVE</div>
+        <div style="display:flex;gap:6px;align-items:center">
+          <select id="chartPair" style="background:#060e06;border:1px solid #1a2e1a;color:#FFD700;border-radius:6px;padding:5px 8px;font-size:10px;font-family:monospace">
+            <option>EUR/USD</option><option>GBP/USD</option><option>USD/JPY</option>
+            <option>GBP/JPY</option><option>XAU/USD</option><option>USD/CAD</option>
+            <option>AUD/USD</option><option>EUR/JPY</option>
+          </select>
+          <button onclick="loadChart()" style="background:linear-gradient(135deg,#FFD700,#FFA500);color:#000;border-radius:6px;padding:5px 12px;font-size:10px;font-weight:900;font-family:monospace">▶ CHARGER</button>
+          <span id="chartSource" class="mt4-badge" style="display:none">📡 MT4</span>
+        </div>
+      </div>
+      <div class="divider"></div>
+      <canvas id="candleChart" style="width:100%;height:380px;margin-top:12px;border-radius:8px;background:#040d04"></canvas>
+      <div id="chartLevels" style="display:none;margin-top:10px"></div>
+    </div>
+    <!-- GLOSSAIRE -->
+    <div class="card" style="border-color:#C0C0C020;margin-top:4px">
+      <div class="gold-title" style="margin-bottom:10px">📖 GLOSSAIRE SMC — TERMES EXPLIQUÉS</div>
+      <div class="divider"></div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:8px;margin-top:12px" id="glossaireGrid"></div>
+    </div>
+  </div>
     <div class="card" style="border-color:#FFD70020">
       <div class="gold-title" style="margin-bottom:4px">🔍 L'ENQUÊTEUR</div>
       <div class="divider"></div>
@@ -216,12 +241,13 @@ function initControls(){
 }
 
 function showTab(name,btn){
-  ['enqueteur','orchestrateur','journal','stats'].forEach(t=>document.getElementById('tab-'+t).style.display='none');
+  ['enqueteur','orchestrateur','chart','journal','stats'].forEach(t=>document.getElementById('tab-'+t).style.display='none');
   document.getElementById('tab-'+name).style.display='block';
   document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');
   if(name==='journal') loadJournal();
   if(name==='stats')   loadStats();
+  if(name==='chart')   { loadChart(); renderGlossaire(); }
 }
 
 async function sendTelegram(msg){
@@ -720,6 +746,140 @@ async function loadStats(){
 }
 
 function getSession(){const h=new Date().getHours();return h>=7&&h<10?'London Open':h>=13&&h<16?'NY Open':h>=2&&h<6?'Asian Session':'Inter-session';}
+
+// ── CHART CHANDELIERS ────────────────────────────────────────
+async function loadChart(){
+  const pair=document.getElementById('chartPair').value;
+  const sym=MT4_SYMBOLS[pair];
+  if(!sym){ alert('Paire non disponible en MT4'); return; }
+  try{
+    const r=await fetch(BACKEND+'/candles/'+sym);
+    if(!r.ok) throw new Error('Bougies non disponibles — EA doit être actif');
+    const d=await r.json();
+    const candles=d.candles||[];
+    if(!candles.length) throw new Error('Aucune bougie reçue');
+    document.getElementById('chartSource').style.display='inline';
+    drawCandles(candles.slice(-60), pair);
+  }catch(e){
+    const cv=document.getElementById('candleChart');
+    const ctx=cv.getContext('2d');
+    cv.width=cv.offsetWidth; cv.height=380;
+    ctx.fillStyle='#040d04'; ctx.fillRect(0,0,cv.width,cv.height);
+    ctx.fillStyle='#ff6666'; ctx.font='14px monospace'; ctx.textAlign='center';
+    ctx.fillText('⚠ '+e.message, cv.width/2, cv.height/2);
+  }
+}
+
+function drawCandles(candles, pair){
+  const cv=document.getElementById('candleChart');
+  cv.width=cv.offsetWidth||800; cv.height=380;
+  const ctx=cv.getContext('2d');
+  const W=cv.width, H=cv.height;
+  const PAD={t:30,b:40,l:10,r:70};
+  const cW=W-PAD.l-PAD.r, cH=H-PAD.t-PAD.b;
+
+  ctx.fillStyle='#040d04'; ctx.fillRect(0,0,W,H);
+
+  const highs=candles.map(c=>parseFloat(c.h));
+  const lows=candles.map(c=>parseFloat(c.l));
+  const maxP=Math.max(...highs), minP=Math.min(...lows);
+  const range=maxP-minP||0.001;
+
+  const toY=v=>PAD.t+cH-(((v-minP)/range)*cH);
+  const n=candles.length;
+  const bW=Math.max(2,Math.floor(cW/n)-1);
+  const gap=Math.floor(cW/n);
+
+  // Grille
+  ctx.strokeStyle='#0d1a0d'; ctx.lineWidth=1;
+  for(let i=0;i<=5;i++){
+    const y=PAD.t+(cH/5)*i;
+    ctx.beginPath(); ctx.moveTo(PAD.l,y); ctx.lineTo(W-PAD.r,y); ctx.stroke();
+    const price=(maxP-((range/5)*i)).toFixed(5);
+    ctx.fillStyle='#3a5a2a'; ctx.font='9px monospace'; ctx.textAlign='left';
+    ctx.fillText(price, W-PAD.r+4, y+3);
+  }
+
+  // Titre
+  ctx.fillStyle='#FFD700'; ctx.font='bold 12px monospace'; ctx.textAlign='left';
+  ctx.fillText(pair+' H1 — '+n+' bougies', PAD.l+5, 18);
+
+  // Bougies
+  candles.forEach((c,i)=>{
+    const o=parseFloat(c.o), h=parseFloat(c.h), l=parseFloat(c.l), cl=parseFloat(c.c);
+    const x=PAD.l+i*gap+gap/2;
+    const isBull=cl>=o;
+    const color=isBull?'#00C853':'#ff6666';
+
+    // Mèche
+    ctx.strokeStyle=color; ctx.lineWidth=1;
+    ctx.beginPath(); ctx.moveTo(x,toY(h)); ctx.lineTo(x,toY(l)); ctx.stroke();
+
+    // Corps
+    const yO=toY(o), yCl=toY(cl);
+    const bodyTop=Math.min(yO,yCl), bodyH=Math.max(2,Math.abs(yO-yCl));
+    ctx.fillStyle=color;
+    ctx.fillRect(x-bW/2, bodyTop, bW, bodyH);
+  });
+
+  // Prix actuel
+  const lastClose=parseFloat(candles[candles.length-1].c);
+  const yLast=toY(lastClose);
+  ctx.strokeStyle='#FFD700'; ctx.lineWidth=1; ctx.setLineDash([4,4]);
+  ctx.beginPath(); ctx.moveTo(PAD.l,yLast); ctx.lineTo(W-PAD.r,yLast); ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle='#FFD700'; ctx.font='bold 10px monospace'; ctx.textAlign='left';
+  ctx.fillText(lastClose.toFixed(5), W-PAD.r+4, yLast+3);
+
+  // Niveaux Entry/SL/TP si disponibles
+  if(jsLevels&&jsLevels.entry&&jsLevels.entry!=='—'){
+    const levels=[
+      {v:parseFloat(jsLevels.entry),c:'#FFD700',l:'ENTRY'},
+      {v:parseFloat(jsLevels.sl),c:'#ff6666',l:'SL'},
+      {v:parseFloat(jsLevels.tp),c:'#00C853',l:'TP'}
+    ];
+    levels.forEach(lv=>{
+      if(!lv.v||isNaN(lv.v)) return;
+      const y=toY(lv.v);
+      if(y<PAD.t||y>H-PAD.b) return;
+      ctx.strokeStyle=lv.c; ctx.lineWidth=2; ctx.setLineDash([6,3]);
+      ctx.beginPath(); ctx.moveTo(PAD.l,y); ctx.lineTo(W-PAD.r,y); ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.fillStyle=lv.c; ctx.font='bold 9px monospace';
+      ctx.fillText(lv.l+' '+lv.v.toFixed(5), W-PAD.r+4, y+3);
+    });
+  }
+}
+
+// ── GLOSSAIRE ────────────────────────────────────────────────
+const GLOSSAIRE=[
+  {t:'BSL',c:'#00d4ff',d:'Buy Side Liquidity — Liquidité au-dessus du marché. Ce sont les stops des vendeurs et les ordres des acheteurs qui attendent au-dessus des hauts récents. Le prix monte pour les "collecter" avant de redescendre.'},
+  {t:'SSL',c:'#ff6666',d:'Sell Side Liquidity — Liquidité en dessous du marché. Ce sont les stops des acheteurs sous les bas récents. Le prix descend pour les "collecter" avant de remonter.'},
+  {t:'MSU',c:'#FFD700',d:'Market Structure Update (aussi appelé LIT CYCLE) — Mise à jour de la structure de marché. Cycle en 3 phases: Build Up (création de pièges) → Inducement (le piège se déclenche) → Mitigation (le prix revient à la zone clé).'},
+  {t:'TRAP',c:'#FFD700',d:'Piège — Faux mouvement créé par les institutionnels pour inciter les traders retail à entrer dans la mauvaise direction. Le prix casse un niveau important (faux BOS) puis repart dans l\'autre sens.'},
+  {t:'BOS',c:'#C0C0C0',d:'Break of Structure — Cassure de structure. Le prix casse un haut ou un bas significatif, signalant un changement de tendance. Un vrai BOS confirme la direction. Un faux BOS (Fake BOS) est un piège.'},
+  {t:'CHoCH',c:'#C0C0C0',d:'Change of Character — Changement de caractère du marché. Premier signe d\'un possible retournement de tendance, moins fort qu\'un BOS.'},
+  {t:'OB',c:'#f59e0b',d:'Order Block — Zone de commandes institutionnelles. La dernière bougie avant un fort mouvement. C\'est là que les banques ont placé leurs ordres. Le prix revient souvent sur ces zones pour "remplir" les ordres restants.'},
+  {t:'FVG',c:'#f59e0b',d:'Fair Value Gap — Déséquilibre de prix. Zone où le prix a bougé trop vite, créant un "trou" dans le marché. Le prix revient souvent combler ce déséquilibre avant de continuer dans la tendance.'},
+  {t:'IPA',c:'#a78bfa',d:'Inefficiency Price Area — Zone de prix inefficace, similaire au FVG. Zone non couverte que le prix cherchera à revisiter.'},
+  {t:'EPA',c:'#a78bfa',d:'Equilibrium Price Area — Zone d\'équilibre du prix. Le milieu d\'une range ou d\'un FVG. Niveau clé où le prix peut trouver un support ou une résistance.'},
+  {t:'Kill Zone',c:'#00C853',d:'Zone horaire à fort volume institutionnel. London Open: 7h-10h (heure Paris). NY Open: 13h-16h (heure Paris). C\'est dans ces fenêtres que les vrais moves directionnels se produisent. Éviter de trader en dehors.'},
+  {t:'RR',c:'#00C853',d:'Risk/Reward — Ratio Risque/Rendement. Un RR de 3:1 signifie que pour 1€ risqué, on vise 3€ de gain. Minimum recommandé: 3:1. Avec 50% de winrate et RR 3:1, on est rentable sur le long terme.'},
+  {t:'BE',c:'#C0C0C0',d:'Break Even — Déplacer le Stop Loss au prix d\'entrée une fois la première cible atteinte. Permet de sécuriser le trade sans risque de perte.'},
+  {t:'HTF',c:'#C0C0C0',d:'Higher Time Frame — Timeframe supérieur. Daily (quotidien) ou H4 (4 heures). Donne la direction macro à suivre. Toujours analyser le HTF avant le LTF.'},
+  {t:'LTF',c:'#C0C0C0',d:'Lower Time Frame — Timeframe inférieur. H1 (1 heure) ou M15 (15 minutes). Utilisé pour affiner l\'entrée après avoir identifié la direction sur le HTF.'},
+  {t:'IDC',c:'#fb923c',d:'Indecision Candle — Bougie d\'indécision (doji, pin bar). Souvent le signal que le prix va repartir dans l\'autre sens. Chercher les IDC dans les zones clés (OB, FVG, BSL/SSL).'},
+];
+
+function renderGlossaire(){
+  const grid=document.getElementById('glossaireGrid');
+  if(grid.children.length>0) return;
+  grid.innerHTML=GLOSSAIRE.map(g=>`
+    <div style="background:#060e06;border:1px solid ${g.c}22;border-left:3px solid ${g.c};border-radius:8px;padding:10px 12px">
+      <div style="font-size:11px;font-weight:900;color:${g.c};font-family:monospace;margin-bottom:5px">${g.t}</div>
+      <div style="font-size:10px;color:#6a8a5a;line-height:1.6">${g.d}</div>
+    </div>`).join('');
+}
 
 initControls();
 </script>
