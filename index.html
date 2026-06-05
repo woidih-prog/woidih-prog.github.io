@@ -475,7 +475,8 @@ async function launch(forcePair){
     renderStepBar(0,'📡 Connexion MT4...');
     mt4=await getPriceMT4(targetPair);
 
-    // ── RÉCUPÉRATION BOUGIES DAILY MT4 ──
+    // ── RÉCUPÉRATION BOUGIES ──
+    const sym=MT4_SYMBOLS[targetPair];
     let dailyContext='';
     if(sym){
       try{
@@ -502,7 +503,6 @@ async function launch(forcePair){
         }
       }catch(e){}
     }
-    const sym=MT4_SYMBOLS[targetPair];
     if(sym){
       try{
         const rc=await fetch(BACKEND+'/candles/'+sym);
