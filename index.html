@@ -175,7 +175,7 @@ const MT4_SYMBOLS = {
   "XAG/USD":"XAGUSD","BTC/USD":"BTCUSD"
 };
 
-let selectedPair="EUR/USD",selectedTf="H1",loading=false,trades=[],lastId=null;
+let selectedPair="EUR/USD",selectedTf="H1",loading=false,trades=[],lastId=null,enqueteurContext=null;
 
 function getPip(p){return p>10000?50:p>1000?2:p>100?0.01:0.0001;}
 function fmtLevel(p,v){return p>1000?v.toFixed(2):p>100?v.toFixed(3):v.toFixed(5);}
@@ -298,7 +298,7 @@ function renderEnquete(r){
           <span style="font-size:12px;font-weight:900;color:${dc}">${isL?'🟢':'🔴'} ${op.direction} — ${op.score_opportunite}/100</span>
         </div>
         <p style="font-size:11px;color:#6a8a5a;margin:0 0 10px;line-height:1.6">${op.raison||''}</p>
-        <button onclick="analyzeFromEnquete('${op.paire}')" style="width:100%;background:${dc}20;border:2px solid ${dc}40;color:${dc};border-radius:8px;padding:9px;font-size:11px;font-weight:700;font-family:monospace;cursor:pointer">⚡ Analyser ${op.paire}</button>
+        <button onclick="analyzeFromEnquete('${op.paire}','${(op.raison||'').replace(/'/g,"\\'")}','${op.direction}',${op.score_opportunite})" style="width:100%;background:${dc}20;border:2px solid ${dc}40;color:${dc};border-radius:8px;padding:9px;font-size:11px;font-weight:700;font-family:monospace;cursor:pointer">⚡ Analyser ${op.paire}</button>
       </div>`;
     });
   }
@@ -306,8 +306,9 @@ function renderEnquete(r){
   document.getElementById('enqueteResult').innerHTML=html;
 }
 
-function analyzeFromEnquete(pair){
+function analyzeFromEnquete(pair,raison,direction,score){
   selectedPair=pair;
+  enqueteurContext={pair,raison,direction,score};
   document.querySelectorAll('.pair-btn').forEach(b=>{b.classList.remove('active');if(b.textContent===pair)b.classList.add('active');});
   showTab('orchestrateur',document.querySelectorAll('.tab')[1]);
   setTimeout(()=>launch(),100);
@@ -428,6 +429,10 @@ async function launch(forcePair){
       try{
         let ctx=`Paire:${targetPair} TF:${selectedTf} Session:${session} Jour:${days[now.getDay()]}`;
         if(smcData){ctx+=` | Prix: ${smcData.price} (${smcData.source})`;if(smcData.bid)ctx+=` Bid:${smcData.bid} Ask:${smcData.ask}`;}
+        // Injection contexte Enquêteur si disponible
+        if(enqueteurContext&&enqueteurContext.pair===targetPair){
+          ctx+=` | CONTEXTE ENQUÊTEUR (score ${enqueteurContext.score}/100): Direction ${enqueteurContext.direction}. Raison: ${enqueteurContext.raison}. Tiens compte de cette analyse macro dans ton évaluation.`;
+        }
         ctx+=' | JSON uniquement.';
         results[key]=await aiCall(getSys(key),ctx,900);
       }catch(e){results[key]={nom:key,analyse:'Erreur: '+e.message,score:0,score_max:20,verdict:'Indisponible'};}
