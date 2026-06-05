@@ -393,13 +393,44 @@ async function launch(forcePair){
   document.getElementById('decisionPanel').innerHTML='';
 
   const now=new Date(),h=now.getHours();
-  const session=h>=7&&h<10?'London Open':h>=13&&h<16?'NY Open':h>=2&&h<6?'Asian Session':'Inter-session';
+  const session=h>=7&&h<16?'London Active':h>=13&&h<16?'NY Open':h>=7&&h<10?'London Open':h>=2&&h<6?'Asian Session':'Inter-session';
   const days=['Dimanche','Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi'];
-  const results={};let smcData=null,jsLevels=null,mt4Source=false,mt4=null;
+  const results={};let smcData=null,jsLevels=null,mt4Source=false,mt4=null,candleContext='';
 
   try{
     renderStepBar(0,'📡 Connexion MT4...');
     mt4=await getPriceMT4(targetPair);
+
+    // ── RÉCUPÉRATION BOUGIES MT4 pour toutes les paires ──
+    const sym=MT4_SYMBOLS[targetPair];
+    if(sym){
+      try{
+        const rc=await fetch(BACKEND+'/candles/'+sym);
+        if(rc.ok){
+          const dc=await rc.json();
+          const candles=dc.candles||[];
+          if(candles.length>=10){
+            const last10=candles.slice(-10);
+            const highs=last10.map(c=>parseFloat(c.h));
+            const lows=last10.map(c=>parseFloat(c.l));
+            const closes=last10.map(c=>parseFloat(c.c));
+            const recentHigh=Math.max(...highs);
+            const recentLow=Math.min(...lows);
+            const lastClose=closes[closes.length-1];
+            const prevClose=closes[closes.length-2];
+            const trend10=lastClose>closes[0]?'bullish':'bearish';
+            const momentum=lastClose>prevClose?'haussier':'baissier';
+            // Compter bougies haussières vs baissières
+            let bullCount=0,bearCount=0;
+            for(let i=1;i<last10.length;i++){
+              if(parseFloat(last10[i].c)>parseFloat(last10[i].o)) bullCount++;
+              else bearCount++;
+            }
+            candleContext=` | BOUGIES MT4 RÉELLES (10 dernières H1): High=${recentHigh.toFixed(5)} Low=${recentLow.toFixed(5)} LastClose=${lastClose.toFixed(5)} Trend=${trend10} Momentum=${momentum} Bougies_haussières=${bullCount}/9 Bougies_baissières=${bearCount}/9. Utilise ces niveaux réels pour identifier BSL/SSL/OB/FVG.`;
+          }
+        }
+      }catch(e){}
+    }
     if(mt4){
       mt4Source=true;
       const price=mt4.bid,pip=getPip(price);
@@ -437,13 +468,13 @@ async function launch(forcePair){
       const key=AGENT_KEYS[i];
       renderStepBar(i,ICONS[key]+' Agent '+(i+1)+'/8 en cours...');
       try{
-        let ctx=`Paire:${targetPair} TF:${selectedTf} Session:${session} Jour:${days[now.getDay()]}`;
-        if(smcData){ctx+=` | Prix: ${smcData.price} (${smcData.source})`;if(smcData.bid)ctx+=` Bid:${smcData.bid} Ask:${smcData.ask}`;}
-        // Injection contexte Enquêteur si disponible
+        let ctx=`Paire:${targetPair} TF:${selectedTf} Session:${session} Jour:${days[now.getDay()]} Heure:${h}h`;
+        if(smcData){ctx+=` | Prix LIVE: ${smcData.price} Bid:${smcData.bid||smcData.price} Ask:${smcData.ask||smcData.price}`;}
+        if(candleContext) ctx+=candleContext;
         if(enqueteurContext&&enqueteurContext.pair===targetPair){
-          ctx+=` | CONTEXTE ENQUÊTEUR (score ${enqueteurContext.score}/100): Direction ${enqueteurContext.direction}. Raison: ${enqueteurContext.raison}. Tiens compte de cette analyse macro dans ton évaluation.`;
+          ctx+=` | CONTEXTE ENQUÊTEUR (score ${enqueteurContext.score}/100): Direction ${enqueteurContext.direction}. Raison: ${enqueteurContext.raison}.`;
         }
-        ctx+=' | JSON uniquement.';
+        ctx+=' | Réponds en JSON uniquement.';
         results[key]=await aiCall(getSys(key),ctx,900);
       }catch(e){results[key]={nom:key,analyse:'Erreur: '+e.message,score:0,score_max:20,verdict:'Indisponible'};}
       document.getElementById('agentCards').innerHTML+=renderAgentCard(key,results[key]);
