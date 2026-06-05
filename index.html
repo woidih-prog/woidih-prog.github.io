@@ -449,7 +449,16 @@ function getSys(key){
 
     timing:pre+couche1+` ${sessionRules} Tu es Agent Timing ICT. IMPORTANT: London est ACTIVE de 7h à 16h, pas seulement 7h-10h. Score 12-15/15 si Kill Zone peak (7h-10h ou 13h-16h). Score 8-11/15 si London active 10h-16h. Score 4-7/15 si vendredi après-midi ou inter-session courte. Score 0-3/15 uniquement si vendredi après 15h ou weekend. Mardi/Mercredi/Jeudi = bonus +2pts. Format: {"nom":"Agent Timing","analyse":"texte","kill_zone":true,"session":"London Active","jour_ok":true,"score":10,"score_max":15,"verdict":"texte"}`,
 
-    risk:pre+couche1+` ${sessionRules} Tu es Agent Risk. Calcule RR sur base prix actuel disponible. RR minimum 3:1 visé. Score minimum 8/15 si: session active + trend direction claire + prix disponible pour calculer SL/TP approximatifs. Ne mets 0 que si RR calculé est inférieur à 1:1 ou si position size serait dangereuse. Utilise 20 pips SL / 60 pips TP si pas de niveaux précis disponibles. 1% capital max. Format: {"nom":"Agent Risk","analyse":"texte","rr_valide":true,"rr_calcule":"3.0:1","taille":"1%","score":10,"score_max":15,"verdict":"texte"}`,
+    risk:pre+couche1+` ${sessionRules} Tu es Agent Risk avec règles FTMO strictes. 
+RÈGLES FTMO OBLIGATOIRES:
+- Drawdown max compte: 10% (ex: compte 10k = SL global 1000€)
+- Daily loss max: 5% par jour (ex: compte 10k = max 500€ de perte/jour)
+- Lot size: 1% du capital par trade maximum
+- RR minimum 3:1 obligatoire
+- Pas de trade vendredi après 15h (risque gap weekend)
+- Pas de trade avant news majeures (NFP, CPI, FOMC)
+- BE obligatoire sur première cause atteinte
+SCORING: Score 12-15/15 si RR≥3:1 + session active + règles FTMO respectées. Score 8-11/15 si RR≥2:1 + conditions acceptables. Score 3-7/15 si RR borderline ou timing risqué. Score 0-2/15 si violation règle FTMO détectée. Format: {"nom":"Agent Risk","analyse":"texte","rr_valide":true,"rr_calcule":"3.0:1","taille":"1%","ftmo_ok":true,"daily_loss_ok":true,"drawdown_ok":true,"score":10,"score_max":15,"verdict":"texte"}`,
 
     memoire:pre+` Tu es Agent Mémoire. Analyse patterns historiques de la paire sur cette session et ce jour de semaine. Base-toi sur ta connaissance des marchés Forex. Score entre 3 et 5 si patterns historiques favorables identifiables. Score 1-2 si patterns défavorables connus. Format: {"nom":"Agent Memoire","analyse":"texte","winrate":"65%","pattern_reconnu":true,"score":4,"score_max":5,"verdict":"texte"}`,
 
@@ -490,6 +499,8 @@ function renderAgentCard(key,data){
   if(key==='eco') chips=`<span class="chip" style="background:#4ade8020;border:1px solid #4ade8040;color:#4ade80">Biais: ${data.biais_fondamental||'—'}</span>`;
   if(key==='liquidite'&&data.trap_confirme) chips=`<span class="chip" style="background:#00d4ff20;border:1px solid #00d4ff40;color:#00d4ff">TRAP ✓</span>`;
   if(key==='structure'&&data.msu_detecte) chips+=`<span class="chip" style="background:#FFD70020;border:1px solid #FFD70040;color:#FFD700">MSU ${data.msu_type||''}</span>`;
+  if(key==='risk'&&data.ftmo_ok===true) chips+=`<span class="chip" style="background:#00C85320;border:1px solid #00C85340;color:#00C853">FTMO ✓</span>`;
+  if(key==='risk'&&data.ftmo_ok===false) chips+=`<span class="chip" style="background:#ff666620;border:1px solid #ff666640;color:#ff6666">⚠ FTMO KO</span>`;
   return `<div class="agent-card" style="border:1px solid ${color}22;box-shadow:0 4px 15px #00000040">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
       <div style="display:flex;align-items:center;gap:7px"><span style="font-size:15px">${icon}</span><span style="font-size:10px;font-weight:700;color:${color};font-family:monospace">${data.nom||key}</span></div>
@@ -741,8 +752,14 @@ async function launch(forcePair){
     renderDecision(o);
 
     if((o.score_total||0)>=65&&o.decision!=='ATTENDRE'){
-      const isL=o.bias==='long';
-      await sendTelegram(`💰 <b>SIGNAL TRADING MASTER V5</b>\n━━━━━━━━━━━━━━\n${isL?'🟢 <b>ACHETER</b>':'🔴 <b>VENDRE</b>'} <b>${targetPair}</b>\n📊 ${selectedTf} | Score: <b>${o.score_total}/100</b>\n${mt4Source?'📡 MT4 Live':'📊 Calculé'}\n━━━━━━━━━━━━━━\n📍 Entrée: <b>${o.entry}</b>\n🛡️ SL: <b>${o.sl}</b>\n🎯 TP: <b>${o.tp}</b>\n⚖️ RR: <b>${o.rr}</b>\n💰 Risque: <b>1% capital</b>\n${trapOk?'✅ TRAP confirmé\n':''}${msuOk?'🔄 MSU détecté\n':''}━━━━━━━━━━━━━━\n📱 Ouvre MT4 !`);
+      // Vérification FTMO avant envoi signal
+      const ftmoOk = results.risk?.ftmo_ok !== false;
+      if(!ftmoOk){
+        await sendTelegram(`⚠️ <b>Signal bloqué — FTMO</b>\n${targetPair} ${selectedTf}\nAgent Risk a détecté une violation des règles FTMO.\nAttendre conditions conformes.`);
+      } else {
+        const isL=o.bias==='long';
+        await sendTelegram(`💰 <b>SIGNAL TRADING MASTER V5</b>\n━━━━━━━━━━━━━━\n${isL?'🟢 <b>ACHETER</b>':'🔴 <b>VENDRE</b>'} <b>${targetPair}</b>\n📊 ${selectedTf} | Score: <b>${o.score_total}/100</b>\n${mt4Source?'📡 MT4 Live':'📊 Calculé'}\n━━━━━━━━━━━━━━\n📍 Entrée: <b>${o.entry}</b>\n🛡️ SL: <b>${o.sl}</b>\n🎯 TP: <b>${o.tp}</b>\n⚖️ RR: <b>${o.rr}</b>\n💰 Risque: <b>1% capital</b>\n${trapOk?'✅ TRAP confirmé\n':''}${msuOk?'🔄 MSU détecté\n':''}━━━━━━━━━━━━━━\n📱 Ouvre MT4 !`);
+      }
     }
 
     const t={id:Date.now(),date:new Date().toLocaleString('fr-FR'),pair:targetPair,tf:selectedTf,score:o.score_total,decision:o.decision,bias:o.bias,entry:o.entry,sl:o.sl,tp:o.tp,rr:o.rr};
