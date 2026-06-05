@@ -202,8 +202,7 @@ const MT4_SYMBOLS = {
   "DAX40":"DAX40","WTI":"WTIUSD","BRENT":"BRENTUSD"
 };
 
-let selectedPair="EUR/USD",selectedTf="H1",loading=false,trades=[],lastId=null,enqueteurContext=null;
-
+let selectedPair="EUR/USD",selectedTf="H1",loading=false,trades=[],lastId=null,enqueteurContext=null,jsLevels=null;
 function getPip(p){return p>10000?50:p>1000?2:p>100?0.01:0.0001;}
 function fmtLevel(p,v){return p>1000?v.toFixed(2):p>100?v.toFixed(3):v.toFixed(5);}
 
