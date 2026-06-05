@@ -172,7 +172,8 @@ const MT4_SYMBOLS = {
   "EUR/USD":"EURUSD","GBP/USD":"GBPUSD","USD/JPY":"USDJPY","GBP/JPY":"GBPJPY",
   "EUR/GBP":"EURGBP","EUR/JPY":"EURJPY","USD/CAD":"USDCAD","USD/CHF":"USDCHF",
   "AUD/USD":"AUDUSD","NZD/USD":"NZDUSD","GBP/CHF":"GBPCHF","XAU/USD":"XAUUSD",
-  "XAG/USD":"XAGUSD","BTC/USD":"BTCUSD"
+  "XAG/USD":"XAGUSD","BTC/USD":"BTCUSD","NAS100":"NAS100","SPX500":"SPX500",
+  "DAX40":"DAX40","WTI":"WTIUSD","BRENT":"BRENTUSD"
 };
 
 let selectedPair="EUR/USD",selectedTf="H1",loading=false,trades=[],lastId=null,enqueteurContext=null;
@@ -485,9 +486,17 @@ async function launch(forcePair){
       const price=mt4.bid,pip=getPip(price);
       smcData={price:fmtLevel(price,price),bid:fmtLevel(price,mt4.bid),ask:fmtLevel(price,mt4.ask),
         bsl:fmtLevel(price,price+pip*30),ssl:fmtLevel(price,price-pip*30),
-        spread:mt4.ask-mt4.bid,trend:'à confirmer',zone:'à confirmer',source:'MT4 LIVE'};
-      jsLevels={entry:fmtLevel(price,mt4.ask),sl:fmtLevel(price,mt4.bid-pip*20),
-        tp:null,rr:'3.0:1',bias:null};
+        spread:mt4.ask-mt4.bid,trend:jsLevels?jsLevels.bias==='long'?'bullish':'bearish':'à confirmer',
+        zone:'à confirmer',source:'MT4 LIVE'};
+      // Garder le bias des bougies, juste mettre à jour entry avec prix live
+      const isBullFromCandles=jsLevels&&jsLevels.bias==='long';
+      jsLevels={
+        entry:fmtLevel(price,mt4.ask),
+        sl:fmtLevel(price,isBullFromCandles?mt4.bid-pip*20:mt4.ask+pip*20),
+        tp:fmtLevel(price,isBullFromCandles?mt4.ask+pip*60:mt4.bid-pip*60),
+        rr:'3.0:1',
+        bias:jsLevels?jsLevels.bias:'long'
+      };
     } else {
       try{
         const PAIR_SRC={"XAU/USD":{s:"XAUUSDT",t:"bnb"},"XAG/USD":{s:"XAGUSDT",t:"bnb"},"BTC/USD":{s:"BTCUSDT",t:"bnb"},"ETH/USD":{s:"ETHUSDT",t:"bnb"},"BNB/USD":{s:"BNBUSDT",t:"bnb"},"SOL/USD":{s:"SOLUSDT",t:"bnb"},"XRP/USD":{s:"XRPUSDT",t:"bnb"},"ADA/USD":{s:"ADAUSDT",t:"bnb"}};
