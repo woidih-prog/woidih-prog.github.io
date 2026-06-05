@@ -604,6 +604,26 @@ async function launch(forcePair){
         if(smcData){ctx+=` | Prix LIVE: ${smcData.price} Bid:${smcData.bid||smcData.price} Ask:${smcData.ask||smcData.price}`;}
         if(candleContext) ctx+=candleContext;
         if(dailyContext) ctx+=dailyContext;
+        // Description visuelle du chart
+        const chartDesc=generateChartDescription(
+          candleContext?JSON.parse('{"c":'+candleContext.match(/LastClose=([\d.]+)/)?.[1]+'}'):null,
+          null
+        );
+        // Injecter description visuelle depuis les vraies bougies
+        try{
+          const rawC=await fetch(BACKEND+'/candles/'+(MT4_SYMBOLS[targetPair]||''));
+          const rawD=await fetch(BACKEND+'/daily/'+(MT4_SYMBOLS[targetPair]||''));
+          if(rawC.ok&&rawD.ok){
+            const dc=await rawC.json();
+            const dd=await rawD.json();
+            const visual=generateChartDescription(dc.candles||[],dd.candles||[]);
+            if(visual) ctx+=visual;
+          } else if(rawC.ok){
+            const dc=await rawC.json();
+            const visual=generateChartDescription(dc.candles||[],[]);
+            if(visual) ctx+=visual;
+          }
+        }catch(e){}
         if(enqueteurContext&&enqueteurContext.pair===targetPair){
           ctx+=` | CONTEXTE ENQUÊTEUR (score ${enqueteurContext.score}/100): Direction ${enqueteurContext.direction}. Raison: ${enqueteurContext.raison}.`;
         }
@@ -796,7 +816,66 @@ async function loadStats(){
 
 function getSession(){const h=new Date().getHours();return h>=7&&h<10?'London Open':h>=13&&h<16?'NY Open':h>=2&&h<6?'Asian Session':'Inter-session';}
 
-// ── CHART CHANDELIERS ────────────────────────────────────────
+// ── DESCRIPTION VISUELLE DU CHART ───────────────────────────
+function generateChartDescription(candles, daily){
+  if(!candles||candles.length<10) return '';
+  
+  const last20=candles.slice(-20);
+  const last5=candles.slice(-5);
+  const last3=candles.slice(-3);
+  
+  // Niveaux clés
+  const high20=Math.max(...last20.map(c=>parseFloat(c.h)));
+  const low20=Math.min(...last20.map(c=>parseFloat(c.l)));
+  const lastC=last20[last20.length-1];
+  const prevC=last20[last20.length-2];
+  const lastClose=parseFloat(lastC.c);
+  const lastOpen=parseFloat(lastC.o);
+  const lastHigh=parseFloat(lastC.h);
+  const lastLow=parseFloat(lastC.l);
+  const mid20=(high20+low20)/2;
+  
+  // Direction des 3 dernières bougies
+  const last3desc=last3.map((c,i)=>{
+    const o=parseFloat(c.o),cl=parseFloat(c.c),h=parseFloat(c.h),l=parseFloat(c.l);
+    const type=cl>o?'haussière':'baissière';
+    const size=Math.abs(cl-o);
+    return `B${i+1}:${type} O=${o.toFixed(5)} H=${h.toFixed(5)} L=${l.toFixed(5)} C=${cl.toFixed(5)}`;
+  }).join(' | ');
+  
+  // Patterns détectables
+  let patterns=[];
+  const body=Math.abs(lastClose-lastOpen);
+  const upperWick=lastHigh-Math.max(lastClose,lastOpen);
+  const lowerWick=Math.min(lastClose,lastOpen)-lastLow;
+  if(upperWick>body*2) patterns.push('Pin Bar baissier (longue mèche haute)');
+  if(lowerWick>body*2) patterns.push('Pin Bar haussier (longue mèche basse)');
+  if(body<(high20-low20)*0.01) patterns.push('Doji (indécision)');
+  if(lastClose>parseFloat(prevC.h)) patterns.push('Engulfing haussier');
+  if(lastClose<parseFloat(prevC.l)) patterns.push('Engulfing baissier');
+  
+  // Tendance H1
+  let bullH1=0,bearH1=0;
+  last20.forEach(c=>{if(parseFloat(c.c)>parseFloat(c.o))bullH1++;else bearH1++;});
+  const trendH1=bullH1>bearH1?'BULLISH':'BEARISH';
+  
+  // Zone premium/discount
+  const zone=lastClose>mid20?'PREMIUM (zone de vente)':'DISCOUNT (zone d\'achat)';
+  
+  // Description HTF Daily si disponible
+  let dailyDesc='';
+  if(daily&&daily.length>=5){
+    const dlast5=daily.slice(-5);
+    const dhigh=Math.max(...dlast5.map(c=>parseFloat(c.h)));
+    const dlow=Math.min(...dlast5.map(c=>parseFloat(c.l)));
+    const dlastClose=parseFloat(dlast5[dlast5.length-1].c);
+    let dbull=0,dbear=0;
+    dlast5.forEach(c=>{if(parseFloat(c.c)>parseFloat(c.o))dbull++;else dbear++;});
+    dailyDesc=` | HTF_DAILY: Trend=${dbull>dbear?'BULLISH':'BEARISH'} High5j=${dhigh.toFixed(5)} Low5j=${dlow.toFixed(5)} LastClose=${dlastClose.toFixed(5)}`;
+  }
+  
+  return ` | ANALYSE VISUELLE CHART H1: Zone=${zone} Trend_H1=${trendH1} (${bullH1}h/${bearH1}b sur 20) High20=${high20.toFixed(5)} Low20=${low20.toFixed(5)} Mid=${mid20.toFixed(5)} | 3_DERNIÈRES_BOUGIES: ${last3desc} | PATTERNS: ${patterns.length>0?patterns.join(', '):'Aucun pattern fort détecté'}${dailyDesc}`;
+}
 async function loadChart(){
   const pair=document.getElementById('chartPair').value;
   const sym=MT4_SYMBOLS[pair];
