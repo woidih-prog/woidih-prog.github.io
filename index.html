@@ -322,9 +322,30 @@ async function runEnquete(){
     }catch(e){}
   }
 
+  // Récupérer bougies Daily MT4 pour les paires principales
+  let dailyResume='';
+  for(const sym of pairesAVerifier){
+    try{
+      const rd=await fetch(BACKEND+'/daily/'+sym);
+      if(rd.ok){
+        const dd=await rd.json();
+        const daily=dd.candles||[];
+        if(daily.length>=5){
+          const last5d=daily.slice(-5);
+          const dlastClose=parseFloat(last5d[last5d.length-1].c);
+          const dfirstClose=parseFloat(last5d[0].c);
+          const dhigh=Math.max(...last5d.map(c=>parseFloat(c.h)));
+          const dlow=Math.min(...last5d.map(c=>parseFloat(c.l)));
+          const dtrend=dlastClose>dfirstClose?'↑':'↓';
+          dailyResume+=`${sym}_D: ${dtrend} H=${dhigh.toFixed(5)} L=${dlow.toFixed(5)} | `;
+        }
+      }
+    }catch(e){}
+  }
   try{
     let prompt='Date:'+now.toLocaleDateString('fr-FR')+' Heure:'+now.toLocaleTimeString('fr-FR')+' Session:'+sess+' Jour:'+days[now.getDay()]+'\nPaires disponibles: '+ALL_PAIRS.join(', ');
     if(candlesResume) prompt+='\nBOUGIES MT4 RÉELLES (5 dernières H1): '+candlesResume;
+    if(dailyResume) prompt+='\nBOUGIES DAILY HTF (5 derniers jours): '+dailyResume;
     const r=await aiCall(ENQUETEUR_SYS,prompt,2000);
     renderEnquete(r);
   }catch(e){document.getElementById('enqueteResult').innerHTML=`<div class="error-box">⚠ ${e.message}</div>`;}
@@ -454,7 +475,33 @@ async function launch(forcePair){
     renderStepBar(0,'📡 Connexion MT4...');
     mt4=await getPriceMT4(targetPair);
 
-    // ── RÉCUPÉRATION BOUGIES MT4 pour toutes les paires ──
+    // ── RÉCUPÉRATION BOUGIES DAILY MT4 ──
+    let dailyContext='';
+    if(sym){
+      try{
+        const rd=await fetch(BACKEND+'/daily/'+sym);
+        if(rd.ok){
+          const dd=await rd.json();
+          const daily=dd.candles||[];
+          if(daily.length>=20){
+            const last20=daily.slice(-20);
+            const dhighs=last20.map(c=>parseFloat(c.h));
+            const dlows=last20.map(c=>parseFloat(c.l));
+            const dcloses=last20.map(c=>parseFloat(c.c));
+            const dmaxP=Math.max(...dhighs);
+            const dminP=Math.min(...dlows);
+            const dlastClose=dcloses[dcloses.length-1];
+            const dtrend=dlastClose>dcloses[0]?'bullish':'bearish';
+            let dbullCount=0,dbearCount=0;
+            for(let i=1;i<last20.length;i++){
+              if(parseFloat(last20[i].c)>parseFloat(last20[i].o)) dbullCount++;
+              else dbearCount++;
+            }
+            dailyContext=` | BOUGIES DAILY HTF (20 derniers jours): High=${dmaxP.toFixed(5)} Low=${dminP.toFixed(5)} LastClose=${dlastClose.toFixed(5)} Trend_HTF=${dtrend} Bougies_haussières=${dbullCount}/19 Bougies_baissières=${dbearCount}/19. Utilise ces données HTF pour valider la direction macro.`;
+          }
+        }
+      }catch(e){}
+    }
     const sym=MT4_SYMBOLS[targetPair];
     if(sym){
       try{
@@ -556,6 +603,7 @@ async function launch(forcePair){
         let ctx=`Paire:${targetPair} TF:${selectedTf} Session:${session} Jour:${days[now.getDay()]} Heure:${h}h`;
         if(smcData){ctx+=` | Prix LIVE: ${smcData.price} Bid:${smcData.bid||smcData.price} Ask:${smcData.ask||smcData.price}`;}
         if(candleContext) ctx+=candleContext;
+        if(dailyContext) ctx+=dailyContext;
         if(enqueteurContext&&enqueteurContext.pair===targetPair){
           ctx+=` | CONTEXTE ENQUÊTEUR (score ${enqueteurContext.score}/100): Direction ${enqueteurContext.direction}. Raison: ${enqueteurContext.raison}.`;
         }
