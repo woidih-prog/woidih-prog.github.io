@@ -772,7 +772,12 @@ async function loadChart(){
 
 function drawCandles(candles, pair){
   const cv=document.getElementById('candleChart');
-  cv.width=cv.offsetWidth||800; cv.height=380;
+const dpr=window.devicePixelRatio||1;
+cv.width=(cv.offsetWidth||800)*dpr;
+cv.height=380*dpr;
+ctx.scale(dpr,dpr);
+cv.style.width=(cv.offsetWidth||800)+'px';
+cv.style.height='380px';
   const ctx=cv.getContext('2d');
   const W=cv.width, H=cv.height;
   const PAD={t:30,b:40,l:10,r:70};
