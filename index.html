@@ -269,10 +269,35 @@ async function runEnquete(){
   btn.disabled=true;btn.textContent='🔍 ENQUÊTE EN COURS...';
   document.getElementById('enqueteResult').innerHTML='';
   const now=new Date(),h=now.getHours();
-  const sess=h>=7&&h<10?'London Open':h>=13&&h<16?'NY Open':h>=2&&h<6?'Asian Session':'Inter-session';
+  const sess=h>=7&&h<16?'London Active':h>=13&&h<16?'NY Open':h>=7&&h<10?'London Open':h>=2&&h<6?'Asian Session':'Inter-session';
   const days=['Dimanche','Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi'];
+
+  // Récupérer bougies MT4 pour les paires principales
+  let candlesResume='';
+  const pairesAVerifier=['EURUSD','GBPUSD','XAUUSD','USDJPY','GBPJPY','AUDUSD'];
+  for(const sym of pairesAVerifier){
+    try{
+      const rc=await fetch(BACKEND+'/candles/'+sym);
+      if(rc.ok){
+        const dc=await rc.json();
+        const candles=dc.candles||[];
+        if(candles.length>=5){
+          const last5=candles.slice(-5);
+          const lastClose=parseFloat(last5[last5.length-1].c);
+          const firstClose=parseFloat(last5[0].c);
+          const high=Math.max(...last5.map(c=>parseFloat(c.h)));
+          const low=Math.min(...last5.map(c=>parseFloat(c.l)));
+          const trend=lastClose>firstClose?'↑':'↓';
+          candlesResume+=`${sym}: Close=${lastClose.toFixed(5)} H=${high.toFixed(5)} L=${low.toFixed(5)} ${trend} | `;
+        }
+      }
+    }catch(e){}
+  }
+
   try{
-    const r=await aiCall(ENQUETEUR_SYS,'Date:'+now.toLocaleDateString('fr-FR')+' Heure:'+now.toLocaleTimeString('fr-FR')+' Session:'+sess+' Jour:'+days[now.getDay()]+'\nPaires: '+ALL_PAIRS.join(', '),2000);
+    let prompt='Date:'+now.toLocaleDateString('fr-FR')+' Heure:'+now.toLocaleTimeString('fr-FR')+' Session:'+sess+' Jour:'+days[now.getDay()]+'\nPaires disponibles: '+ALL_PAIRS.join(', ');
+    if(candlesResume) prompt+='\nBOUGIES MT4 RÉELLES (5 dernières H1): '+candlesResume;
+    const r=await aiCall(ENQUETEUR_SYS,prompt,2000);
     renderEnquete(r);
   }catch(e){document.getElementById('enqueteResult').innerHTML=`<div class="error-box">⚠ ${e.message}</div>`;}
   btn.disabled=false;btn.textContent='🔍 LANCER L\'ENQUÊTE';
