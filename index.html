@@ -97,8 +97,15 @@ button:disabled{opacity:.4;cursor:not-allowed}
         <div style="display:flex;gap:6px;align-items:center">
           <select id="chartPair" style="background:#060e06;border:1px solid #1a2e1a;color:#FFD700;border-radius:6px;padding:5px 8px;font-size:10px;font-family:monospace">
             <option>EUR/USD</option><option>GBP/USD</option><option>USD/JPY</option>
-            <option>GBP/JPY</option><option>XAU/USD</option><option>USD/CAD</option>
-            <option>AUD/USD</option><option>EUR/JPY</option>
+            <option>GBP/JPY</option><option>EUR/JPY</option><option>USD/CAD</option>
+            <option>USD/CHF</option><option>AUD/USD</option><option>NZD/USD</option>
+            <option>EUR/GBP</option><option>GBP/CHF</option><option>XAU/USD</option>
+            <option>XAG/USD</option>
+          </select>
+          <select id="chartTf" style="background:#060e06;border:1px solid #1a2e1a;color:#C0C0C0;border-radius:6px;padding:5px 8px;font-size:10px;font-family:monospace">
+            <option value="M15">M15</option>
+            <option value="H1" selected>H1</option>
+            <option value="Daily">Daily</option>
           </select>
           <button onclick="loadChart()" style="background:linear-gradient(135deg,#FFD700,#FFA500);color:#000;border-radius:6px;padding:5px 12px;font-size:10px;font-weight:900;font-family:monospace">&#x25B6; CHARGER</button>
           <span id="chartSource" class="mt4-badge" style="display:none">&#x1F4E1; MT4</span>
@@ -609,6 +616,7 @@ async function launch(forcePair){
           const mt4sym=MT4_SYMBOLS[targetPair];
           if(mt4sym){
             const rawC=await fetch(BACKEND+'/candles/'+mt4sym);
+            const rawM15=await fetch(BACKEND+'/m15/'+mt4sym);
             const rawD=await fetch(BACKEND+'/daily/'+mt4sym);
             if(rawC.ok){
               const dc=await rawC.json();
@@ -767,9 +775,10 @@ function generateChartDescription(candles,daily){
   return ' | ANALYSE VISUELLE CHART H1: Zone='+zone+' Trend_H1='+trendH1+' ('+bullH1+'h/'+bearH1+'b sur 20) High20='+high20.toFixed(5)+' Low20='+low20.toFixed(5)+' Mid='+mid20.toFixed(5)+' | 3_DERNIERES_BOUGIES: '+last3desc+' | PATTERNS: '+(patterns.length>0?patterns.join(', '):'Aucun pattern fort detecte')+dailyDesc;
 }
 
-// ── CHART — FONCTION CORRIGEE (bug ctx fixed) ────────────────
+// ── CHART — M15 / H1 / Daily ─────────────────────────────────
 async function loadChart(){
   const pair=document.getElementById('chartPair').value;
+  const tf=(document.getElementById('chartTf')||{value:'H1'}).value||'H1';
   const sym=MT4_SYMBOLS[pair];
   const cv=document.getElementById('candleChart');
 
@@ -791,21 +800,30 @@ async function loadChart(){
   }
 
   if(!sym){showError('Paire non disponible en MT4');return;}
+
+  // Route selon timeframe
+  const TF_ROUTES={'M15':'/m15/','H1':'/candles/','Daily':'/daily/'};
+  const route=TF_ROUTES[tf]||'/candles/';
+  // Nb bougies a afficher selon TF
+  const TF_LIMIT={'M15':80,'H1':60,'Daily':60};
+  const limit=TF_LIMIT[tf]||60;
+
   try{
-    showError('Chargement...');
-    const r=await fetch(BACKEND+'/candles/'+sym);
-    if(!r.ok) throw new Error('Bougies non disponibles - EA doit etre actif');
+    showError('Chargement '+tf+'...');
+    const r=await fetch(BACKEND+route+sym);
+    if(!r.ok) throw new Error('Bougies '+tf+' non disponibles - EA doit etre actif');
     const d=await r.json();
     const candles=d.candles||[];
-    if(!candles.length) throw new Error('Aucune bougie recue - marche ferme ou EA inactif');
+    if(!candles.length) throw new Error('Aucune bougie '+tf+' - marche ferme ou EA inactif');
     document.getElementById('chartSource').style.display='inline';
-    drawCandles(candles.slice(-60),pair);
+    document.getElementById('chartSource').textContent='MT4 '+tf;
+    drawCandles(candles.slice(-limit),pair,tf);
   }catch(e){
     showError(e.message);
   }
 }
 
-function drawCandles(candles,pair){
+function drawCandles(candles,pair,tf){
   const cv=document.getElementById('candleChart');
   const dpr=window.devicePixelRatio||1;
   const displayW=cv.offsetWidth||800;
@@ -842,7 +860,7 @@ function drawCandles(candles,pair){
   }
 
   ctx.fillStyle='#FFD700';ctx.font='bold 12px monospace';ctx.textAlign='left';
-  ctx.fillText(pair+' H1 - '+n+' bougies',PAD.l+5,18);
+  ctx.fillText(pair+' '+(tf||'H1')+' - '+n+' bougies',PAD.l+5,18);
 
   candles.forEach((c,i)=>{
     const o=parseFloat(c.o),h=parseFloat(c.h),l=parseFloat(c.l),cl=parseFloat(c.c);
