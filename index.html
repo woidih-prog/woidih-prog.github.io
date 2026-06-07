@@ -637,10 +637,24 @@ async function launch(forcePair){
 
     renderStepBar(8,'Synthese finale...');
     const total=Object.values(results).reduce((s,a)=>s+(a.score||0),0);
-    const dec=total>=86?'EXECUTION':total>=61?'SIGNAL':'ATTENDRE';
-    const sum=Object.values(results).map(a=>(a.nom||'?')+':'+(a.score||0)).join(' ');
     const trapOk=results.liquidite&&results.liquidite.trap_confirme;
     const msuOk=results.structure&&results.structure.msu_detecte;
+
+    // ── DECISION GATE OVERRIDE ────────────────────────────────
+    // Si Liquidité et Structure HTF sont en contradiction → NO TRADE
+    const liqDir=results.liquidite?results.liquidite.direction:'';
+    const htfDir=results.structure?results.structure.trend_htf:'';
+    const liqBull=liqDir==='bullish'||liqDir==='long';
+    const liqBear=liqDir==='bearish'||liqDir==='short';
+    const htfBull=htfDir==='bullish';
+    const htfBear=htfDir==='bearish';
+    const contradiction=(liqBull&&htfBear)||(liqBear&&htfBull);
+    // Si contradiction bloquante → forcer ATTENDRE peu importe le score
+    const dec=contradiction?'ATTENDRE':total>=86?'EXECUTION':total>=61?'SIGNAL':'ATTENDRE';
+    const gateBlocked=contradiction;
+    // ─────────────────────────────────────────────────────────
+
+    const sum=Object.values(results).map(a=>(a.nom||'?')+':'+(a.score||0)).join(' ');
 
     const biasVotes={long:0,short:0};
     if(results.liquidite){if(results.liquidite.direction==='bullish'||results.liquidite.direction==='long')biasVotes.long+=3;else if(results.liquidite.direction==='bearish'||results.liquidite.direction==='short')biasVotes.short+=3;}
@@ -658,7 +672,7 @@ async function launch(forcePair){
       jsLevels={entry:fmtLevel(price,entryPrice),sl:fmtLevel(price,isBull?entryPrice-pip*20:entryPrice+pip*20),tp:fmtLevel(price,isBull?entryPrice+pip*60:entryPrice-pip*60),rr:'3.0:1',bias:finalBias};
     }
 
-    const o={score_total:total,decision:dec,bias:finalBias,raisonnement:oRaw.raisonnement||'Analyse completee.',confluence:oRaw.confluence||'--',invalidation:oRaw.invalidation||'--',message:oRaw.message||'--',entry:jsLevels?jsLevels.entry:'--',sl:jsLevels?jsLevels.sl:'--',tp:jsLevels?jsLevels.tp:'--',rr:jsLevels?jsLevels.rr:'--',pair:targetPair,tf:selectedTf};
+    const o={score_total:total,decision:dec,bias:finalBias,raisonnement:gateBlocked?'GATE OVERRIDE: Liquidite ('+liqDir+') vs Structure HTF ('+htfDir+') en contradiction — NO TRADE force (score ignore: '+total+'/100)':oRaw.raisonnement||'Analyse completee.',confluence:gateBlocked?'--':oRaw.confluence||'--',invalidation:gateBlocked?'Contradiction Liquidite/Structure HTF bloquante':oRaw.invalidation||'--',message:gateBlocked?'Systeme en desaccord — attendre alignement':oRaw.message||'--',entry:jsLevels?jsLevels.entry:'--',sl:jsLevels?jsLevels.sl:'--',tp:jsLevels?jsLevels.tp:'--',rr:jsLevels?jsLevels.rr:'--',pair:targetPair,tf:selectedTf,gate_blocked:gateBlocked};
 
     renderStepBar(9,'');
     renderDecision(o);
@@ -669,14 +683,22 @@ async function launch(forcePair){
         await sendTelegram('Signal bloque - FTMO\n'+targetPair+' '+selectedTf+'\nAgent Risk a detecte une violation des regles FTMO. Attendre conditions conformes.');
       } else {
         const isL=o.bias==='long';
-        await sendTelegram((isL?'ACHETER':'VENDRE')+' '+targetPair+'\n'+selectedTf+' | Score: '+o.score_total+'/100\n'+(mt4Source?'MT4 Live':'Calcule')+'\nEntree: '+o.entry+'\nSL: '+o.sl+'\nTP: '+o.tp+'\nRR: '+o.rr+'\nRisque: 1% capital'+(trapOk?'\nTRAP confirme':'')+(msuOk?'\nMSU detecte':''));
+        const tgMsg=(isL?'ACHETER':'VENDRE')+' '+targetPair+'\n'+selectedTf+' | Score: '+o.score_total+'/100\n'+(mt4Source?'MT4 Live':'Calcule')+'\nEntree: '+o.entry+'\nSL: '+o.sl+'\nTP: '+o.tp+'\nRR: '+o.rr+'\nRisque: 1% capital'+(trapOk?'\nTRAP confirme':'')+(msuOk?'\nMSU detecte':'')+'\n\nResultat du trade ?';
+        // Envoyer avec boutons inline si trade_id disponible
+        try{await fetch(BACKEND+'/telegram',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text:tgMsg,trade_id:realTradeId})});}catch(e){}
       }
     }
 
-    const t={id:Date.now(),date:new Date().toLocaleString('fr-FR'),pair:targetPair,tf:selectedTf,score:o.score_total,decision:o.decision,bias:o.bias,entry:o.entry,sl:o.sl,tp:o.tp,rr:o.rr};
+    // Sauvegarder dans le journal et récupérer le trade_id réel
+    let realTradeId = null;
+    try{
+      const jr=await fetch(BACKEND+'/journal',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({date:new Date().toLocaleString('fr-FR'),pair:targetPair,tf:selectedTf,session:session,score:o.score_total,decision:o.decision,bias:o.bias,entry:o.entry,sl:o.sl,tp:o.tp,rr:o.rr})});
+      const jd=await jr.json();
+      realTradeId=jd.id||null;
+    }catch(e){}
+    const t={id:realTradeId||Date.now(),date:new Date().toLocaleString('fr-FR'),pair:targetPair,tf:selectedTf,score:o.score_total,decision:o.decision,bias:o.bias,entry:o.entry,sl:o.sl,tp:o.tp,rr:o.rr};
     trades.unshift(t);lastId=t.id;
     if(trades.length>100) trades=trades.slice(0,100);
-    try{await fetch(BACKEND+'/journal',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({date:t.date,pair:targetPair,tf:selectedTf,session:session,score:o.score_total,decision:o.decision,bias:o.bias,entry:o.entry,sl:o.sl,tp:o.tp,rr:o.rr})});}catch(e){}
 
   }catch(e){
     const eb=document.getElementById('errorBox');eb.textContent=e.message;eb.style.display='block';
@@ -686,7 +708,9 @@ async function launch(forcePair){
 }
 
 function renderDecision(o){
-  const cfg={ATTENDRE:{icon:'&#x23F3;',color:'#ff6666',label:'ATTENDRE',sub:'Setup insuffisant'},SIGNAL:{icon:'&#x1F441;&#xFE0F;',color:'#FFD700',label:'SIGNAL DETECTE',sub:'Attendre confirmation'},EXECUTION:{icon:'&#x1F4B0;',color:'#00C853',label:'EXECUTION POSSIBLE',sub:'Setup haute probabilite'}};
+  // Badge gate blocked
+  const gateBlocked=o.gate_blocked;
+  const cfg={ATTENDRE:{icon:'&#x23F3;',color:'#ff6666',label:gateBlocked?'CONTRADICTION BLOQUEE':'ATTENDRE',sub:gateBlocked?'Liquidite vs Structure HTF':'Setup insuffisant'},SIGNAL:{icon:'&#x1F441;&#xFE0F;',color:'#FFD700',label:'SIGNAL DETECTE',sub:'Attendre confirmation'},EXECUTION:{icon:'&#x1F4B0;',color:'#00C853',label:'EXECUTION POSSIBLE',sub:'Setup haute probabilite'}};
   const c=cfg[o.decision]||cfg.ATTENDRE;
   if((o.score_total||0)>=65&&o.decision!=='ATTENDRE'){
     const isL=o.bias==='long',cl=isL?'#00C853':'#ff6666';
