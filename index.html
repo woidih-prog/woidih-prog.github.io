@@ -677,28 +677,28 @@ async function launch(forcePair){
     renderStepBar(9,'');
     renderDecision(o);
 
-    if((o.score_total||0)>=65&&o.decision!=='ATTENDRE'){
-      const ftmoOk=!(results.risk&&results.risk.ftmo_ok===false);
-      if(!ftmoOk){
-        await sendTelegram('Signal bloque - FTMO\n'+targetPair+' '+selectedTf+'\nAgent Risk a detecte une violation des regles FTMO. Attendre conditions conformes.');
-      } else {
-        const isL=o.bias==='long';
-        const tgMsg=(isL?'ACHETER':'VENDRE')+' '+targetPair+'\n'+selectedTf+' | Score: '+o.score_total+'/100\n'+(mt4Source?'MT4 Live':'Calcule')+'\nEntree: '+o.entry+'\nSL: '+o.sl+'\nTP: '+o.tp+'\nRR: '+o.rr+'\nRisque: 1% capital'+(trapOk?'\nTRAP confirme':'')+(msuOk?'\nMSU detecte':'')+'\n\nResultat du trade ?';
-        // Envoyer avec boutons inline si trade_id disponible
-        try{await fetch(BACKEND+'/telegram',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text:tgMsg,trade_id:realTradeId})});}catch(e){}
-      }
-    }
-
-    // Sauvegarder dans le journal et récupérer le trade_id réel
+    // 1. Sauvegarder dans le journal EN PREMIER pour avoir le trade_id
     let realTradeId = null;
     try{
       const jr=await fetch(BACKEND+'/journal',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({date:new Date().toLocaleString('fr-FR'),pair:targetPair,tf:selectedTf,session:session,score:o.score_total,decision:o.decision,bias:o.bias,entry:o.entry,sl:o.sl,tp:o.tp,rr:o.rr})});
       const jd=await jr.json();
       realTradeId=jd.id||null;
-    }catch(e){}
+    }catch(e){console.error('Journal error:',e);}
     const t={id:realTradeId||Date.now(),date:new Date().toLocaleString('fr-FR'),pair:targetPair,tf:selectedTf,score:o.score_total,decision:o.decision,bias:o.bias,entry:o.entry,sl:o.sl,tp:o.tp,rr:o.rr};
     trades.unshift(t);lastId=t.id;
     if(trades.length>100) trades=trades.slice(0,100);
+
+    // 2. Envoyer Telegram APRES avoir le trade_id
+    if((o.score_total||0)>=65&&o.decision!=='ATTENDRE'){
+      const ftmoOk=!(results.risk&&results.risk.ftmo_ok===false);
+      if(!ftmoOk){
+        try{await fetch(BACKEND+'/telegram',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text:'Signal bloque - FTMO\n'+targetPair+' '+selectedTf+'\nAgent Risk a detecte une violation des regles FTMO.'})});}catch(e){}
+      } else {
+        const isL=o.bias==='long';
+        const tgMsg=(isL?'ACHETER':'VENDRE')+' '+targetPair+'\n'+selectedTf+' | Score: '+o.score_total+'/100\n'+(mt4Source?'MT4 Live':'Calcule')+'\nEntree: '+o.entry+'\nSL: '+o.sl+'\nTP: '+o.tp+'\nRR: '+o.rr+'\nRisque: 1% capital'+(trapOk?'\nTRAP confirme':'')+(msuOk?'\nMSU detecte':'')+'\n\nResultat du trade ?';
+        try{await fetch(BACKEND+'/telegram',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text:tgMsg,trade_id:realTradeId})});}catch(e){console.error('Telegram error:',e);}
+      }
+    }
 
   }catch(e){
     const eb=document.getElementById('errorBox');eb.textContent=e.message;eb.style.display='block';
