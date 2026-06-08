@@ -505,8 +505,8 @@ async function launch(forcePair){
     let dailyContext='';
     if(sym){
       try{
-        const rd=await fetch(BACKEND+'/daily/'+sym);
-        if(rd.ok){
+        const rd=await fetch(BACKEND+'/daily/'+sym).catch(()=>null);
+        if(rd&&rd.ok){
           const dd=await rd.json();
           const daily=dd.candles||[];
           if(daily.length>=20){
@@ -543,8 +543,8 @@ async function launch(forcePair){
     }
     if(sym){
       try{
-        const rc=await fetch(BACKEND+'/candles/'+sym);
-        if(rc.ok){
+        const rc=await fetch(BACKEND+'/candles/'+sym).catch(()=>null);
+        if(rc&&rc.ok){
           const dc=await rc.json();
           const candles=dc.candles||[];
           if(candles.length>=10){
@@ -615,15 +615,14 @@ async function launch(forcePair){
         try{
           const mt4sym=MT4_SYMBOLS[targetPair];
           if(mt4sym){
-            const rawC=await fetch(BACKEND+'/candles/'+mt4sym);
-            const rawM15=await fetch(BACKEND+'/m15/'+mt4sym);
-            const rawD=await fetch(BACKEND+'/daily/'+mt4sym);
-            if(rawC.ok){
-              const dc=await rawC.json();
-              const dd=rawD.ok?await rawD.json():{candles:[]};
-              const visual=generateChartDescription(dc.candles||[],dd.candles||[]);
-              if(visual) ctx+=visual;
-            }
+            const rawC=await fetch(BACKEND+'/candles/'+mt4sym).catch(()=>null);
+            const rawD=await fetch(BACKEND+'/daily/'+mt4sym).catch(()=>null);
+            const dcOk=rawC&&rawC.ok;
+            const ddOk=rawD&&rawD.ok;
+            const dc=dcOk?await rawC.json():{candles:[]};
+            const dd=ddOk?await rawD.json():{candles:[]};
+            const visual=generateChartDescription(dc.candles||[],dd.candles||[]);
+            if(visual) ctx+=visual;
           }
         }catch(e){}
         if(enqueteurContext&&enqueteurContext.pair===targetPair) ctx+=' | CONTEXTE ENQUETEUR (score '+enqueteurContext.score+'/100): Direction '+enqueteurContext.direction+'. Raison: '+enqueteurContext.raison+'.';
