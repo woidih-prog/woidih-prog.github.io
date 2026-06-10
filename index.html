@@ -498,6 +498,19 @@ async function launch(forcePair){
   jsLevels=null;
 
   try{
+    // Récupérer le contexte journal pour enrichir les agents
+    let journalContext = '';
+    try{
+      const jcr = await fetch(BACKEND+'/journal/context').catch(()=>null);
+      if(jcr && jcr.ok){
+        const jcd = await jcr.json();
+        if(jcd.has_data && jcd.context) {
+          journalContext = jcd.context;
+          console.log('Journal context chargé:', jcd.total_trades, 'trades');
+        }
+      }
+    }catch(e){}
+
     renderStepBar(0,'Connexion MT4...');
     mt4=await getPriceMT4(targetPair);
 
@@ -626,6 +639,7 @@ async function launch(forcePair){
           }
         }catch(e){}
         if(enqueteurContext&&enqueteurContext.pair===targetPair) ctx+=' | CONTEXTE ENQUETEUR (score '+enqueteurContext.score+'/100): Direction '+enqueteurContext.direction+'. Raison: '+enqueteurContext.raison+'.';
+        if(journalContext) ctx+=' | '+journalContext;
         ctx+=' | Reponds en JSON uniquement.';
         results[key]=await aiCall(getSys(key),ctx,900);
       }catch(e){results[key]={nom:key,analyse:'Erreur: '+e.message,score:0,score_max:20,verdict:'Indisponible'};}
