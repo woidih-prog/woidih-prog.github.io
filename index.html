@@ -705,7 +705,10 @@ async function launch(forcePair){
     if((o.score_total||0)>=65&&o.decision!=='ATTENDRE'){
       const ftmoOk=!(results.risk&&results.risk.ftmo_ok===false);
       if(!ftmoOk){
-        try{await fetch(BACKEND+'/telegram',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text:'Signal bloque - FTMO\n'+targetPair+' '+selectedTf+'\nAgent Risk a detecte une violation des regles FTMO.'})});}catch(e){}
+        // Envoyer signal FTMO bloqué AVEC boutons pour journaliser quand même
+        const isLftmo=o.bias==='long';
+        const ftmoMsg=(isLftmo?'ACHETER':'VENDRE')+' '+targetPair+'\n'+selectedTf+' | Score: '+o.score_total+'/100\n⚠️ BLOQUE PAR AGENT RISK (FTMO)\nEntree: '+o.entry+'\nSL: '+o.sl+'\nTP: '+o.tp+'\nRR: '+o.rr+'\n\nPrends-tu ce trade quand même ?';
+        try{await fetch(BACKEND+'/telegram',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text:ftmoMsg,trade_id:realTradeId,ftmo_override:true})});}catch(e){}
       } else {
         const isL=o.bias==='long';
         const tgMsg=(isL?'ACHETER':'VENDRE')+' '+targetPair+'\n'+selectedTf+' | Score: '+o.score_total+'/100\n'+(mt4Source?'MT4 Live':'Calcule')+'\nEntree: '+o.entry+'\nSL: '+o.sl+'\nTP: '+o.tp+'\nRR: '+o.rr+'\nRisque: 1% capital'+(trapOk?'\nTRAP confirme':'')+(msuOk?'\nMSU detecte':'')+'\n\nResultat du trade ?';
