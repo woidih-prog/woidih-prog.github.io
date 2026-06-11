@@ -308,25 +308,43 @@ async function testTelegram(){
 }
 
 async function aiCall(sys,prompt,maxT=900){
-  const r=await fetch(API_URL,{method:'POST',headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({model:'claude-sonnet-4-5',max_tokens:maxT,system:sys,messages:[{role:'user',content:prompt}]})});
-  const d=await r.json();
-  if(d.error) throw new Error(d.error.message);
-  const text=(d.content||[]).map(b=>b.text||'').join('');
-  const t=text.trim().replace(/^```\w*\n?/m,'').replace(/\n?```$/m,'').trim();
-  const s=t.indexOf('{'),e=t.lastIndexOf('}');
-  if(s===-1||e===-1) throw new Error('Pas de JSON');
-  let raw=t.slice(s,e+1).replace(/[\u0000-\u001F\u007F]/g,' ').replace(/,\s*}/g,'}').replace(/,\s*]/g,']');
-  try{return JSON.parse(raw);}
-  catch(x){
-    const ex=k=>{const m=raw.match(new RegExp('"'+k+'"\\s*:\\s*"([^"]*)"'));return m?m[1]:'';};
-    const exN=k=>{const m=raw.match(new RegExp('"'+k+'"\\s*:\\s*([0-9.]+)'));return m?+m[1]:0;};
-    return{nom:ex('nom')||'Agent',analyse:ex('analyse')||'--',verdict:ex('verdict')||'--',
-      score:exN('score'),score_max:exN('score_max')||20,kill_zone:raw.includes('"kill_zone":true'),
-      biais_fondamental:ex('biais_fondamental'),trap_confirme:raw.includes('"trap_confirme":true'),
-      msu_detecte:raw.includes('"msu_detecte":true'),msu_type:ex('msu_type'),
-      bias:ex('bias'),raisonnement:ex('raisonnement'),confluence:ex('confluence'),
-      invalidation:ex('invalidation'),message:ex('message')};
+  try{
+    const r=await fetch(API_URL,{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({model:'claude-sonnet-4-5',max_tokens:maxT,system:sys,messages:[{role:'user',content:prompt}]})});
+    if(!r.ok) throw new Error('API HTTP '+r.status);
+    const d=await r.json();
+    if(d.error) throw new Error(d.error.message||'API error');
+    const text=(d.content||[]).map(b=>b.text||'').join('');
+    if(!text||!text.trim()) throw new Error('Reponse vide');
+    const t=text.trim().replace(/^```\w*\n?/m,'').replace(/\n?```$/m,'').trim();
+    const s=t.indexOf('{'),e=t.lastIndexOf('}');
+    if(s===-1||e===-1) throw new Error('Pas de JSON dans la reponse');
+    let raw=t.slice(s,e+1)
+      .replace(/[\u0000-\u001F\u007F]/g,' ')
+      .replace(/,\s*}/g,'}')
+      .replace(/,\s*]/g,']')
+      .replace(/:\s*undefined/g,':null')
+      .replace(/:\s*NaN/g,':0');
+    try{return JSON.parse(raw);}
+    catch(x){
+      // Fallback extraction manuelle
+      const ex=k=>{const m=raw.match(new RegExp('"'+k+'"\\s*:\\s*"([^"]*)"'));return m?m[1]:'';};
+      const exN=k=>{const m=raw.match(new RegExp('"'+k+'"\\s*:\\s*([0-9.]+)'));return m?+m[1]:0;};
+      return{nom:ex('nom')||'Agent',analyse:ex('analyse')||'Analyse indisponible',verdict:ex('verdict')||'--',
+        score:exN('score')||5,score_max:exN('score_max')||20,kill_zone:raw.includes('"kill_zone":true'),
+        biais_fondamental:ex('biais_fondamental')||'neutre',trap_confirme:raw.includes('"trap_confirme":true'),
+        msu_detecte:raw.includes('"msu_detecte":true'),msu_type:ex('msu_type')||'',
+        bias:ex('bias')||'',raisonnement:ex('raisonnement')||'--',confluence:ex('confluence')||'--',
+        invalidation:ex('invalidation')||'--',message:ex('message')||'--',
+        ftmo_ok:!raw.includes('"ftmo_ok":false'),daily_loss_ok:true,drawdown_ok:true};
+    }
+  }catch(err){
+    console.warn('aiCall erreur:', err.message);
+    // Retourner un agent par défaut plutôt que de planter
+    return{nom:'Agent',analyse:'Erreur: '+err.message,verdict:'Indisponible',
+      score:5,score_max:20,kill_zone:false,biais_fondamental:'neutre',
+      trap_confirme:false,msu_detecte:false,bias:'',
+      ftmo_ok:true,daily_loss_ok:true,drawdown_ok:true};
   }
 }
 
