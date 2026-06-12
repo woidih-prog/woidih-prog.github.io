@@ -62,6 +62,69 @@ button:disabled{opacity:.4;cursor:not-allowed}
 </style>
 </head>
 <body>
+
+<!-- ECRAN MOT DE PASSE -->
+<div id="loginScreen" style="
+  position:fixed;top:0;left:0;width:100%;height:100%;
+  background:#050a05;display:flex;align-items:center;
+  justify-content:center;z-index:9999;flex-direction:column;gap:20px;">
+  <div style="text-align:center;margin-bottom:10px;">
+    <div style="font-size:36px;">⚡</div>
+    <div style="color:#FFD700;font-family:'Courier New',monospace;font-size:16px;letter-spacing:4px;font-weight:bold;">TRADING MASTER V5</div>
+    <div style="color:#4a6a4a;font-size:10px;letter-spacing:2px;margin-top:4px;">ACCÈS RESTREINT — BÊTA</div>
+  </div>
+  <div style="background:#0d180d;border:1px solid #1a2e1a;border-radius:12px;padding:30px;width:300px;text-align:center;">
+    <div style="color:#8aaa7a;font-size:12px;margin-bottom:16px;letter-spacing:1px;">CODE D'ACCÈS</div>
+    <input id="pwdInput" type="password" placeholder="••••••••"
+      style="width:100%;padding:12px;background:#050a05;border:1px solid #2a4a2a;
+      border-radius:8px;color:#FFD700;font-size:18px;text-align:center;
+      letter-spacing:4px;outline:none;box-sizing:border-box;margin-bottom:16px;"
+      onkeydown="if(event.key==='Enter') checkPassword()"/>
+    <button onclick="checkPassword()" style="
+      width:100%;padding:12px;background:#FFD700;border:none;
+      border-radius:8px;color:#050a05;font-weight:bold;font-size:14px;
+      cursor:pointer;letter-spacing:2px;">ACCÉDER</button>
+    <div id="pwdError" style="color:#ff6666;font-size:11px;margin-top:10px;display:none;">
+      Code incorrect — Contactez l'administrateur
+    </div>
+  </div>
+  <div style="color:#2a4a2a;font-size:9px;letter-spacing:1px;">Trading Master V5 — Accès Bêta-testeurs</div>
+</div>
+
+<script>
+// CODES D'ACCÈS — modifiez ici pour changer ou révoquer
+const ACCESS_CODES = [
+  'BETA2026',      // Code général bêta-testeurs
+  'REDPILL01',     // Testeur RedPillFX
+  'NOVICE01',      // Testeur novice 1
+  'NOVICE02',      // Testeur novice 2
+  'NOVICE03',      // Testeur novice 3
+  'ADMIN999',      // Votre accès admin personnel
+];
+
+function checkPassword() {
+  const input = document.getElementById('pwdInput').value.toUpperCase().trim();
+  if(ACCESS_CODES.includes(input)) {
+    document.getElementById('loginScreen').style.display = 'none';
+    sessionStorage.setItem('tmv5_access', 'granted');
+  } else {
+    document.getElementById('pwdError').style.display = 'block';
+    document.getElementById('pwdInput').value = '';
+    document.getElementById('pwdInput').style.borderColor = '#ff6666';
+    setTimeout(() => {
+      document.getElementById('pwdInput').style.borderColor = '#2a4a2a';
+    }, 2000);
+  }
+}
+
+// Vérifier si déjà connecté dans cette session
+window.addEventListener('load', () => {
+  if(sessionStorage.getItem('tmv5_access') === 'granted') {
+    document.getElementById('loginScreen').style.display = 'none';
+  }
+});
+</script>
+
 <div class="header">
   <div style="display:flex;align-items:center;gap:12px">
     <div class="logo">&#x1F4B0;</div>
