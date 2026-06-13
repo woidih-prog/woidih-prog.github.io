@@ -479,15 +479,9 @@ async function aiCall(sys,prompt,maxT=1200){
 
 // ── ENQUETEUR SYSTEM PROMPT ────────────────────────────────────
 const ENQUETEUR_SYS=`Reponds UNIQUEMENT avec un objet JSON brut. Zero texte avant ou apres. Pas de markdown.
-Tu es L'ENQUETEUR REDPILLFX. Ta mission: identifier les paires avec LIQUIDITE DISPONIBLE + CAUSE CONSTRUITE.
-${REDPILL_CORE}
-FILTRE OBLIGATOIRE REDPILLFX:
-- Ne proposer UNE paire que si: liquidite identifiable (BSL ou SSL clairement situe) ET cause construite (accumulation visible) ET session favorable
-- Verifier: ou est la prochaine pool de liquidite dans chaque direction
-- Identifier si le prix est dans une zone de Build Up (cause en construction) ou apres un move (effet deja produit)
-- Privilegier les paires avec Equal Highs ou Equal Lows non collectes
-- EVITER les paires ou le prix est entre deux pools sans direction claire (risque SMC TRAP)
-Format: {"session_actuelle":"...","sentiment":"risk-on","dxy":"hausse","resume_macro":"2 phrases max","top_opportunites":[{"rang":1,"paire":"EUR/USD","direction":"ACHETER","raison":"1 phrase incluant la liquidite identifiee","session_ideale":"London Open","score_opportunite":82,"liquidite_cible":"SSL a 1.0820","cause_construite":true}],"paires_eviter":[{"paire":"USD/JPY","raison":"texte"}],"conseil_du_jour":"1 phrase RedPillFX"}`;
+Tu es L'ENQUETEUR REDPILLFX. Mission: identifier les paires avec LIQUIDITE DISPONIBLE + CAUSE CONSTRUITE.
+REGLES FILTRAGE: Ne proposer une paire que si liquidite identifiable (BSL ou SSL) ET cause construite (accumulation visible) ET session favorable. Privilegier equal highs/lows non collectes. EVITER paires sans direction claire (risque SMC TRAP). Le marche se deplace de liquidite en liquidite — identifier la prochaine pool logique.
+Format STRICT: {"session_actuelle":"London Open","sentiment":"risk-on","dxy":"hausse","resume_macro":"2 phrases max","top_opportunites":[{"rang":1,"paire":"EUR/USD","direction":"ACHETER","raison":"1 phrase avec liquidite identifiee","session_ideale":"London Open","score_opportunite":82,"liquidite_cible":"SSL a 1.0820","cause_construite":true}],"paires_eviter":[{"paire":"USD/JPY","raison":"texte court"}],"conseil_du_jour":"1 phrase RedPillFX"}`;
 
 async function runEnquete(){
   const btn=document.getElementById('btnEnquete');
@@ -557,7 +551,7 @@ async function runEnquete(){
     if(candlesResume) prompt+='\nBOUGIES MT4 H1 (5 dernieres): '+candlesResume;
     if(dailyResume) prompt+='\nBOUGIES DAILY HTF (5 derniers jours): '+dailyResume;
     prompt+='\nAnalyse la liquidite disponible sur chaque paire selon methodologie RedPillFX.';
-    const r=await aiCall(ENQUETEUR_SYS,prompt,2000);
+    const r=await aiCall(ENQUETEUR_SYS,prompt,2500);
     renderEnquete(r);
   }catch(e){document.getElementById('enqueteResult').innerHTML='<div class="error-box">'+e.message+'</div>';}
   btn.disabled=false;btn.textContent="LANCER L'ENQUETE";
