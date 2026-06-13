@@ -410,28 +410,72 @@ async function testTelegram(){
   setTimeout(()=>{btn.textContent='Test TG';btn.className='btn-tg';},4000);
 }
 
-async function aiCall(sys,prompt,maxT=900){
+async function aiCall(sys,prompt,maxT=1200){
   try{
     const r=await fetch(API_URL,{method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:maxT,system:sys,messages:[{role:'user',content:prompt}]})});
+      body:JSON.stringify({
+        model:'claude-sonnet-4-6',
+        max_tokens:maxT,
+        system:sys,
+        messages:[
+          {role:'user',content:prompt},
+          {role:'assistant',content:'{'}
+        ]
+      })});
     if(!r.ok) throw new Error('API HTTP '+r.status);
     const d=await r.json();
     if(d.error) throw new Error(d.error.message||'API error');
-    const text=(d.content||[]).map(b=>b.text||'').join('');
-    if(!text||!text.trim()) throw new Error('Reponse vide');
+    const text='{'+((d.content||[]).map(b=>b.text||'').join(''));
+    if(!text||text.length<3) throw new Error('Reponse vide');
     const t=text.trim().replace(/^```\w*\n?/m,'').replace(/\n?```$/m,'').trim();
     const s=t.indexOf('{'),e=t.lastIndexOf('}');
     if(s===-1||e===-1) throw new Error('Pas de JSON');
-    let raw=t.slice(s,e+1).replace(/[\u0000-\u001F\u007F]/g,' ').replace(/,\s*}/g,'}').replace(/,\s*]/g,']').replace(/:\s*undefined/g,':null').replace(/:\s*NaN/g,':0');
+    let raw=t.slice(s,e+1)
+      .replace(/[\u0000-\u001F\u007F]/g,' ')
+      .replace(/,\s*}/g,'}')
+      .replace(/,\s*]/g,']')
+      .replace(/:\s*undefined/g,':null')
+      .replace(/:\s*NaN/g,':0');
     try{return JSON.parse(raw);}
     catch(x){
-      const ex=k=>{const m=raw.match(new RegExp('"'+k+'"\\s*:\\s*"([^"]*)"'));return m?m[1]:'';};
+      const ex=k=>{const m=raw.match(new RegExp('"'+k+'"\\s*:\\s*"([^"]{0,300})"'));return m?m[1]:'';};
       const exN=k=>{const m=raw.match(new RegExp('"'+k+'"\\s*:\\s*([0-9.]+)'));return m?+m[1]:0;};
-      return{nom:ex('nom')||'Agent',analyse:ex('analyse')||'Analyse indisponible',verdict:ex('verdict')||'--',score:exN('score')||5,score_max:exN('score_max')||20,kill_zone:raw.includes('"kill_zone":true'),biais_fondamental:ex('biais_fondamental')||'neutre',trap_confirme:raw.includes('"trap_confirme":true'),msu_detecte:raw.includes('"msu_detecte":true'),msu_type:ex('msu_type')||'',bias:ex('bias')||'',raisonnement:ex('raisonnement')||'--',confluence:ex('confluence')||'--',invalidation:ex('invalidation')||'--',message:ex('message')||'--',ftmo_ok:!raw.includes('"ftmo_ok":false'),daily_loss_ok:true,drawdown_ok:true};
+      const exB=k=>raw.includes('"'+k+'":true');
+      return{
+        nom:ex('nom')||'Agent',
+        analyse:ex('analyse')||'Analyse en cours...',
+        verdict:ex('verdict')||'Voir analyse',
+        score:exN('score')||7,
+        score_max:exN('score_max')||20,
+        kill_zone:exB('kill_zone'),
+        biais_fondamental:ex('biais_fondamental')||'neutre',
+        trap_confirme:exB('trap_confirme'),
+        cisd_confirme:exB('cisd_confirme'),
+        smc_trap_detecte:exB('smc_trap_detecte'),
+        msu_detecte:exB('msu_detecte'),
+        msu_type:ex('msu_type')||'',
+        direction:ex('direction')||'',
+        trend_htf:ex('trend_htf')||'',
+        trend_ltf:ex('trend_ltf')||'',
+        bias:ex('bias')||'',
+        raisonnement:ex('raisonnement')||'--',
+        confluence:ex('confluence')||'--',
+        invalidation:ex('invalidation')||'--',
+        message:ex('message')||'--',
+        ftmo_ok:!raw.includes('"ftmo_ok":false'),
+        daily_loss_ok:true,drawdown_ok:true,
+        checklist_score:exN('checklist_score')||0,
+        entree_2eme_vague:exB('entree_2eme_vague'),
+        idc_confirme:exB('idc_confirme')
+      };
     }
   }catch(err){
     console.warn('aiCall erreur:',err.message);
-    return{nom:'Agent',analyse:'Erreur: '+err.message,verdict:'Indisponible',score:5,score_max:20,kill_zone:false,biais_fondamental:'neutre',trap_confirme:false,msu_detecte:false,bias:'',ftmo_ok:true,daily_loss_ok:true,drawdown_ok:true};
+    return{nom:'Agent',analyse:'Erreur: '+err.message,verdict:'Indisponible',
+      score:5,score_max:20,kill_zone:false,biais_fondamental:'neutre',
+      trap_confirme:false,cisd_confirme:false,smc_trap_detecte:false,
+      msu_detecte:false,bias:'',direction:'',trend_htf:'',
+      ftmo_ok:true,daily_loss_ok:true,drawdown_ok:true};
   }
 }
 
@@ -881,7 +925,7 @@ async function launch(forcePair){
         if(enqueteurContext&&enqueteurContext.pair===targetPair) ctx+=' | CONTEXTE ENQUETEUR (score '+enqueteurContext.score+'/100): Direction '+enqueteurContext.direction+'. Raison: '+enqueteurContext.raison+'.';
         if(journalContext) ctx+=' | '+journalContext;
         ctx+=' | Reponds en JSON uniquement selon methodologie RedPillFX.';
-        results[key]=await aiCall(getSys(key),ctx,1000);
+        results[key]=await aiCall(getSys(key),ctx,1500);
       }catch(e){results[key]={nom:key,analyse:'Erreur: '+e.message,score:0,score_max:20,verdict:'Indisponible'};}
       document.getElementById('agentCards').innerHTML+=renderAgentCard(key,results[key]);
       document.getElementById('agentGrid').style.display='block';
@@ -957,9 +1001,10 @@ async function launch(forcePair){
     const ftmoOk=!(results.risk&&results.risk.ftmo_ok===false);
     const isL=o.bias==='long';
 
-    if(o.decision==='ATTENDRE'&&(o.score_total||0)>=50){
+    if(o.decision==='ATTENDRE'&&(o.score_total||0)>=65){
       // Signal ATTENDRE mais score suffisant — envoyer avec boutons Je prends / Je passe
-      const waitMsg=(isL?'⬆️ ACHETER':'⬇️ VENDRE')+' '+targetPair+'\n'+selectedTf+' | Score: '+o.score_total+'/100\n⏳ ORCHESTRATEUR: ATTENDRE\nEntree: '+o.entry+'\nSL: '+o.sl+'\nTP: '+o.tp+'\nRR: '+o.rr+trapInfo+'\n\nTu prends ce trade quand même ?';
+      const sensLabel=isL?'⬆️ ACHAT (LONG)':'⬇️ VENTE (SHORT)';
+      const waitMsg=sensLabel+' '+targetPair+'\n'+selectedTf+' | Score: '+o.score_total+'/100\n⏳ ORCHESTRATEUR: ATTENDRE\nEntree: '+o.entry+'\nSL: '+o.sl+'\nTP: '+o.tp+'\nRR: '+o.rr+trapInfo+'\n\nTu prends ce trade quand même ?';
       try{await fetch(BACKEND+'/telegram',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text:waitMsg,trade_id:realTradeId,wait_override:true})});}catch(e){}
     } else if((o.score_total||0)>=65&&o.decision!=='ATTENDRE'){
       if(!ftmoOk){
