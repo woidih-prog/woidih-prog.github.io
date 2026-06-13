@@ -417,17 +417,15 @@ async function aiCall(sys,prompt,maxT=1200){
         model:'claude-sonnet-4-6',
         max_tokens:maxT,
         system:sys,
-        messages:[
-          {role:'user',content:prompt},
-          {role:'assistant',content:'{'}
-        ]
+        messages:[{role:'user',content:prompt}]
       })});
     if(!r.ok) throw new Error('API HTTP '+r.status);
     const d=await r.json();
     if(d.error) throw new Error(d.error.message||'API error');
-    const text='{'+((d.content||[]).map(b=>b.text||'').join(''));
-    if(!text||text.length<3) throw new Error('Reponse vide');
-    const t=text.trim().replace(/^```\w*\n?/m,'').replace(/\n?```$/m,'').trim();
+    const text=(d.content||[]).map(b=>b.text||'').join('');
+    if(!text||!text.trim()) throw new Error('Reponse vide');
+    // Extraire le JSON — chercher le premier { et le dernier }
+    const t=text.trim();
     const s=t.indexOf('{'),e=t.lastIndexOf('}');
     if(s===-1||e===-1) throw new Error('Pas de JSON');
     let raw=t.slice(s,e+1)
@@ -443,8 +441,8 @@ async function aiCall(sys,prompt,maxT=1200){
       const exB=k=>raw.includes('"'+k+'":true');
       return{
         nom:ex('nom')||'Agent',
-        analyse:ex('analyse')||'Analyse en cours...',
-        verdict:ex('verdict')||'Voir analyse',
+        analyse:ex('analyse')||'Analyse disponible',
+        verdict:ex('verdict')||'--',
         score:exN('score')||7,
         score_max:exN('score_max')||20,
         kill_zone:exB('kill_zone'),
