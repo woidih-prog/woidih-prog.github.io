@@ -64,10 +64,7 @@ button:disabled{opacity:.4;cursor:not-allowed}
 <body>
 
 <!-- ECRAN MOT DE PASSE -->
-<div id="loginScreen" style="
-  position:fixed;top:0;left:0;width:100%;height:100%;
-  background:#050a05;display:flex;align-items:center;
-  justify-content:center;z-index:9999;flex-direction:column;gap:20px;">
+<div id="loginScreen" style="position:fixed;top:0;left:0;width:100%;height:100%;background:#050a05;display:flex;align-items:center;justify-content:center;z-index:9999;flex-direction:column;gap:20px;">
   <div style="text-align:center;margin-bottom:10px;">
     <div style="font-size:36px;">⚡</div>
     <div style="color:#FFD700;font-family:'Courier New',monospace;font-size:16px;letter-spacing:4px;font-weight:bold;">TRADING MASTER V5</div>
@@ -76,32 +73,16 @@ button:disabled{opacity:.4;cursor:not-allowed}
   <div style="background:#0d180d;border:1px solid #1a2e1a;border-radius:12px;padding:30px;width:300px;text-align:center;">
     <div style="color:#8aaa7a;font-size:12px;margin-bottom:16px;letter-spacing:1px;">CODE D'ACCÈS</div>
     <input id="pwdInput" type="password" placeholder="••••••••"
-      style="width:100%;padding:12px;background:#050a05;border:1px solid #2a4a2a;
-      border-radius:8px;color:#FFD700;font-size:18px;text-align:center;
-      letter-spacing:4px;outline:none;box-sizing:border-box;margin-bottom:16px;"
+      style="width:100%;padding:12px;background:#050a05;border:1px solid #2a4a2a;border-radius:8px;color:#FFD700;font-size:18px;text-align:center;letter-spacing:4px;outline:none;box-sizing:border-box;margin-bottom:16px;"
       onkeydown="if(event.key==='Enter') checkPassword()"/>
-    <button onclick="checkPassword()" style="
-      width:100%;padding:12px;background:#FFD700;border:none;
-      border-radius:8px;color:#050a05;font-weight:bold;font-size:14px;
-      cursor:pointer;letter-spacing:2px;">ACCÉDER</button>
-    <div id="pwdError" style="color:#ff6666;font-size:11px;margin-top:10px;display:none;">
-      Code incorrect — Contactez l'administrateur
-    </div>
+    <button onclick="checkPassword()" style="width:100%;padding:12px;background:#FFD700;border:none;border-radius:8px;color:#050a05;font-weight:bold;font-size:14px;cursor:pointer;letter-spacing:2px;">ACCÉDER</button>
+    <div id="pwdError" style="color:#ff6666;font-size:11px;margin-top:10px;display:none;">Code incorrect — Contactez l'administrateur</div>
   </div>
   <div style="color:#2a4a2a;font-size:9px;letter-spacing:1px;">Trading Master V5 — Accès Bêta-testeurs</div>
 </div>
 
 <script>
-// CODES D'ACCÈS — modifiez ici pour changer ou révoquer
-const ACCESS_CODES = [
-  'BETA2026',      // Code général bêta-testeurs
-  'REDPILL01',     // Testeur RedPillFX
-  'NOVICE01',      // Testeur novice 1
-  'NOVICE02',      // Testeur novice 2
-  'NOVICE03',      // Testeur novice 3
-  'ADMIN999',      // Votre accès admin personnel
-];
-
+const ACCESS_CODES = ['BETA2026','REDPILL01','NOVICE01','NOVICE02','NOVICE03','ADMIN999'];
 function checkPassword() {
   const input = document.getElementById('pwdInput').value.toUpperCase().trim();
   if(ACCESS_CODES.includes(input)) {
@@ -111,31 +92,25 @@ function checkPassword() {
     document.getElementById('pwdError').style.display = 'block';
     document.getElementById('pwdInput').value = '';
     document.getElementById('pwdInput').style.borderColor = '#ff6666';
-    setTimeout(() => {
-      document.getElementById('pwdInput').style.borderColor = '#2a4a2a';
-    }, 2000);
+    setTimeout(() => { document.getElementById('pwdInput').style.borderColor = '#2a4a2a'; }, 2000);
   }
 }
-
-// Vérifier si déjà connecté dans cette session
 window.addEventListener('load', () => {
-  if(sessionStorage.getItem('tmv5_access') === 'granted') {
-    document.getElementById('loginScreen').style.display = 'none';
-  }
+  if(sessionStorage.getItem('tmv5_access') === 'granted') document.getElementById('loginScreen').style.display = 'none';
 });
 </script>
 
 <div class="header">
   <div style="display:flex;align-items:center;gap:12px">
-    <div class="logo">&#x1F4B0;</div>
+    <div class="logo">💰</div>
     <div>
       <div class="title">TRADING MASTER V5</div>
-      <div class="subtitle">ENQUETEUR + ORCHESTRATEUR &middot; 8 AGENTS SMC &middot; MSU LIT CYCLE</div>
+      <div class="subtitle">REDPILLFX · 8 AGENTS SMC · LIQUIDITE = CAUSE · MOUVEMENT = EFFET</div>
     </div>
   </div>
   <div style="display:flex;align-items:center;gap:8px">
-    <button class="btn-tg" id="btnTg" onclick="testTelegram()">&#x1F4F1; Test TG</button>
-    <button id="schedulerBtn" onclick="toggleScheduler()" style="background:#FFD70015;border:1px solid #FFD700;color:#FFD700;border-radius:6px;padding:5px 10px;font-size:9px;font-family:monospace;font-weight:700;cursor:pointer">&#x25B6; Scheduler OFF</button>
+    <button class="btn-tg" id="btnTg" onclick="testTelegram()">📱 Test TG</button>
+    <button id="schedulerBtn" onclick="toggleScheduler()" style="background:#FFD70015;border:1px solid #FFD700;color:#FFD700;border-radius:6px;padding:5px 10px;font-size:9px;font-family:monospace;font-weight:700;cursor:pointer">▶ Scheduler OFF</button>
     <div style="display:flex;align-items:center;gap:4px">
       <div id="statusDot" style="width:6px;height:6px;border-radius:50%;background:#00C853;box-shadow:0 0 6px #00C853"></div>
       <span id="statusTxt" style="font-size:8px;color:#3a5a2a;font-family:monospace">PRET</span>
@@ -145,42 +120,39 @@ window.addEventListener('load', () => {
 
 <div class="container">
   <div class="tabs">
-    <button class="tab active" onclick="showTab('enqueteur',this)">&#x1F50D; Enqueteur</button>
-    <button class="tab" onclick="showTab('orchestrateur',this)">&#x26A1; Orchestrateur</button>
-    <button class="tab" onclick="showTab('chart',this)">&#x1F4CA; Chart</button>
-    <button class="tab" onclick="showTab('journal',this)">&#x1F4D3; Journal</button>
-    <button class="tab" onclick="showTab('stats',this)">&#x1F4C8; Stats</button>
+    <button class="tab active" onclick="showTab('enqueteur',this)">🔍 Enqueteur</button>
+    <button class="tab" onclick="showTab('orchestrateur',this)">⚡ Orchestrateur</button>
+    <button class="tab" onclick="showTab('chart',this)">📊 Chart</button>
+    <button class="tab" onclick="showTab('journal',this)">📓 Journal</button>
+    <button class="tab" onclick="showTab('stats',this)">📈 Stats</button>
   </div>
 
   <!-- TAB CHART -->
   <div id="tab-chart" style="display:none">
     <div class="card" style="border-color:#FFD70020">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:8px">
-        <div class="gold-title">&#x1F4CA; CHART MT4 LIVE</div>
+        <div class="gold-title">📊 CHART MT4 LIVE</div>
         <div style="display:flex;gap:6px;align-items:center">
           <select id="chartPair" style="background:#060e06;border:1px solid #1a2e1a;color:#FFD700;border-radius:6px;padding:5px 8px;font-size:10px;font-family:monospace">
             <option>EUR/USD</option><option>GBP/USD</option><option>USD/JPY</option>
             <option>GBP/JPY</option><option>EUR/JPY</option><option>USD/CAD</option>
             <option>USD/CHF</option><option>AUD/USD</option><option>NZD/USD</option>
-            <option>EUR/GBP</option><option>GBP/CHF</option><option>XAU/USD</option>
-            <option>XAG/USD</option>
+            <option>EUR/GBP</option><option>GBP/CHF</option><option>XAU/USD</option><option>XAG/USD</option>
           </select>
           <select id="chartTf" style="background:#060e06;border:1px solid #1a2e1a;color:#C0C0C0;border-radius:6px;padding:5px 8px;font-size:10px;font-family:monospace">
             <option value="M15">M15</option>
             <option value="H1" selected>H1</option>
             <option value="Daily">Daily</option>
           </select>
-          <button onclick="loadChart()" style="background:linear-gradient(135deg,#FFD700,#FFA500);color:#000;border-radius:6px;padding:5px 12px;font-size:10px;font-weight:900;font-family:monospace">&#x25B6; CHARGER</button>
-          <span id="chartSource" class="mt4-badge" style="display:none">&#x1F4E1; MT4</span>
+          <button onclick="loadChart()" style="background:linear-gradient(135deg,#FFD700,#FFA500);color:#000;border-radius:6px;padding:5px 12px;font-size:10px;font-weight:900;font-family:monospace">▶ CHARGER</button>
+          <span id="chartSource" class="mt4-badge" style="display:none">📡 MT4</span>
         </div>
       </div>
       <div class="divider"></div>
       <canvas id="candleChart" style="width:100%;height:380px;margin-top:12px;border-radius:8px;background:#040d04"></canvas>
-      <div id="chartLevels" style="display:none;margin-top:10px"></div>
     </div>
-    <!-- GLOSSAIRE -->
     <div class="card" style="border-color:#C0C0C020;margin-top:4px">
-      <div class="gold-title" style="margin-bottom:10px">&#x1F4D6; GLOSSAIRE SMC &mdash; TERMES EXPLIQUES</div>
+      <div class="gold-title" style="margin-bottom:10px">📖 GLOSSAIRE REDPILLFX — TERMES EXPLIQUES</div>
       <div class="divider"></div>
       <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:8px;margin-top:12px" id="glossaireGrid"></div>
     </div>
@@ -189,10 +161,10 @@ window.addEventListener('load', () => {
   <!-- TAB ENQUETEUR -->
   <div id="tab-enqueteur" style="display:block">
     <div class="card" style="border-color:#FFD70020">
-      <div class="gold-title" style="margin-bottom:4px">&#x1F50D; L'ENQUETEUR</div>
+      <div class="gold-title" style="margin-bottom:4px">🔍 L'ENQUETEUR — FILTRE REDPILLFX</div>
       <div class="divider"></div>
-      <div style="font-size:11px;color:#4a6a3a;margin-bottom:14px;font-style:italic">Identifie les meilleures opportunites du marche &rarr; clique pour analyser</div>
-      <button class="btn-enquete" id="btnEnquete" onclick="runEnquete()">&#x1F50D; LANCER L'ENQUETE</button>
+      <div style="font-size:11px;color:#4a6a3a;margin-bottom:14px;font-style:italic">Identifie les paires avec liquidite disponible + cause construite → clique pour analyser</div>
+      <button class="btn-enquete" id="btnEnquete" onclick="runEnquete()">🔍 LANCER L'ENQUETE</button>
       <div id="enqueteResult"></div>
     </div>
   </div>
@@ -208,7 +180,7 @@ window.addEventListener('load', () => {
           <div class="silver-label" style="margin-bottom:6px">TIMEFRAME</div>
           <div style="display:flex;gap:4px" id="tfContainer"></div>
         </div>
-        <button class="btn-launch" id="btnLaunch" onclick="launch()">&#x25B6; ANALYSER</button>
+        <button class="btn-launch" id="btnLaunch" onclick="launch()">▶ ANALYSER</button>
       </div>
     </div>
     <div id="stepBar" style="display:none;margin-bottom:16px"></div>
@@ -216,7 +188,7 @@ window.addEventListener('load', () => {
     <div id="smcData" style="display:none" class="card"></div>
     <div id="signalBanner"></div>
     <div id="agentGrid" style="display:none">
-      <div class="gold-title" style="margin-bottom:12px">RAPPORTS DES 8 AGENTS</div>
+      <div class="gold-title" style="margin-bottom:12px">RAPPORTS DES 8 AGENTS REDPILLFX</div>
       <div class="agent-grid" id="agentCards"></div>
     </div>
     <div id="decisionPanel"></div>
@@ -224,7 +196,7 @@ window.addEventListener('load', () => {
 
   <!-- TAB JOURNAL -->
   <div id="tab-journal" style="display:none">
-    <div class="gold-title" style="margin-bottom:12px">&#x1F4D3; JOURNAL DE TRADING</div>
+    <div class="gold-title" style="margin-bottom:12px">📓 JOURNAL DE TRADING</div>
     <div class="card" style="margin-bottom:14px;border-color:#C0C0C020">
       <div style="font-size:8px;color:#C0C0C0;letter-spacing:2px;margin-bottom:10px">AJOUTER UN TRADE MANUEL</div>
       <div class="divider"></div>
@@ -237,10 +209,7 @@ window.addEventListener('load', () => {
         <div><div class="silver-label">R:R</div><input id="j_rr" placeholder="3:1" style="width:100%;background:#060e06;border:1px solid #1a2e1a;color:#C0C0C0;border-radius:6px;padding:7px 10px;font-size:11px;font-family:monospace"></div>
         <div><div class="silver-label">RESULTAT</div>
           <select id="j_resultat" style="width:100%;background:#060e06;border:1px solid #1a2e1a;color:#e8e8e8;border-radius:6px;padding:7px 10px;font-size:11px">
-            <option value="">En cours</option>
-            <option value="win">Gagne</option>
-            <option value="loss">Perdu</option>
-            <option value="be">Break Even</option>
+            <option value="">En cours</option><option value="win">Gagne</option><option value="loss">Perdu</option><option value="be">Break Even</option>
           </select>
         </div>
         <div><div class="silver-label">P&amp;L (euros)</div><input id="j_pnl" placeholder="150" type="number" style="width:100%;background:#060e06;border:1px solid #1a2e1a;color:#00C853;border-radius:6px;padding:7px 10px;font-size:11px;font-family:monospace"></div>
@@ -253,11 +222,11 @@ window.addEventListener('load', () => {
 
   <!-- TAB STATS -->
   <div id="tab-stats" style="display:none">
-    <div class="gold-title" style="margin-bottom:12px">&#x1F4C8; STATISTIQUES &amp; PERFORMANCE</div>
+    <div class="gold-title" style="margin-bottom:12px">📈 STATISTIQUES &amp; PERFORMANCE</div>
     <div id="statsContent"></div>
   </div>
 
-  <div class="footer">&#x26A0;&#xFE0F; Outil educatif uniquement &middot; Ne constitue pas un conseil en investissement &middot; Trading Master V5</div>
+  <div class="footer">⚠️ Outil educatif uniquement · Ne constitue pas un conseil en investissement · Trading Master V5 — RedPillFX Methodology</div>
 </div>
 
 <script>
@@ -265,12 +234,61 @@ const BACKEND = "https://trading-master-backend.onrender.com";
 const API_URL  = BACKEND + "/anthropic";
 const AV_KEY   = "UCP44WUC4UHAJ2I8";
 
+// ── REDPILLFX CORE — injecte dans tous les agents ─────────────
+const REDPILL_CORE = `
+METHODOLOGIE REDPILLFX COMPLETE — LOI FONDAMENTALE:
+LIQUIDITE = CAUSE / MOUVEMENT = EFFET.
+Le marche se deplace UNIQUEMENT de pool de liquidite en pool de liquidite.
+Sans prise de liquidite prealable = pas de vrai move = ne pas entrer.
+
+SEQUENCE OBLIGATOIRE (dans cet ordre):
+1. IDENTIFIER LA LIQUIDITE: Ou sont les BSL (equal highs, resistances, stops vendeurs) et SSL (equal lows, supports, stops acheteurs). Cartographier TOUTES les pools proches. Equal Highs/Lows = concentration maximale de liquidite = cibles institutionnelles garanties.
+2. STRUCTURE EXTERNE HTF (Daily/H4/H1): Direction macro. Strong High/Low = high ou low qui a PREALABLEMENT recupere de la liquidite avant de se former. Un High/Low SANS prise de liquidite prealable = NO STRONG = niveau faible a ignorer.
+3. STRUCTURE INTERNE LTF (15min/5min/3min): Fake BOS vs True BOS. SMC TRAP = faux BOS multiple pour pieger les traders SMC eux-memes (qui deviennent de la liquidite). Le prix cree un Fake BOS pour faire croire aux Smart Money qu ils vont rebondir.
+4. TRAP OBLIGATOIRE: Prise de liquidite externe (BSL ou SSL). Buy to Sell = prix monte chercher BSL puis rejette pour vendre. Sell to Buy = prix descend chercher SSL puis rejette pour acheter. CISD = Change In State of Delivery = confirmation du retournement apres TRAP.
+5. ZONE D ENTREE (POI): BPL retest (Breaker Block = breakout haut + bas ou inverse, entree sur retest). OTE sur FVG/BPR. IDC (Indecision Candle) en confirmation. POI valide UNIQUEMENT si liquidite prise AVANT le retour sur la zone.
+6. ENTREE SUR 2EME VAGUE: Ne jamais entrer sur le premier move. Attendre le retest du POI (2eme vague). Plus la cause est grande (liquidite accumulee longtemps) = plus l effet est violent.
+7. GESTION: BE obligatoire a premiere cause atteinte. TP sur prochaine pool de liquidite. Ne jamais modifier SL sous pression emotionnelle.
+
+TYPES DE LIQUIDITE BUILD UP:
+- TREND: ordres dans le sens du mouvement continu, stops des retardataires accumules.
+- SUPPORT/RESISTANCE: zones avec plusieurs rebonds, retail place des ordres esperant continuation. Breakout piege ces ordres.
+- SMC TRAP: faux BOS multiple sur OB/FVG des traders SMC. Les traders qui pensent comprendre la liquidite deviennent eux-memes la liquidite.
+
+ORDER-FLOW MITIGATION: POI HTF non mitigue = aimant obligatoire. Le prix DOIT revenir mitiger avant de continuer. OB + FVG = zone de mitigation precise. Petits retraits pour saisir la liquidite et permettre aux ordres de circuler dans les deux sens.
+
+POI CONTINUATION vs RETOURNEMENT:
+- Continuation: prix en trend, pullback sur equal lows (SSL), POI = OB/FVG apres prise SSL, rebond continuation.
+- Retournement: prix monte prend BSL (Strong High), CISD confirme, POI = OB baissier, move baissier.
+
+BPL (Breaker Block): Prix casse en haut (prend liquidite High) ET casse en bas (prend liquidite Low). Entree sur RETEST du BPL uniquement. Meilleures TF: 3min, 5min, 15min. Beaucoup de faux signals en 1min. On ne trade PAS le BPL — on trade la liquidite, le BPL est l outil de placement.
+
+CHECKLIST TRADE REDPILLFX (trade reel du 12/06/2026):
+1. Prise de liquidite externe confirmee
+2. Cycle de cause a effet identifie
+3. Buy to Sell ou Sell to Buy confirme
+4. CISD confirme
+5. IFVG identifie comme zone d entree
+6. Entree sur la DEUXIEME vague uniquement
+
+REGLES SESSION: London Open 7h-10h = Kill Zone principale (declenchement sur liquidity grab Asia). London Active 10h-16h = continuation. NY Open 13h30-16h = deuxieme Kill Zone. Asia 00h-07h = Build Up silencieux, identifier IPA et liquidite, ne pas trader. Inter-session 16h-21h = eviter absolument. Vendredi apres 15h = INTERDIT.`;
+
+const REDPILL_SCORING = `
+REGLES DE SCORING REDPILLFX:
+- TRAP confirme sur TF analyse = +5pts bonus OBLIGATOIRE
+- Strong High/Low identifie avec prise de liquidite prealable = +3pts
+- POI valide (liquidite prise avant retour zone) = +4pts
+- Entree sur 2eme vague confirmee = +3pts
+- CISD confirme = +3pts
+- POI HTF non mitigue aligne avec direction = +4pts
+- SMC TRAP detecte (eviter) = -8pts
+- Aucune prise de liquidite visible = -6pts (signal invalide)
+- Liquidite proche non collectee dans direction opposee = -4pts
+- Score minimum 8/20 si session London/NY active + prix disponible
+- Ne jamais mettre 0 sauf condition explicitement invalide`;
+
 async function getAlphaVantageDaily(pair){
-  const AV_SYMBOLS={
-    "EUR/USD":"EUR","GBP/USD":"GBP","USD/JPY":"JPY","GBP/JPY":"GBP",
-    "XAU/USD":"XAU","USD/CAD":"CAD","AUD/USD":"AUD","NZD/USD":"NZD",
-    "EUR/JPY":"EUR","USD/CHF":"CHF","EUR/GBP":"EUR"
-  };
+  const AV_SYMBOLS={"EUR/USD":"EUR","GBP/USD":"GBP","USD/JPY":"JPY","GBP/JPY":"GBP","XAU/USD":"XAU","USD/CAD":"CAD","AUD/USD":"AUD","NZD/USD":"NZD","EUR/JPY":"EUR","USD/CHF":"CHF","EUR/GBP":"EUR"};
   const from=AV_SYMBOLS[pair];
   if(!from) return null;
   try{
@@ -279,31 +297,18 @@ async function getAlphaVantageDaily(pair){
     const d=await r.json();
     const ts=d['Time Series FX (Daily)'];
     if(!ts) return null;
-    const candles=Object.entries(ts).slice(0,60).reverse().map(([date,v])=>({
-      t:date,
-      o:parseFloat(v['1. open']),
-      h:parseFloat(v['2. high']),
-      l:parseFloat(v['3. low']),
-      c:parseFloat(v['4. close'])
-    }));
-    return candles;
+    return Object.entries(ts).slice(0,60).reverse().map(([date,v])=>({t:date,o:parseFloat(v['1. open']),h:parseFloat(v['2. high']),l:parseFloat(v['3. low']),c:parseFloat(v['4. close'])}));
   }catch(e){return null;}
 }
 
 const ALL_PAIRS = ["EUR/USD","GBP/USD","USD/JPY","GBP/JPY","EUR/GBP","EUR/JPY","USD/CAD","USD/CHF","AUD/USD","NZD/USD","GBP/CHF","XAU/USD","XAG/USD","WTI","BRENT","BTC/USD","ETH/USD","BNB/USD","SOL/USD","XRP/USD","ADA/USD","NAS100","SPX500","DAX40"];
 const TFS       = ["M15","H1","H4","Daily"];
 const COLORS    = {liquidite:"#00d4ff",structure:"#C0C0C0",zones:"#FFD700",timing:"#00C853",risk:"#ff6666",memoire:"#FFA500",backtest:"#e879f9",eco:"#4ade80"};
-const ICONS     = {liquidite:"&#x1F4A7;",structure:"&#x1F4CA;",zones:"&#x1F3AF;",timing:"&#x23F0;",risk:"&#x1F6E1;&#xFE0F;",memoire:"&#x1F9E0;",backtest:"&#x1F4C8;",eco:"&#x1F30D;"};
+const ICONS     = {liquidite:"💧",structure:"📊",zones:"🎯",timing:"⏰",risk:"🛡️",memoire:"🧠",backtest:"📈",eco:"🌍"};
 const AGENT_KEYS= ["liquidite","structure","zones","timing","risk","memoire","backtest","eco"];
 const STEPS     = ["Liquidite","Structure","Zones","Timing","Risk","Memoire","Backtest","Eco","Synthese"];
 
-const MT4_SYMBOLS = {
-  "EUR/USD":"EURUSD","GBP/USD":"GBPUSD","USD/JPY":"USDJPY","GBP/JPY":"GBPJPY",
-  "EUR/GBP":"EURGBP","EUR/JPY":"EURJPY","USD/CAD":"USDCAD","USD/CHF":"USDCHF",
-  "AUD/USD":"AUDUSD","NZD/USD":"NZDUSD","GBP/CHF":"GBPCHF","XAU/USD":"XAUUSD",
-  "XAG/USD":"XAGUSD","BTC/USD":"BTCUSD","NAS100":"NAS100","SPX500":"SPX500",
-  "DAX40":"DAX40","WTI":"WTIUSD","BRENT":"BRENTUSD"
-};
+const MT4_SYMBOLS = {"EUR/USD":"EURUSD","GBP/USD":"GBPUSD","USD/JPY":"USDJPY","GBP/JPY":"GBPJPY","EUR/GBP":"EURGBP","EUR/JPY":"EURJPY","USD/CAD":"USDCAD","USD/CHF":"USDCHF","AUD/USD":"AUDUSD","NZD/USD":"NZDUSD","GBP/CHF":"GBPCHF","XAU/USD":"XAUUSD","XAG/USD":"XAGUSD","BTC/USD":"BTCUSD","NAS100":"NAS100","SPX500":"SPX500","DAX40":"DAX40","WTI":"WTIUSD","BRENT":"BRENTUSD"};
 
 let selectedPair="EUR/USD",selectedTf="H1",loading=false,trades=[],lastId=null,enqueteurContext=null,jsLevels=null;
 
@@ -362,7 +367,7 @@ async function testTelegram(){
   const btn=document.getElementById('btnTg');
   btn.textContent='...';btn.className='btn-tg';
   try{
-    const r=await fetch(BACKEND+"/telegram",{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text:'Trading Master V5 - Backend + Telegram + MT4 Live operationnels'})});
+    const r=await fetch(BACKEND+"/telegram",{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text:'Trading Master V5 — RedPillFX Edition — Backend + Telegram + MT4 operationnels'})});
     const d=await r.json();
     btn.textContent=d.ok?'OK':'ERR';
     btn.className=d.ok?'btn-tg ok':'btn-tg err';
@@ -373,7 +378,7 @@ async function testTelegram(){
 async function aiCall(sys,prompt,maxT=900){
   try{
     const r=await fetch(API_URL,{method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({model:'claude-sonnet-4-5',max_tokens:maxT,system:sys,messages:[{role:'user',content:prompt}]})});
+      body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:maxT,system:sys,messages:[{role:'user',content:prompt}]})});
     if(!r.ok) throw new Error('API HTTP '+r.status);
     const d=await r.json();
     if(d.error) throw new Error(d.error.message||'API error');
@@ -381,44 +386,38 @@ async function aiCall(sys,prompt,maxT=900){
     if(!text||!text.trim()) throw new Error('Reponse vide');
     const t=text.trim().replace(/^```\w*\n?/m,'').replace(/\n?```$/m,'').trim();
     const s=t.indexOf('{'),e=t.lastIndexOf('}');
-    if(s===-1||e===-1) throw new Error('Pas de JSON dans la reponse');
-    let raw=t.slice(s,e+1)
-      .replace(/[\u0000-\u001F\u007F]/g,' ')
-      .replace(/,\s*}/g,'}')
-      .replace(/,\s*]/g,']')
-      .replace(/:\s*undefined/g,':null')
-      .replace(/:\s*NaN/g,':0');
+    if(s===-1||e===-1) throw new Error('Pas de JSON');
+    let raw=t.slice(s,e+1).replace(/[\u0000-\u001F\u007F]/g,' ').replace(/,\s*}/g,'}').replace(/,\s*]/g,']').replace(/:\s*undefined/g,':null').replace(/:\s*NaN/g,':0');
     try{return JSON.parse(raw);}
     catch(x){
-      // Fallback extraction manuelle
       const ex=k=>{const m=raw.match(new RegExp('"'+k+'"\\s*:\\s*"([^"]*)"'));return m?m[1]:'';};
       const exN=k=>{const m=raw.match(new RegExp('"'+k+'"\\s*:\\s*([0-9.]+)'));return m?+m[1]:0;};
-      return{nom:ex('nom')||'Agent',analyse:ex('analyse')||'Analyse indisponible',verdict:ex('verdict')||'--',
-        score:exN('score')||5,score_max:exN('score_max')||20,kill_zone:raw.includes('"kill_zone":true'),
-        biais_fondamental:ex('biais_fondamental')||'neutre',trap_confirme:raw.includes('"trap_confirme":true'),
-        msu_detecte:raw.includes('"msu_detecte":true'),msu_type:ex('msu_type')||'',
-        bias:ex('bias')||'',raisonnement:ex('raisonnement')||'--',confluence:ex('confluence')||'--',
-        invalidation:ex('invalidation')||'--',message:ex('message')||'--',
-        ftmo_ok:!raw.includes('"ftmo_ok":false'),daily_loss_ok:true,drawdown_ok:true};
+      return{nom:ex('nom')||'Agent',analyse:ex('analyse')||'Analyse indisponible',verdict:ex('verdict')||'--',score:exN('score')||5,score_max:exN('score_max')||20,kill_zone:raw.includes('"kill_zone":true'),biais_fondamental:ex('biais_fondamental')||'neutre',trap_confirme:raw.includes('"trap_confirme":true'),msu_detecte:raw.includes('"msu_detecte":true'),msu_type:ex('msu_type')||'',bias:ex('bias')||'',raisonnement:ex('raisonnement')||'--',confluence:ex('confluence')||'--',invalidation:ex('invalidation')||'--',message:ex('message')||'--',ftmo_ok:!raw.includes('"ftmo_ok":false'),daily_loss_ok:true,drawdown_ok:true};
     }
   }catch(err){
-    console.warn('aiCall erreur:', err.message);
-    // Retourner un agent par défaut plutôt que de planter
-    return{nom:'Agent',analyse:'Erreur: '+err.message,verdict:'Indisponible',
-      score:5,score_max:20,kill_zone:false,biais_fondamental:'neutre',
-      trap_confirme:false,msu_detecte:false,bias:'',
-      ftmo_ok:true,daily_loss_ok:true,drawdown_ok:true};
+    console.warn('aiCall erreur:',err.message);
+    return{nom:'Agent',analyse:'Erreur: '+err.message,verdict:'Indisponible',score:5,score_max:20,kill_zone:false,biais_fondamental:'neutre',trap_confirme:false,msu_detecte:false,bias:'',ftmo_ok:true,daily_loss_ok:true,drawdown_ok:true};
   }
 }
 
-const ENQUETEUR_SYS=`Reponds UNIQUEMENT avec un objet JSON brut. Zero texte avant ou apres. Pas de markdown. Tu es L'ENQUETEUR SMC. Format: {"session_actuelle":"...","sentiment":"risk-on","dxy":"hausse","resume_macro":"2 phrases max","top_opportunites":[{"rang":1,"paire":"EUR/USD","direction":"ACHETER","raison":"1 phrase","session_ideale":"London Open","score_opportunite":82}],"paires_eviter":[{"paire":"USD/JPY","raison":"texte"}],"conseil_du_jour":"1 phrase"}`;
+// ── ENQUETEUR SYSTEM PROMPT ────────────────────────────────────
+const ENQUETEUR_SYS=`Reponds UNIQUEMENT avec un objet JSON brut. Zero texte avant ou apres. Pas de markdown.
+Tu es L'ENQUETEUR REDPILLFX. Ta mission: identifier les paires avec LIQUIDITE DISPONIBLE + CAUSE CONSTRUITE.
+${REDPILL_CORE}
+FILTRE OBLIGATOIRE REDPILLFX:
+- Ne proposer UNE paire que si: liquidite identifiable (BSL ou SSL clairement situe) ET cause construite (accumulation visible) ET session favorable
+- Verifier: ou est la prochaine pool de liquidite dans chaque direction
+- Identifier si le prix est dans une zone de Build Up (cause en construction) ou apres un move (effet deja produit)
+- Privilegier les paires avec Equal Highs ou Equal Lows non collectes
+- EVITER les paires ou le prix est entre deux pools sans direction claire (risque SMC TRAP)
+Format: {"session_actuelle":"...","sentiment":"risk-on","dxy":"hausse","resume_macro":"2 phrases max","top_opportunites":[{"rang":1,"paire":"EUR/USD","direction":"ACHETER","raison":"1 phrase incluant la liquidite identifiee","session_ideale":"London Open","score_opportunite":82,"liquidite_cible":"SSL a 1.0820","cause_construite":true}],"paires_eviter":[{"paire":"USD/JPY","raison":"texte"}],"conseil_du_jour":"1 phrase RedPillFX"}`;
 
 async function runEnquete(){
   const btn=document.getElementById('btnEnquete');
   btn.disabled=true;btn.textContent='ENQUETE EN COURS...';
   document.getElementById('enqueteResult').innerHTML='';
   const now=new Date(),h=now.getHours();
-  const sess=h>=7&&h<16?'London Active':h>=13&&h<16?'NY Open':h>=7&&h<10?'London Open':h>=2&&h<6?'Asian Session':'Inter-session';
+  const sess=h>=7&&h<10?'London Open':h>=10&&h<16?'London Active':h>=13&&h<16?'NY Open':h>=2&&h<6?'Asian Session':'Inter-session';
   const days=['Dimanche','Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi'];
 
   let candlesResume='';
@@ -467,10 +466,8 @@ async function runEnquete(){
         const avC=await getAlphaVantageDaily(pair);
         if(avC&&avC.length>=5){
           const last5=avC.slice(-5);
-          const dlast=last5[last5.length-1].c;
-          const dfirst=last5[0].c;
-          const dh=Math.max(...last5.map(c=>c.h));
-          const dl=Math.min(...last5.map(c=>c.l));
+          const dlast=last5[last5.length-1].c,dfirst=last5[0].c;
+          const dh=Math.max(...last5.map(c=>c.h)),dl=Math.min(...last5.map(c=>c.l));
           const dt=dlast>dfirst?'up':'down';
           const sym2=MT4_SYMBOLS[pair]||pair.replace('/','');
           dailyResume+=sym2+"_AV: "+dt+" H="+dh.toFixed(5)+" L="+dl.toFixed(5)+" | ";
@@ -480,22 +477,28 @@ async function runEnquete(){
   }
   try{
     let prompt='Heure:'+now.toLocaleTimeString('fr-FR')+' Session:'+sess+' Jour:'+days[now.getDay()]+'\nPaires disponibles: '+ALL_PAIRS.join(', ');
-    if(candlesResume) prompt+='\nBOUGIES MT4 REELLES (5 dernières H1): '+candlesResume;
+    if(candlesResume) prompt+='\nBOUGIES MT4 H1 (5 dernieres): '+candlesResume;
     if(dailyResume) prompt+='\nBOUGIES DAILY HTF (5 derniers jours): '+dailyResume;
+    prompt+='\nAnalyse la liquidite disponible sur chaque paire selon methodologie RedPillFX.';
     const r=await aiCall(ENQUETEUR_SYS,prompt,2000);
     renderEnquete(r);
   }catch(e){document.getElementById('enqueteResult').innerHTML='<div class="error-box">'+e.message+'</div>';}
-  btn.disabled=false;btn.textContent='LANCER L\'ENQUETE';
+  btn.disabled=false;btn.textContent="LANCER L'ENQUETE";
 }
 
 function renderEnquete(r){
   const sc=r.sentiment==='risk-on'?'#00C853':r.sentiment==='risk-off'?'#ff6666':'#FFD700';
   let html='<div class="card" style="margin-bottom:14px;border-color:#FFD70020;margin-top:14px"><div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap"><span class="chip" style="background:'+sc+'20;border:1px solid '+sc+'40;color:'+sc+'">'+(r.session_actuelle||'--')+'</span><span class="chip" style="background:'+sc+'20;border:1px solid '+sc+'40;color:'+sc+'">Sentiment: '+(r.sentiment||'--')+'</span><span class="chip" style="background:#C0C0C020;border:1px solid #C0C0C040;color:#C0C0C0">DXY: '+(r.dxy||'--')+'</span></div><p style="font-size:11px;color:#8aaa7a;line-height:1.7;font-style:italic">'+(r.resume_macro||'')+'</p></div>';
   if(r.top_opportunites&&r.top_opportunites.length){
-    html+='<div class="gold-title" style="margin-bottom:10px">TOP OPPORTUNITES DU MARCHE</div>';
+    html+='<div class="gold-title" style="margin-bottom:10px">TOP OPPORTUNITES — LIQUIDITE IDENTIFIEE</div>';
     r.top_opportunites.forEach(op=>{
       const isL=op.direction==='ACHETER',dc=isL?'#00C853':'#ff6666';
-      html+='<div style="background:linear-gradient(135deg,#0d160d,#111a0d);border:2px solid '+dc+'30;border-left:4px solid '+dc+';border-radius:12px;padding:14px 16px;margin-bottom:12px;box-shadow:0 4px 15px #00000050"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><span style="font-size:16px;font-weight:900;color:#FFD700;font-family:monospace">'+op.paire+'</span><span style="font-size:12px;font-weight:900;color:'+dc+'">'+op.direction+' - '+op.score_opportunite+'/100</span></div><p style="font-size:11px;color:#6a8a5a;margin:0 0 10px;line-height:1.6">'+(op.raison||'')+'</p><button onclick="analyzeFromEnquete(\''+op.paire+'\',\''+((op.raison||'').replace(/'/g,"\\'"))+'\',\''+op.direction+'\','+op.score_opportunite+')" style="width:100%;background:'+dc+'20;border:2px solid '+dc+'40;color:'+dc+';border-radius:8px;padding:9px;font-size:11px;font-weight:700;font-family:monospace;cursor:pointer">Analyser '+op.paire+'</button></div>';
+      html+='<div style="background:linear-gradient(135deg,#0d160d,#111a0d);border:2px solid '+dc+'30;border-left:4px solid '+dc+';border-radius:12px;padding:14px 16px;margin-bottom:12px;box-shadow:0 4px 15px #00000050">';
+      html+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><span style="font-size:16px;font-weight:900;color:#FFD700;font-family:monospace">'+op.paire+'</span><span style="font-size:12px;font-weight:900;color:'+dc+'">'+op.direction+' — '+op.score_opportunite+'/100</span></div>';
+      html+='<p style="font-size:11px;color:#6a8a5a;margin:0 0 6px;line-height:1.6">'+(op.raison||'')+'</p>';
+      if(op.liquidite_cible) html+='<div style="font-size:9px;color:#00d4ff;font-family:monospace;margin-bottom:8px">💧 Liquidite cible: '+op.liquidite_cible+'</div>';
+      if(op.cause_construite) html+='<div style="font-size:9px;color:#FFD700;font-family:monospace;margin-bottom:8px">⚡ Cause construite: OUI</div>';
+      html+='<button onclick="analyzeFromEnquete(\''+op.paire+'\',\''+((op.raison||'').replace(/'/g,"\\'"))+'\',\''+op.direction+'\','+op.score_opportunite+')" style="width:100%;background:'+dc+'20;border:2px solid '+dc+'40;color:'+dc+';border-radius:8px;padding:9px;font-size:11px;font-weight:700;font-family:monospace;cursor:pointer">Analyser '+op.paire+'</button></div>';
     });
   }
   if(r.conseil_du_jour) html+='<div style="background:linear-gradient(135deg,#FFD70008,#00C85308);border:1px solid #FFD70025;border-radius:12px;padding:14px 16px;margin-top:8px"><p style="font-size:11px;color:#FFD700cc;margin:0;font-style:italic">"'+r.conseil_du_jour+'"</p></div>';
@@ -510,19 +513,144 @@ function analyzeFromEnquete(pair,raison,direction,score){
   setTimeout(()=>launch(),100);
 }
 
+// ── PROMPTS DES 8 AGENTS REDPILLFX ────────────────────────────
 function getSys(key){
   const pre='Reponds UNIQUEMENT avec un objet JSON brut. Zero texte avant ou apres. Pas de markdown. ';
-  const couche1='METHODOLOGIE REDPILLFX (COUCHE 1): Sequence ideale: IPA -> TRAP (faux BO sur BSL/SSL) -> IDC/OB -> Move directionnel. MSU AKA LIT CYCLE - BUILD UP -> INDUCEMENT -> MITIGATION. REGLES DE SCORING REALISTES: Tu n\'as pas toujours acces aux bougies detaillees - raisonne sur le contexte disponible (prix, session, heure, contexte Enqueteur). Ne mets JAMAIS 0 sauf si la condition est explicitement invalide. Un score entre 5 et 15 est normal sans donnees parfaites. Sois pragmatique : un bon contexte macro + bonne session + prix en zone = setup valide meme sans TRAP visible.';
-  const sessionRules='REGLES SESSION: London ACTIVE = 7h-16h (pas seulement 7h-10h). Kill Zone peak = 7h-10h London et 13h-16h NY. London 10h-16h = session normale, score timing correct. Vendredi apres 15h = prudence. Mardi/Mercredi/Jeudi = jours optimaux. Lundi/Vendredi = prudence mais pas interdit.';
   const m={
-    liquidite:pre+couche1+' '+sessionRules+' Tu es Agent Liquidite SMC. Analyse BSL/SSL, direction probable, contexte de liquidite. Si contexte Enqueteur disponible, utilise-le pour orienter ton analyse. Sans donnees bougies precises, estime la liquidite sur base prix actuel + session + paire. Score minimum 8/20 si session London/NY active et prix disponible. TRAP confirme = +5pts bonus. Format: {"nom":"Agent Liquidite","analyse":"texte","bsl":"niveau estime","ssl":"niveau estime","trap_confirme":false,"direction":"bullish","score":12,"score_max":20,"verdict":"texte"}',
-    structure:pre+couche1+' '+sessionRules+' Tu es Agent Structure SMC. Analyse trend HTF et LTF sur base contexte disponible. Si contexte Enqueteur indique une direction, c\'est un signal HTF fort a integrer. Score minimum 8/20 si session active + direction macro claire. Ne mets 0 que si structure explicitement cassee contre le trade. MSU Continuation si trend HTF confirme. Format: {"nom":"Agent Structure","analyse":"texte","trend_htf":"bullish","trend_ltf":"bullish","msu_detecte":false,"msu_type":"continuation","wyckoff":"phase","score":12,"score_max":20,"verdict":"texte"}',
-    zones:pre+couche1+' '+sessionRules+' Tu es Agent Zones SMC. Identifie zones premium/discount sur base prix actuel. Sans bougies detaillees, estime les zones cles sur base psychologique (00, 50) et contexte session. Score minimum 7/20 si prix en zone discount bullish ou premium bearish identifiable. FVG HTF = +4pts si contexte le suggere. Format: {"nom":"Agent Zones","analyse":"texte","ob_type":"bullish","zone_type":"discount","fvg_htf":false,"score":10,"score_max":20,"verdict":"texte"}',
-    timing:pre+couche1+' '+sessionRules+' Tu es Agent Timing ICT. IMPORTANT: London est ACTIVE de 7h a 16h, pas seulement 7h-10h. Score 12-15/15 si Kill Zone peak (7h-10h ou 13h-16h). Score 8-11/15 si London active 10h-16h. Score 4-7/15 si vendredi apres-midi ou inter-session courte. Score 0-3/15 uniquement si vendredi apres 15h ou weekend. Mardi/Mercredi/Jeudi = bonus +2pts. Format: {"nom":"Agent Timing","analyse":"texte","kill_zone":true,"session":"London Active","jour_ok":true,"score":10,"score_max":15,"verdict":"texte"} REGLE STATISTIQUE OBLIGATOIRE: Le contexte contient ton historique personnel (HISTORIQUE PERSONNEL TRADER). Pour chaque penalite ou bonus base sur cet historique: si N < 5 trades sur la paire/session/contexte concerne, mentionner echantillon insuffisant et reduire la penalite de 66%. Si N entre 5-10 trades, reduire la penalite/bonus de 33%. Si N >= 10 trades, appliquer penalite/bonus plein poids. Ne pas inventer de statistiques — utiliser uniquement les donnees fournies.',
-    risk:pre+couche1+' '+sessionRules+' Tu es Agent Risk avec regles FTMO strictes. REGLES FTMO: Drawdown max 10%, Daily loss max 5%, Lot size 1% max, RR minimum 3:1, pas de trade vendredi apres 15h, pas de trade avant news majeures, BE obligatoire sur premiere cause. SCORING: Score 12-15/15 si RR>=3:1 + session active + regles FTMO respectees. Score 8-11/15 si RR>=2:1. Score 3-7/15 si RR borderline. Score 0-2/15 si violation FTMO. Format: {"nom":"Agent Risk","analyse":"texte","rr_valide":true,"rr_calcule":"3.0:1","taille":"1%","ftmo_ok":true,"daily_loss_ok":true,"drawdown_ok":true,"score":10,"score_max":15,"verdict":"texte"} REGLE STATISTIQUE OBLIGATOIRE: Le contexte contient ton historique personnel (HISTORIQUE PERSONNEL TRADER). Pour chaque penalite ou bonus base sur cet historique: si N < 5 trades sur la paire/session/contexte concerne, mentionner echantillon insuffisant et reduire la penalite de 66%. Si N entre 5-10 trades, reduire la penalite/bonus de 33%. Si N >= 10 trades, appliquer penalite/bonus plein poids. Ne pas inventer de statistiques — utiliser uniquement les donnees fournies.',
-    memoire:pre+'Tu es Agent Memoire. Analyse patterns historiques de la paire sur cette session et ce jour de semaine. Base-toi sur ta connaissance des marches Forex. Score entre 3 et 5 si patterns historiques favorables identifiables. Score 1-2 si patterns defavorables connus. Format: {"nom":"Agent Memoire","analyse":"texte","winrate":"65%","pattern_reconnu":true,"score":4,"score_max":5,"verdict":"texte"} REGLE STATISTIQUE OBLIGATOIRE: Le contexte contient ton historique personnel (HISTORIQUE PERSONNEL TRADER). Pour chaque penalite ou bonus base sur cet historique: si N < 5 trades sur la paire/session/contexte concerne, mentionner echantillon insuffisant et reduire la penalite de 66%. Si N entre 5-10 trades, reduire la penalite/bonus de 33%. Si N >= 10 trades, appliquer penalite/bonus plein poids. Ne pas inventer de statistiques — utiliser uniquement les donnees fournies.',
-    backtest:pre+couche1+' '+sessionRules+' Tu es Agent Backtest. Evalue si le type de setup decrit par le contexte a un historique favorable sur cette paire/session. Score 4-5/5 si setup type London Open bullish/bearish sur paire majeure = historiquement fiable. Score 2-3/5 si setup mixte. Score 0-1/5 uniquement si setup va contre tous les patterns historiques connus. Format: {"nom":"Agent Backtest","analyse":"texte","sequence_complete":true,"taux_succes_estime":"65%","score":3,"score_max":5,"verdict":"texte"} REGLE STATISTIQUE OBLIGATOIRE: Le contexte contient ton historique personnel (HISTORIQUE PERSONNEL TRADER). Pour chaque penalite ou bonus base sur cet historique: si N < 5 trades sur la paire/session/contexte concerne, mentionner echantillon insuffisant et reduire la penalite de 66%. Si N entre 5-10 trades, reduire la penalite/bonus de 33%. Si N >= 10 trades, appliquer penalite/bonus plein poids. Ne pas inventer de statistiques — utiliser uniquement les donnees fournies.',
-    eco:pre+'Tu es Agent Economique. Analyse contexte macro actuel: DXY, risk-on/off, evenements recents, correlations. Score 7-10/10 si contexte macro aligne avec direction trade. Score 4-6/10 si contexte neutre. Score 0-3/10 si contexte macro fortement contre le trade. Format: {"nom":"Agent Eco","analyse":"texte","risk_mode":"risk-on","biais_fondamental":"bullish","evenement_majeur":false,"score":7,"score_max":10,"verdict":"texte"}'
+
+    liquidite: pre+REDPILL_CORE+REDPILL_SCORING+`
+Tu es l AGENT LIQUIDITE REDPILLFX — CHASSEUR DE POOLS.
+Ta mission: identifier toutes les pools de liquidite disponibles et determiner si la CAUSE est construite.
+ANALYSE OBLIGATOIRE:
+1. Localiser BSL (Buy Side Liquidity): equal highs, resistances multi-touches, stops vendeurs au-dessus
+2. Localiser SSL (Sell Side Liquidity): equal lows, supports multi-touches, stops acheteurs en dessous
+3. Verifier si TRAP confirme: prix a-t-il pris la liquidite d un cote avant de revenir?
+4. Identifier type de Build Up: TREND / SUPPORT-RESISTANCE / SMC TRAP
+5. Detecter SMC TRAP: faux BOS multiple sur OB/FVG des traders SMC = DANGER eviter entree
+6. Evaluer: liquidite proche dans direction opposee = risque, reduire score
+7. Le marche se deplace de pool en pool — identifier la prochaine cible logique
+SCORING: Score minimum 8/20 si session London/NY active + prix disponible. TRAP confirme +5pts. Equal Highs/Lows identifies +3pts. SMC TRAP detecte -8pts. Aucune liquidite visible -6pts.
+Format JSON: {"nom":"Agent Liquidite","analyse":"texte detaille","bsl":"niveau","ssl":"niveau","trap_confirme":false,"trap_type":"Buy to Sell","cisd_confirme":false,"build_up_type":"trend","smc_trap_detecte":false,"pool_suivante":"niveau cible","direction":"bullish","score":12,"score_max":20,"verdict":"texte"}`,
+
+    structure: pre+REDPILL_CORE+REDPILL_SCORING+`
+Tu es l AGENT STRUCTURE REDPILLFX — ARCHITECTE DE MARCHE.
+Ta mission: identifier la structure externe HTF et interne LTF selon RedPillFX.
+ANALYSE OBLIGATOIRE:
+1. STRUCTURE EXTERNE (Daily/H4/H1): direction macro, Strong High/Low (avec prise de liquidite prealable UNIQUEMENT)
+2. STRUCTURE INTERNE (15min/5min): Fake BOS vs True BOS, SMC TRAP multiple
+3. Fake BOS = partie du TRAP = ne PAS invalider le setup, c est le piege intentionnel
+4. True BOS = cassure confirmee avec cloture au-dessus/dessous = direction reelle
+5. CHoCH = premier signe retournement, reduire conviction direction precedente
+6. LIT CYCLE: BUILD UP (Asia) → INDUCEMENT (prise liquidite, faux move) → MITIGATION (retour OB/FVG) → EXPANSION (vrai move)
+7. MSU H1 dans FVG Daily = confluence majeure +4pts
+8. Order-Flow Mitigation: POI HTF non mitigue = aimant obligatoire, le prix DOIT y revenir
+9. Strong High/Low sans prise de liquidite prealable = NO STRONG = ignorer comme niveau
+SCORING: H1 et Daily alignes +3pts. Conflit H1 vs Daily -4pts. LIT Cycle identifie complet +4pts. POI HTF non mitigue dans direction +4pts.
+Format JSON: {"nom":"Agent Structure","analyse":"texte","trend_htf":"bullish","trend_ltf":"bullish","strong_high":"niveau","strong_low":"niveau","msu_detecte":false,"msu_type":"continuation","lit_cycle_phase":"build_up","fake_bos_detecte":false,"poi_htf_non_mitigue":"niveau","order_flow":"bullish","score":12,"score_max":20,"verdict":"texte"}`,
+
+    zones: pre+REDPILL_CORE+REDPILL_SCORING+`
+Tu es l AGENT ZONES REDPILLFX — EXPERT POI.
+Ta mission: identifier les zones d entree valides selon RedPillFX (POI = Point of Interest).
+ANALYSE OBLIGATOIRE:
+1. POI CONTINUATION: prix en trend → pullback sur equal lows/highs → POI = OB/FVG apres prise liquidite → rebond continuation
+2. POI RETOURNEMENT: prix prend BSL (Strong High) → CISD confirme → POI = OB baissier → move baissier
+3. POI VALIDE uniquement si liquidite prise AVANT le retour sur la zone
+4. BPL (Breaker Block): prix casse en haut ET en bas → entree sur RETEST uniquement → TF optimaux 3-5-15min
+5. FVG (Fair Value Gap): imbalance B1High-B3Low → zone a mitiger obligatoirement → 50% du wick = entree valide
+6. OB (Order Block): derniere bougie opposee avant move fort → zone institutionnelle
+7. IDC (Indecision Candle): doji/pin bar en zone = confirmation entree
+8. Zone PREMIUM (au-dessus midpoint range) = zone SELL institutionnelle
+9. Zone DISCOUNT (en dessous midpoint range) = zone BUY institutionnelle
+10. IFVG (Inversion FVG): zone de reequilibrage apres MSU = entree agressive valide
+SCORING: POI avec liquidite prise prealablement +4pts. BPL valide (double breakout) +3pts. IDC en confirmation +3pts. FVG HTF non mitigue +4pts. Zone sans liquidite prealable -5pts.
+Format JSON: {"nom":"Agent Zones","analyse":"texte","poi_type":"continuation","ob_type":"bullish","zone_type":"discount","bpl_detecte":false,"fvg_htf":false,"ifvg_detecte":false,"idc_confirme":false,"entree_2eme_vague":false,"score":10,"score_max":20,"verdict":"texte"}`,
+
+    timing: pre+REDPILL_CORE+REDPILL_SCORING+`
+Tu es l AGENT TIMING REDPILLFX — GARDIEN DES SESSIONS.
+Ta mission: evaluer le timing selon les sessions RedPillFX et le LIT Cycle.
+SESSIONS REDPILLFX:
+- Asia 00h-07h: BUILD UP silencieux. Identifier IPA, BSL/SSL. Ne pas trader les faux moves. Accumuler la lecture.
+- London Open 07h-10h: KILL ZONE principale. Declenchement moves sur liquidity grab Asia. Score maximum 12-15/15.
+- London Active 10h-16h: Continuation ou consolidation. Score 8-11/15.
+- NY Open 13h30-16h: Deuxieme KILL ZONE. Retournement ou continuation London. Fort momentum overlap. Score 11-14/15.
+- Inter-session 16h-21h: ZONE MORTE. Liquidite reduite, spreads elargis. Score 0-3/15.
+- Asia pre-open 21h-00h: Faible liquidite. Score 2-5/15.
+REGLES CRITIQUES:
+- Vendredi apres 15h = INTERDIT absolu. Score 0/15.
+- Mardi/Mercredi/Jeudi = jours optimaux RedPillFX +2pts bonus.
+- Lundi = repositionnement, attendre confirmation +0pts.
+- 70 minutes avant London Open = patience pre-London, laisser institutionnels placer ordres.
+- News majeures NFP/CPI/FOMC = eviter 30min avant et apres.
+- BE obligatoire a premiere cause atteinte.
+REGLE STATISTIQUE: Si N < 5 trades sur paire/session, echantillon insuffisant, reduire penalite de 66%. Si N 5-10, reduire de 33%. Si N >= 10, plein poids.
+Format JSON: {"nom":"Agent Timing","analyse":"texte","kill_zone":true,"session":"London Open","lit_cycle_phase":"inducement","jour_ok":true,"patience_pre_london":false,"score":10,"score_max":15,"verdict":"texte"}`,
+
+    risk: pre+REDPILL_CORE+REDPILL_SCORING+`
+Tu es l AGENT RISK REDPILLFX — CONTROLEUR FTMO.
+Ta mission: valider le risque selon les regles FTMO et RedPillFX.
+REGLES FTMO STRICTES:
+- Drawdown max 10% du compte, Daily loss max 5%, Lot size 1% max du capital
+- RR minimum 3:1 obligatoire (TP sur prochaine pool de liquidite)
+- Pas de trade vendredi apres 15h, pas de trade avant news majeures
+- BE obligatoire des que TP1 atteint (premiere cause)
+- Ne jamais modifier SL manuellement sous pression emotionnelle
+REGLES REDPILLFX RISK:
+- SL place derriere Strong High/Low valide (avec prise de liquidite prealable)
+- TP vise la prochaine pool de liquidite (BSL ou SSL logique suivante)
+- Plus la cause est grande = plus le move potentiel est grand = RR naturellement eleve
+- Si liquidite proche dans direction opposee < SL distance = risque asymetrique, reduire score
+SCORING: RR>=3:1 + FTMO OK + session active 12-15/15. RR>=2:1 8-11/15. RR borderline 3-7/15. Violation FTMO 0-2/15.
+REGLE STATISTIQUE: Meme regle echantillon que Agent Timing.
+Format JSON: {"nom":"Agent Risk","analyse":"texte","rr_valide":true,"rr_calcule":"3.0:1","taille":"1%","sl_derriere_strong":true,"tp_sur_liquidite":"niveau","ftmo_ok":true,"daily_loss_ok":true,"drawdown_ok":true,"score":10,"score_max":15,"verdict":"texte"}`,
+
+    memoire: pre+REDPILL_CORE+REDPILL_SCORING+`
+Tu es l AGENT MEMOIRE REDPILLFX — ARCHIVISTE DES PATTERNS.
+Ta mission: identifier les patterns historiques selon la methodologie RedPillFX et l historique personnel.
+ANALYSE REDPILLFX:
+1. Patterns historiques de la paire sur cette session et ce jour de semaine
+2. Frequence des TRAP haussiers vs baissiers sur cette paire en London Open
+3. Comportement historique autour des equal highs/lows sur cette paire
+4. Phases LIT Cycle typiques de cette paire a cette heure
+5. Patterns Buy to Sell vs Sell to Buy historiquement dominants
+6. Taux de succes des setups CISD + IFVG sur cette paire
+REGLE STATISTIQUE OBLIGATOIRE: Utiliser UNIQUEMENT les donnees fournies dans HISTORIQUE PERSONNEL TRADER.
+Si N < 5 trades sur contexte concerne: echantillon insuffisant, reduire penalite de 66%, mentionner explicitement.
+Si N 5-10: reduire penalite/bonus de 33%.
+Si N >= 10: appliquer plein poids.
+Ne jamais inventer de statistiques.
+Format JSON: {"nom":"Agent Memoire","analyse":"texte","winrate_paire":"65%","pattern_trap":"Buy to Sell dominant","pattern_session":"London Open favorable","cisd_historique":"fiable","score":4,"score_max":5,"verdict":"texte"}`,
+
+    backtest: pre+REDPILL_CORE+REDPILL_SCORING+`
+Tu es l AGENT BACKTEST REDPILLFX — HISTORIEN DES SETUPS.
+Ta mission: evaluer si le setup correspond aux patterns historiquement profitables selon RedPillFX.
+CHECKLIST BACKTEST REDPILLFX (basee sur trade reel du 12/06/2026):
+1. Prise de liquidite externe confirmee? (BSL ou SSL collecte)
+2. Cycle de cause a effet identifie? (accumulation avant move)
+3. Buy to Sell ou Sell to Buy confirme? (direction du TRAP)
+4. CISD confirme? (Change In State of Delivery)
+5. IFVG identifie comme zone d entree?
+6. Entree prevue sur la 2eme vague? (pas le premier move)
+EVALUATION:
+- 5-6 conditions validees = score 4-5/5 (setup haute probabilite historique)
+- 3-4 conditions = score 2-3/5 (setup moyen)
+- 0-2 conditions = score 0-1/5 (setup invalide historiquement)
+Taux de succes estime des setups RedPillFX complets: 65-70% sur paires majeures en Kill Zone.
+REGLE STATISTIQUE: Meme regle echantillon. Ne pas inventer de statistiques.
+Format JSON: {"nom":"Agent Backtest","analyse":"texte","checklist_score":5,"checklist_detail":"1:oui 2:oui 3:oui 4:non 5:oui 6:oui","sequence_complete":true,"taux_succes_estime":"65%","score":3,"score_max":5,"verdict":"texte"}`,
+
+    eco: pre+REDPILL_CORE+`
+Tu es l AGENT ECO REDPILLFX — ECONOMISTE MACRO.
+Ta mission: evaluer le contexte macro et sa coherence avec la Loi de Cause a Effet RedPillFX.
+ANALYSE:
+1. DXY: direction actuelle et impact sur paires Forex majeures
+2. Risk-on vs Risk-off: sentiment global du marche
+3. Correlations: Gold/USD, indices/Forex, correlations inter-paires
+4. Evenements majeurs recents (NFP, CPI, FOMC, BCE, BoE)
+5. Coherence macro avec direction du trade propose
+6. Cause macro: accumulation de positions institutionnelles visible macro
+7. Effet probable: direction attendue selon contexte macro
+SCORING: Macro aligne avec direction 7-10/10. Contexte neutre 4-6/10. Macro fortement contre le trade 0-3/10.
+Format JSON: {"nom":"Agent Eco","analyse":"texte","risk_mode":"risk-on","biais_fondamental":"bullish","dxy_direction":"baisse","evenement_majeur":false,"cause_macro":"accumulation institutionnelle","score":7,"score_max":10,"verdict":"texte"}`
   };
   return m[key]||m.memoire;
 }
@@ -540,7 +668,7 @@ function renderStepBar(step,label){
   let html='<div class="step-bar">';
   STEPS.forEach((lbl,i)=>{
     const done=i<step,active=i===step,col=colors[i]||'#00C853';
-    html+='<div class="step"><div class="step-circle" style="background:'+(done?col:active?col+'30':'#0d160d')+';border:2px solid '+(done||active?col:'#1a2e1a')+';color:'+(done?'#000':active?col:'#2a4a2a')+';box-shadow:'+(active?'0 0 10px '+col:'none')+'">'+(done?'V':i+1)+'</div><span class="step-label" style="color:'+(done||active?col:'#1a3a1a')+'">'+lbl+'</span></div>';
+    html+='<div class="step"><div class="step-circle" style="background:'+(done?col:active?col+'30':'#0d160d')+';border:2px solid '+(done||active?col:'#1a2e1a')+';color:'+(done?'#000':active?col:'#2a4a2a')+';box-shadow:'+(active?'0 0 10px '+col:'none')+'">'+(done?'✓':i+1)+'</div><span class="step-label" style="color:'+(done||active?col:'#1a3a1a')+'">'+lbl+'</span></div>';
     if(i<STEPS.length-1) html+='<div class="step-line" style="background:'+(done?col:'#0d160d')+'"></div>';
   });
   html+='</div>';
@@ -555,11 +683,25 @@ function renderAgentCard(key,data){
   let chips='';
   if(key==='timing') chips='<span class="chip" style="background:'+(data.kill_zone?'#00C85320':'#44444420')+';border:1px solid '+(data.kill_zone?'#00C85340':'#44444440')+';color:'+(data.kill_zone?'#00C853':'#666')+'">'+(data.kill_zone?'Kill Zone OK':'Hors Kill Zone')+'</span>';
   if(key==='eco') chips='<span class="chip" style="background:#4ade8020;border:1px solid #4ade8040;color:#4ade80">Biais: '+(data.biais_fondamental||'--')+'</span>';
-  if(key==='liquidite'&&data.trap_confirme) chips='<span class="chip" style="background:#00d4ff20;border:1px solid #00d4ff40;color:#00d4ff">TRAP OK</span>';
-  if(key==='structure'&&data.msu_detecte) chips+='<span class="chip" style="background:#FFD70020;border:1px solid #FFD70040;color:#FFD700">MSU '+(data.msu_type||'')+'</span>';
-  if(key==='risk'&&data.ftmo_ok===true) chips+='<span class="chip" style="background:#00C85320;border:1px solid #00C85340;color:#00C853">FTMO OK</span>';
-  if(key==='risk'&&data.ftmo_ok===false) chips+='<span class="chip" style="background:#ff666620;border:1px solid #ff666640;color:#ff6666">FTMO KO</span>';
-  return '<div class="agent-card" style="border:1px solid '+color+'22;box-shadow:0 4px 15px #00000040"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><div style="display:flex;align-items:center;gap:7px"><span style="font-size:15px">'+icon+'</span><span style="font-size:10px;font-weight:700;color:'+color+';font-family:monospace">'+(data.nom||key)+'</span></div><span style="font-size:14px;font-weight:900;color:'+color+';font-family:monospace">'+data.score+'<span style="font-size:9px;color:#2a4a2a">/'+data.score_max+'</span></span></div><div class="agent-bar"><div class="agent-fill" style="width:'+pct+'%;background:linear-gradient(90deg,'+color+'88,'+color+')"></div></div><p style="font-size:10px;color:#6a8a5a;line-height:1.6;margin:0 0 8px;font-style:italic">'+(data.analyse||'')+'</p><div style="background:'+color+'10;border:1px solid '+color+'25;border-radius:7px;padding:6px 10px;font-size:10px;color:'+color+'dd">&#x25B8; '+(data.verdict||'')+'</div>'+(chips?'<div style="margin-top:7px;display:flex;gap:4px;flex-wrap:wrap">'+chips+'</div>':'')+'</div>';
+  if(key==='liquidite'){
+    if(data.trap_confirme) chips+='<span class="chip" style="background:#00d4ff20;border:1px solid #00d4ff40;color:#00d4ff">TRAP ✓</span>';
+    if(data.cisd_confirme) chips+='<span class="chip" style="background:#FFD70020;border:1px solid #FFD70040;color:#FFD700">CISD ✓</span>';
+    if(data.smc_trap_detecte) chips+='<span class="chip" style="background:#ff666620;border:1px solid #ff666640;color:#ff6666">SMC TRAP ⚠</span>';
+  }
+  if(key==='structure'){
+    if(data.msu_detecte) chips+='<span class="chip" style="background:#FFD70020;border:1px solid #FFD70040;color:#FFD700">MSU '+(data.msu_type||'')+'</span>';
+    if(data.fake_bos_detecte) chips+='<span class="chip" style="background:#FFA50020;border:1px solid #FFA50040;color:#FFA500">Fake BOS</span>';
+  }
+  if(key==='zones'){
+    if(data.idc_confirme) chips+='<span class="chip" style="background:#00C85320;border:1px solid #00C85340;color:#00C853">IDC ✓</span>';
+    if(data.entree_2eme_vague) chips+='<span class="chip" style="background:#FFD70020;border:1px solid #FFD70040;color:#FFD700">2eme vague</span>';
+  }
+  if(key==='risk'){
+    if(data.ftmo_ok===true) chips+='<span class="chip" style="background:#00C85320;border:1px solid #00C85340;color:#00C853">FTMO OK</span>';
+    if(data.ftmo_ok===false) chips+='<span class="chip" style="background:#ff666620;border:1px solid #ff666640;color:#ff6666">FTMO KO</span>';
+  }
+  if(key==='backtest'&&data.checklist_score) chips+='<span class="chip" style="background:#e879f920;border:1px solid #e879f940;color:#e879f9">Checklist '+data.checklist_score+'/6</span>';
+  return '<div class="agent-card" style="border:1px solid '+color+'22;box-shadow:0 4px 15px #00000040"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><div style="display:flex;align-items:center;gap:7px"><span style="font-size:15px">'+icon+'</span><span style="font-size:10px;font-weight:700;color:'+color+';font-family:monospace">'+(data.nom||key)+'</span></div><span style="font-size:14px;font-weight:900;color:'+color+';font-family:monospace">'+data.score+'<span style="font-size:9px;color:#2a4a2a">/'+data.score_max+'</span></span></div><div class="agent-bar"><div class="agent-fill" style="width:'+pct+'%;background:linear-gradient(90deg,'+color+'88,'+color+')"></div></div><p style="font-size:10px;color:#6a8a5a;line-height:1.6;margin:0 0 8px;font-style:italic">'+(data.analyse||'')+'</p><div style="background:'+color+'10;border:1px solid '+color+'25;border-radius:7px;padding:6px 10px;font-size:10px;color:'+color+'dd">▸ '+(data.verdict||'')+'</div>'+(chips?'<div style="margin-top:7px;display:flex;gap:4px;flex-wrap:wrap">'+chips+'</div>':'')+'</div>';
 }
 
 async function launch(forcePair){
@@ -573,23 +715,16 @@ async function launch(forcePair){
   document.getElementById('decisionPanel').innerHTML='';
 
   const now=new Date(),h=now.getHours();
-  const session=h>=7&&h<16?'London Active':h>=13&&h<16?'NY Open':h>=7&&h<10?'London Open':h>=2&&h<6?'Asian Session':'Inter-session';
+  const session=h>=7&&h<10?'London Open':h>=10&&h<16?'London Active':h>=13&&h<16?'NY Open':h>=2&&h<6?'Asian Session':'Inter-session';
   const days=['Dimanche','Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi'];
   const results={};let smcData=null,mt4Source=false,mt4=null,candleContext='';
   jsLevels=null;
 
   try{
-    // Récupérer le contexte journal pour enrichir les agents
-    let journalContext = '';
+    let journalContext='';
     try{
-      const jcr = await fetch(BACKEND+'/journal/context').catch(()=>null);
-      if(jcr && jcr.ok){
-        const jcd = await jcr.json();
-        if(jcd.has_data && jcd.context) {
-          journalContext = jcd.context;
-          console.log('Journal context chargé:', jcd.total_trades, 'trades');
-        }
-      }
+      const jcr=await fetch(BACKEND+'/journal/context').catch(()=>null);
+      if(jcr&&jcr.ok){const jcd=await jcr.json();if(jcd.has_data&&jcd.context){journalContext=jcd.context;}}
     }catch(e){}
 
     renderStepBar(0,'Connexion MT4...');
@@ -601,20 +736,20 @@ async function launch(forcePair){
       try{
         const rd=await fetch(BACKEND+'/daily/'+sym).catch(()=>null);
         if(rd&&rd.ok){
-          const dd=await rd.json();
-          const daily=dd.candles||[];
+          const dd=await rd.json();const daily=dd.candles||[];
           if(daily.length>=20){
             const last20=daily.slice(-20);
-            const dhighs=last20.map(c=>parseFloat(c.h));
-            const dlows=last20.map(c=>parseFloat(c.l));
-            const dcloses=last20.map(c=>parseFloat(c.c));
-            const dmaxP=Math.max(...dhighs);
-            const dminP=Math.min(...dlows);
-            const dlastClose=dcloses[dcloses.length-1];
+            const dhighs=last20.map(c=>parseFloat(c.h)),dlows=last20.map(c=>parseFloat(c.l)),dcloses=last20.map(c=>parseFloat(c.c));
+            const dmaxP=Math.max(...dhighs),dminP=Math.min(...dlows),dlastClose=dcloses[dcloses.length-1];
             const dtrend=dlastClose>dcloses[0]?'bullish':'bearish';
             let dbullCount=0,dbearCount=0;
             for(let i=1;i<last20.length;i++){if(parseFloat(last20[i].c)>parseFloat(last20[i].o))dbullCount++;else dbearCount++;}
-            dailyContext=' | BOUGIES DAILY HTF (20 derniers jours): High='+dmaxP.toFixed(5)+' Low='+dminP.toFixed(5)+' LastClose='+dlastClose.toFixed(5)+' Trend_HTF='+dtrend+' Bougies_haussières='+dbullCount+'/19 Bougies_baissières='+dbearCount+'/19. Utilise ces données HTF pour valider la direction macro.';
+            // Detecter equal highs/lows pour liquidite
+            const sortedHighs=[...dhighs].sort((a,b)=>b-a);
+            const topHighs=sortedHighs.slice(0,3);
+            const sortedLows=[...dlows].sort((a,b)=>a-b);
+            const botLows=sortedLows.slice(0,3);
+            dailyContext=' | BOUGIES DAILY HTF (20j): High='+dmaxP.toFixed(5)+' Low='+dminP.toFixed(5)+' LastClose='+dlastClose.toFixed(5)+' Trend_HTF='+dtrend+' Haussières='+dbullCount+'/19 Baissières='+dbearCount+'/19 | BSL_POTENTIEL='+topHighs[0].toFixed(5)+' SSL_POTENTIEL='+botLows[0].toFixed(5)+'. Utilise pour identifier Strong High/Low et POI HTF non mitigue.';
           }
         }
       }catch(e){}
@@ -624,14 +759,11 @@ async function launch(forcePair){
         const avCandles=await getAlphaVantageDaily(targetPair);
         if(avCandles&&avCandles.length>=20){
           const last20=avCandles.slice(-20);
-          const dcloses=last20.map(c=>c.c);
-          const dmaxP=Math.max(...last20.map(c=>c.h));
-          const dminP=Math.min(...last20.map(c=>c.l));
-          const dlastClose=dcloses[dcloses.length-1];
-          const dtrend=dlastClose>dcloses[0]?'bullish':'bearish';
+          const dcloses=last20.map(c=>c.c),dmaxP=Math.max(...last20.map(c=>c.h)),dminP=Math.min(...last20.map(c=>c.l));
+          const dlastClose=dcloses[dcloses.length-1],dtrend=dlastClose>dcloses[0]?'bullish':'bearish';
           let dbullCount=0,dbearCount=0;
           for(let i=1;i<last20.length;i++){if(last20[i].c>last20[i].o)dbullCount++;else dbearCount++;}
-          dailyContext=' | DONNEES DAILY HTF Alpha Vantage (20 derniers jours): High='+dmaxP.toFixed(5)+' Low='+dminP.toFixed(5)+' LastClose='+dlastClose.toFixed(5)+' Trend_HTF='+dtrend+' Bougies_haussières='+dbullCount+'/19 Bougies_baissières='+dbearCount+'/19.';
+          dailyContext=' | DAILY HTF AlphaVantage (20j): High='+dmaxP.toFixed(5)+' Low='+dminP.toFixed(5)+' LastClose='+dlastClose.toFixed(5)+' Trend='+dtrend+' Haussières='+dbullCount+'/19 Baissières='+dbearCount+'/19.';
         }
       }catch(e){}
     }
@@ -639,26 +771,20 @@ async function launch(forcePair){
       try{
         const rc=await fetch(BACKEND+'/candles/'+sym).catch(()=>null);
         if(rc&&rc.ok){
-          const dc=await rc.json();
-          const candles=dc.candles||[];
+          const dc=await rc.json();const candles=dc.candles||[];
           if(candles.length>=10){
             const last10=candles.slice(-10);
-            const highs=last10.map(c=>parseFloat(c.h));
-            const lows=last10.map(c=>parseFloat(c.l));
-            const closes=last10.map(c=>parseFloat(c.c));
-            const recentHigh=Math.max(...highs);
-            const recentLow=Math.min(...lows);
-            const lastClose=closes[closes.length-1];
-            const prevClose=closes[closes.length-2];
-            const trend10=lastClose>closes[0]?'bullish':'bearish';
-            const momentum=lastClose>prevClose?'haussier':'baissier';
+            const highs=last10.map(c=>parseFloat(c.h)),lows=last10.map(c=>parseFloat(c.l)),closes=last10.map(c=>parseFloat(c.c));
+            const recentHigh=Math.max(...highs),recentLow=Math.min(...lows),lastClose=closes[closes.length-1],prevClose=closes[closes.length-2];
+            const trend10=lastClose>closes[0]?'bullish':'bearish',momentum=lastClose>prevClose?'haussier':'baissier';
             let bullCount=0,bearCount=0;
             for(let i=1;i<last10.length;i++){if(parseFloat(last10[i].c)>parseFloat(last10[i].o))bullCount++;else bearCount++;}
-            candleContext=' | BOUGIES MT4 REELLES (10 dernières H1): High='+recentHigh.toFixed(5)+' Low='+recentLow.toFixed(5)+' LastClose='+lastClose.toFixed(5)+' Trend='+trend10+' Momentum='+momentum+' Bougies_haussières='+bullCount+'/9 Bougies_baissières='+bearCount+'/9. Utilise ces niveaux reels pour identifier BSL/SSL/OB/FVG.';
+            // Detecter equal highs/lows H1 pour BSL/SSL
+            const equalHighs=highs.filter(h=>Math.abs(h-recentHigh)<recentHigh*0.0003).length;
+            const equalLows=lows.filter(l=>Math.abs(l-recentLow)<recentLow*0.0003).length;
+            candleContext=' | BOUGIES MT4 H1 (10 dernieres): High='+recentHigh.toFixed(5)+' Low='+recentLow.toFixed(5)+' LastClose='+lastClose.toFixed(5)+' Trend='+trend10+' Momentum='+momentum+' Haussières='+bullCount+'/9 Baissières='+bearCount+'/9 | Equal_Highs_count='+equalHighs+' Equal_Lows_count='+equalLows+'. BSL probable='+recentHigh.toFixed(5)+' SSL probable='+recentLow.toFixed(5)+'. Utilise pour identifier TRAP et pools de liquidite.';
             if(!mt4){
-              const pip=getPip(lastClose);
-              const mid=(recentHigh+recentLow)/2;
-              const isBull=trend10==='bullish';
+              const pip=getPip(lastClose),mid=(recentHigh+recentLow)/2,isBull=trend10==='bullish';
               smcData={price:lastClose.toFixed(5),bid:lastClose.toFixed(5),ask:(lastClose+pip).toFixed(5),bsl:recentHigh.toFixed(5),ssl:recentLow.toFixed(5),trend:trend10,zone:lastClose>mid?'premium':'discount',source:'Bougies MT4'};
               jsLevels={entry:lastClose.toFixed(5),sl:(isBull?lastClose-pip*20:lastClose+pip*20).toFixed(5),tp:(isBull?lastClose+pip*60:lastClose-pip*60).toFixed(5),rr:'3.0:1',bias:isBull?'long':'short'};
             }
@@ -694,16 +820,16 @@ async function launch(forcePair){
       const srcBadge=mt4Source?'<span class="mt4-badge">MT4 LIVE</span>':'<span style="font-size:8px;color:#3a5a2a;font-family:monospace">'+(smcData.source||'--')+'</span>';
       const sd=document.getElementById('smcData');
       const lvls=jsLevels||{entry:'--',sl:'--',tp:'--',rr:'--'};
-      sd.innerHTML='<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px"><div class="gold-title">DONNEES LIVE - '+targetPair+' '+selectedTf+'</div>'+srcBadge+'</div><div class="divider"></div><div class="data-grid" style="margin-top:10px">'+[['BID',smcData.bid||smcData.price,'#e8e8e8'],['ASK',smcData.ask||smcData.price,'#C0C0C0'],['BSL',smcData.bsl,'#00d4ff'],['SSL',smcData.ssl,'#ff6666'],['ENTRY',lvls.entry,'#FFD700'],['SL',lvls.sl,'#ff6666'],['TP',lvls.tp,'#00C853'],['RR',lvls.rr,'#C0C0C0']].map(([k,v,c])=>'<div class="data-box"><div class="silver-label" style="margin-bottom:3px">'+k+'</div><div style="font-size:11px;font-weight:700;color:'+c+';font-family:monospace">'+(v||'--')+'</div></div>').join('')+'</div>';
+      sd.innerHTML='<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px"><div class="gold-title">DONNEES LIVE — '+targetPair+' '+selectedTf+'</div>'+srcBadge+'</div><div class="divider"></div><div class="data-grid" style="margin-top:10px">'+[['BID',smcData.bid||smcData.price,'#e8e8e8'],['ASK',smcData.ask||smcData.price,'#C0C0C0'],['BSL',smcData.bsl,'#00d4ff'],['SSL',smcData.ssl,'#ff6666'],['ENTRY',lvls.entry,'#FFD700'],['SL',lvls.sl,'#ff6666'],['TP',lvls.tp,'#00C853'],['RR',lvls.rr,'#C0C0C0']].map(([k,v,c])=>'<div class="data-box"><div class="silver-label" style="margin-bottom:3px">'+k+'</div><div style="font-size:11px;font-weight:700;color:'+c+';font-family:monospace">'+(v||'--')+'</div></div>').join('')+'</div>';
       sd.style.display='block';
     }
 
     for(let i=0;i<AGENT_KEYS.length;i++){
       const key=AGENT_KEYS[i];
-      renderStepBar(i,'Agent '+(i+1)+'/8 en cours...');
+      renderStepBar(i,'Agent '+(i+1)+'/8 — '+(key.charAt(0).toUpperCase()+key.slice(1))+' en cours...');
       try{
         let ctx='Paire:'+targetPair+' TF:'+selectedTf+' Session:'+session+' Jour:'+days[now.getDay()]+' Heure:'+h+'h';
-        if(smcData) ctx+=' | Prix LIVE: '+smcData.price+' Bid:'+(smcData.bid||smcData.price)+' Ask:'+(smcData.ask||smcData.price);
+        if(smcData) ctx+=' | Prix LIVE:'+smcData.price+' Bid:'+(smcData.bid||smcData.price)+' Ask:'+(smcData.ask||smcData.price)+' BSL_estime:'+smcData.bsl+' SSL_estime:'+smcData.ssl;
         if(candleContext) ctx+=candleContext;
         if(dailyContext) ctx+=dailyContext;
         try{
@@ -711,53 +837,58 @@ async function launch(forcePair){
           if(mt4sym){
             const rawC=await fetch(BACKEND+'/candles/'+mt4sym).catch(()=>null);
             const rawD=await fetch(BACKEND+'/daily/'+mt4sym).catch(()=>null);
-            const dcOk=rawC&&rawC.ok;
-            const ddOk=rawD&&rawD.ok;
-            const dc=dcOk?await rawC.json():{candles:[]};
-            const dd=ddOk?await rawD.json():{candles:[]};
+            const dc=rawC&&rawC.ok?await rawC.json():{candles:[]};
+            const dd=rawD&&rawD.ok?await rawD.json():{candles:[]};
             const visual=generateChartDescription(dc.candles||[],dd.candles||[]);
             if(visual) ctx+=visual;
           }
         }catch(e){}
         if(enqueteurContext&&enqueteurContext.pair===targetPair) ctx+=' | CONTEXTE ENQUETEUR (score '+enqueteurContext.score+'/100): Direction '+enqueteurContext.direction+'. Raison: '+enqueteurContext.raison+'.';
         if(journalContext) ctx+=' | '+journalContext;
-        ctx+=' | Reponds en JSON uniquement.';
-        results[key]=await aiCall(getSys(key),ctx,900);
+        ctx+=' | Reponds en JSON uniquement selon methodologie RedPillFX.';
+        results[key]=await aiCall(getSys(key),ctx,1000);
       }catch(e){results[key]={nom:key,analyse:'Erreur: '+e.message,score:0,score_max:20,verdict:'Indisponible'};}
       document.getElementById('agentCards').innerHTML+=renderAgentCard(key,results[key]);
       document.getElementById('agentGrid').style.display='block';
       await new Promise(r=>setTimeout(r,200));
     }
 
-    renderStepBar(8,'Synthese finale...');
+    renderStepBar(8,'Synthese RedPillFX finale...');
     const total=Object.values(results).reduce((s,a)=>s+(a.score||0),0);
     const trapOk=results.liquidite&&results.liquidite.trap_confirme;
+    const cisdOk=results.liquidite&&results.liquidite.cisd_confirme;
     const msuOk=results.structure&&results.structure.msu_detecte;
+    const smcTrapDetecte=results.liquidite&&results.liquidite.smc_trap_detecte;
 
-    // ── DECISION GATE OVERRIDE ────────────────────────────────
-    // Si Liquidité et Structure HTF sont en contradiction → NO TRADE
+    // ── DECISION GATE OVERRIDE ─────────────────────────────────
     const liqDir=results.liquidite?results.liquidite.direction:'';
     const htfDir=results.structure?results.structure.trend_htf:'';
     const liqBull=liqDir==='bullish'||liqDir==='long';
     const liqBear=liqDir==='bearish'||liqDir==='short';
-    const htfBull=htfDir==='bullish';
-    const htfBear=htfDir==='bearish';
+    const htfBull=htfDir==='bullish',htfBear=htfDir==='bearish';
     const contradiction=(liqBull&&htfBear)||(liqBear&&htfBull);
-    // Si contradiction bloquante → forcer ATTENDRE peu importe le score
-    const dec=contradiction?'ATTENDRE':total>=86?'EXECUTION':total>=61?'SIGNAL':'ATTENDRE';
-    const gateBlocked=contradiction;
-    // ─────────────────────────────────────────────────────────
+    // SMC TRAP detecte = bloquer aussi
+    const gateBlocked=contradiction||smcTrapDetecte;
+    const gateRaison=smcTrapDetecte?'SMC TRAP DETECTE':contradiction?'CONTRADICTION LIQUIDITE/STRUCTURE HTF':'';
+    const dec=gateBlocked?'ATTENDRE':total>=86?'EXECUTION':total>=61?'SIGNAL':'ATTENDRE';
+    // ──────────────────────────────────────────────────────────
 
     const sum=Object.values(results).map(a=>(a.nom||'?')+':'+(a.score||0)).join(' ');
-
     const biasVotes={long:0,short:0};
-    if(results.liquidite){if(results.liquidite.direction==='bullish'||results.liquidite.direction==='long')biasVotes.long+=3;else if(results.liquidite.direction==='bearish'||results.liquidite.direction==='short')biasVotes.short+=3;}
-    if(results.structure){if(results.structure.trend_htf==='bullish')biasVotes.long+=3;else if(results.structure.trend_htf==='bearish')biasVotes.short+=3;if(results.structure.trend_ltf==='bullish')biasVotes.long+=1;else if(results.structure.trend_ltf==='bearish')biasVotes.short+=1;}
+    if(results.liquidite){if(liqBull)biasVotes.long+=3;else if(liqBear)biasVotes.short+=3;}
+    if(results.structure){if(htfBull)biasVotes.long+=3;else if(htfBear)biasVotes.short+=3;if(results.structure.trend_ltf==='bullish')biasVotes.long+=1;else if(results.structure.trend_ltf==='bearish')biasVotes.short+=1;}
     if(results.eco){if(results.eco.biais_fondamental==='bullish')biasVotes.long+=2;else if(results.eco.biais_fondamental==='bearish')biasVotes.short+=2;}
     const votedBias=biasVotes.long>=biasVotes.short?'long':'short';
 
-    const sys='Reponds UNIQUEMENT avec un objet JSON brut. Orchestrateur SMC. '+(trapOk?'TRAP confirme.':'')+' '+(msuOk?'MSU detecte.':'')+' Vote agents: long='+biasVotes.long+' short='+biasVotes.short+'. Format: {"score_total":'+total+',"decision":"'+dec+'","bias":"'+votedBias+'","raisonnement":"texte","confluence":"texte","invalidation":"texte","message":"texte"}';
-    const oRaw=await aiCall(sys,targetPair+' '+selectedTf+' | '+sum,800);
+    const orchSys='Reponds UNIQUEMENT avec un objet JSON brut. Tu es l ORCHESTRATEUR REDPILLFX. Loi: LIQUIDITE=CAUSE / MOUVEMENT=EFFET. '+
+      (trapOk?'TRAP confirme. ':'TRAP NON confirme — signal faible. ')+
+      (cisdOk?'CISD confirme. ':'')+
+      (msuOk?'MSU detecte. ':'')+
+      (smcTrapDetecte?'SMC TRAP DETECTE — NE PAS ENTRER. ':'')+
+      'Vote agents: long='+biasVotes.long+' short='+biasVotes.short+'. '+
+      'Checklist RedPillFX: 1-Liquidite_externe 2-Cause/Effet 3-Buy_to_Sell_ou_Sell_to_Buy 4-CISD 5-IFVG 6-2eme_vague. '+
+      'Format: {"score_total":'+total+',"decision":"'+dec+'","bias":"'+votedBias+'","checklist_validee":3,"raisonnement":"texte","confluence":"texte","invalidation":"texte","message":"texte"}';
+    const oRaw=await aiCall(orchSys,targetPair+' '+selectedTf+' | '+sum,900);
 
     const finalBias=oRaw.bias||votedBias;
     if(smcData){
@@ -766,34 +897,38 @@ async function launch(forcePair){
       jsLevels={entry:fmtLevel(price,entryPrice),sl:fmtLevel(price,isBull?entryPrice-pip*20:entryPrice+pip*20),tp:fmtLevel(price,isBull?entryPrice+pip*60:entryPrice-pip*60),rr:'3.0:1',bias:finalBias};
     }
 
-    const o={score_total:total,decision:dec,bias:finalBias,raisonnement:gateBlocked?'GATE OVERRIDE: Liquidite ('+liqDir+') vs Structure HTF ('+htfDir+') en contradiction — NO TRADE force (score ignore: '+total+'/100)':oRaw.raisonnement||'Analyse completee.',confluence:gateBlocked?'--':oRaw.confluence||'--',invalidation:gateBlocked?'Contradiction Liquidite/Structure HTF bloquante':oRaw.invalidation||'--',message:gateBlocked?'Systeme en desaccord — attendre alignement':oRaw.message||'--',entry:jsLevels?jsLevels.entry:'--',sl:jsLevels?jsLevels.sl:'--',tp:jsLevels?jsLevels.tp:'--',rr:jsLevels?jsLevels.rr:'--',pair:targetPair,tf:selectedTf,gate_blocked:gateBlocked};
+    const raisonnementFinal=gateBlocked?
+      'GATE OVERRIDE ('+gateRaison+'): '+
+      (smcTrapDetecte?'SMC TRAP detecte — les traders SMC sont la liquidite, ne pas entrer. ':'')+
+      (contradiction?'Liquidite ('+liqDir+') vs Structure HTF ('+htfDir+') en contradiction. ':'')+
+      'Score ignore: '+total+'/100':
+      oRaw.raisonnement||'Analyse RedPillFX completee.';
+
+    const o={score_total:total,decision:dec,bias:finalBias,raisonnement:raisonnementFinal,confluence:gateBlocked?'--':oRaw.confluence||'--',invalidation:gateBlocked?(smcTrapDetecte?'SMC TRAP actif — attendre resolution':'Contradiction Liquidite/Structure HTF'):oRaw.invalidation||'--',message:gateBlocked?'Liquidite = Cause. Attendre que la cause soit construite.':oRaw.message||'--',entry:jsLevels?jsLevels.entry:'--',sl:jsLevels?jsLevels.sl:'--',tp:jsLevels?jsLevels.tp:'--',rr:jsLevels?jsLevels.rr:'--',pair:targetPair,tf:selectedTf,gate_blocked:gateBlocked,trap_ok:trapOk,cisd_ok:cisdOk};
 
     renderStepBar(9,'');
     renderDecision(o);
 
-    // 1. Sauvegarder dans le journal EN PREMIER pour avoir le trade_id
-    let realTradeId = null;
+    let realTradeId=null;
     try{
       const jr=await fetch(BACKEND+'/journal',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({date:new Date().toLocaleString('fr-FR'),pair:targetPair,tf:selectedTf,session:session,score:o.score_total,decision:o.decision,bias:o.bias,entry:o.entry,sl:o.sl,tp:o.tp,rr:o.rr})});
-      const jd=await jr.json();
-      realTradeId=jd.id||null;
-    }catch(e){console.error('Journal error:',e);}
+      const jd=await jr.json();realTradeId=jd.id||null;
+    }catch(e){}
     const t={id:realTradeId||Date.now(),date:new Date().toLocaleString('fr-FR'),pair:targetPair,tf:selectedTf,score:o.score_total,decision:o.decision,bias:o.bias,entry:o.entry,sl:o.sl,tp:o.tp,rr:o.rr};
     trades.unshift(t);lastId=t.id;
     if(trades.length>100) trades=trades.slice(0,100);
 
-    // 2. Envoyer Telegram APRES avoir le trade_id
     if((o.score_total||0)>=65&&o.decision!=='ATTENDRE'){
       const ftmoOk=!(results.risk&&results.risk.ftmo_ok===false);
+      const trapInfo=(trapOk?'\n✅ TRAP confirme':'\n⚠️ TRAP non confirme')+(cisdOk?'\n✅ CISD confirme':'')+(msuOk?'\n✅ MSU detecte':'');
       if(!ftmoOk){
-        // Envoyer signal FTMO bloqué AVEC boutons pour journaliser quand même
         const isLftmo=o.bias==='long';
-        const ftmoMsg=(isLftmo?'ACHETER':'VENDRE')+' '+targetPair+'\n'+selectedTf+' | Score: '+o.score_total+'/100\n⚠️ BLOQUE PAR AGENT RISK (FTMO)\nEntree: '+o.entry+'\nSL: '+o.sl+'\nTP: '+o.tp+'\nRR: '+o.rr+'\n\nPrends-tu ce trade quand même ?';
+        const ftmoMsg=(isLftmo?'⬆️ ACHETER':'⬇️ VENDRE')+' '+targetPair+'\n'+selectedTf+' | Score: '+o.score_total+'/100\n⚠️ BLOQUE AGENT RISK (FTMO)\nEntree: '+o.entry+'\nSL: '+o.sl+'\nTP: '+o.tp+'\nRR: '+o.rr+trapInfo+'\n\nPrends-tu ce trade quand même ?';
         try{await fetch(BACKEND+'/telegram',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text:ftmoMsg,trade_id:realTradeId,ftmo_override:true})});}catch(e){}
       } else {
         const isL=o.bias==='long';
-        const tgMsg=(isL?'ACHETER':'VENDRE')+' '+targetPair+'\n'+selectedTf+' | Score: '+o.score_total+'/100\n'+(mt4Source?'MT4 Live':'Calcule')+'\nEntree: '+o.entry+'\nSL: '+o.sl+'\nTP: '+o.tp+'\nRR: '+o.rr+'\nRisque: 1% capital'+(trapOk?'\nTRAP confirme':'')+(msuOk?'\nMSU detecte':'')+'\n\nResultat du trade ?';
-        try{await fetch(BACKEND+'/telegram',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text:tgMsg,trade_id:realTradeId})});}catch(e){console.error('Telegram error:',e);}
+        const tgMsg=(isL?'⬆️ ACHETER':'⬇️ VENDRE')+' '+targetPair+'\n'+selectedTf+' | Score: '+o.score_total+'/100\n'+(mt4Source?'📡 MT4 Live':'Calcule')+'\nEntree: '+o.entry+'\nSL: '+o.sl+'\nTP: '+o.tp+'\nRR: '+o.rr+'\nRisque: 1% capital'+trapInfo+'\n\nResultat du trade ?';
+        try{await fetch(BACKEND+'/telegram',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text:tgMsg,trade_id:realTradeId})});}catch(e){}
       }
     }
 
@@ -805,15 +940,14 @@ async function launch(forcePair){
 }
 
 function renderDecision(o){
-  // Badge gate blocked
   const gateBlocked=o.gate_blocked;
-  const cfg={ATTENDRE:{icon:'&#x23F3;',color:'#ff6666',label:gateBlocked?'CONTRADICTION BLOQUEE':'ATTENDRE',sub:gateBlocked?'Liquidite vs Structure HTF':'Setup insuffisant'},SIGNAL:{icon:'&#x1F441;&#xFE0F;',color:'#FFD700',label:'SIGNAL DETECTE',sub:'Attendre confirmation'},EXECUTION:{icon:'&#x1F4B0;',color:'#00C853',label:'EXECUTION POSSIBLE',sub:'Setup haute probabilite'}};
+  const cfg={ATTENDRE:{icon:'⏳',color:'#ff6666',label:gateBlocked?'GATE BLOQUE':'ATTENDRE',sub:gateBlocked?'Setup invalide RedPillFX':'Cause non construite'},SIGNAL:{icon:'👁️',color:'#FFD700',label:'SIGNAL DETECTE',sub:'Attendre 2eme vague'},EXECUTION:{icon:'💰',color:'#00C853',label:'EXECUTION POSSIBLE',sub:'Setup RedPillFX confirme'}};
   const c=cfg[o.decision]||cfg.ATTENDRE;
   if((o.score_total||0)>=65&&o.decision!=='ATTENDRE'){
     const isL=o.bias==='long',cl=isL?'#00C853':'#ff6666';
-    document.getElementById('signalBanner').innerHTML='<div class="signal-banner" style="background:linear-gradient(135deg,'+cl+'10,#FFD70008);border:2px solid '+cl+';box-shadow:0 0 30px '+cl+'20"><div style="text-align:center;margin-bottom:16px"><div style="font-size:10px;color:#FFD700;letter-spacing:3px;margin-bottom:6px">OPPORTUNITE DETECTEE</div><div style="font-size:30px;font-weight:900;color:'+cl+';font-family:monospace;text-shadow:0 0 15px '+cl+'50">'+(isL?'ACHETER':'VENDRE')+'</div></div><div class="signal-grid">'+[['ENTREE',o.entry,'#FFD700'],['STOP LOSS',o.sl,'#ff6666'],['TAKE PROFIT',o.tp,'#00C853'],['R:R',o.rr,'#C0C0C0']].map(([k,v,col])=>'<div class="signal-box" style="background:#060e0640;border:2px solid '+col+'30"><div style="font-size:8px;color:'+col+';letter-spacing:2px;margin-bottom:4px">'+k+'</div><div style="font-size:20px;font-weight:900;color:'+col+';font-family:monospace">'+(v||'--')+'</div></div>').join('')+'</div></div>';
+    document.getElementById('signalBanner').innerHTML='<div class="signal-banner" style="background:linear-gradient(135deg,'+cl+'10,#FFD70008);border:2px solid '+cl+';box-shadow:0 0 30px '+cl+'20"><div style="text-align:center;margin-bottom:16px"><div style="font-size:10px;color:#FFD700;letter-spacing:3px;margin-bottom:6px">SIGNAL REDPILLFX</div><div style="font-size:30px;font-weight:900;color:'+cl+';font-family:monospace;text-shadow:0 0 15px '+cl+'50">'+(isL?'ACHETER':'VENDRE')+'</div><div style="font-size:9px;color:#4a6a3a;margin-top:4px">'+(o.trap_ok?'✅ TRAP · ':'')+( o.cisd_ok?'✅ CISD · ':'')+'ENTRER SUR 2EME VAGUE</div></div><div class="signal-grid">'+[['ENTREE',o.entry,'#FFD700'],['STOP LOSS',o.sl,'#ff6666'],['TAKE PROFIT',o.tp,'#00C853'],['R:R',o.rr,'#C0C0C0']].map(([k,v,col])=>'<div class="signal-box" style="background:#060e0640;border:2px solid '+col+'30"><div style="font-size:8px;color:'+col+';letter-spacing:2px;margin-bottom:4px">'+k+'</div><div style="font-size:20px;font-weight:900;color:'+col+';font-family:monospace">'+(v||'--')+'</div></div>').join('')+'</div></div>';
   }
-  document.getElementById('decisionPanel').innerHTML='<div class="gold-title" style="margin-bottom:10px">DECISION FINALE</div><div class="decision-panel" style="background:linear-gradient(135deg,'+c.color+'06,#0d160d);border:2px solid '+c.color+'40;box-shadow:0 0 20px '+c.color+'10"><div style="display:flex;align-items:center;gap:14px;margin-bottom:14px;flex-wrap:wrap"><div style="width:52px;height:52px;border-radius:14px;background:'+c.color+'18;border:2px solid '+c.color+'30;display:flex;align-items:center;justify-content:center;font-size:24px">'+c.icon+'</div><div style="flex:1"><div class="silver-label" style="margin-bottom:3px">DECISION</div><div style="font-size:18px;font-weight:900;color:'+c.color+';font-family:monospace">'+c.label+'</div></div><div style="font-size:36px;font-weight:900;color:'+c.color+';font-family:monospace;text-shadow:0 0 15px '+c.color+'40">'+(o.score_total||0)+'<span style="font-size:14px;color:#2a4a2a">/100</span></div></div><div class="divider"></div><div style="background:#060e06;border-radius:10px;padding:12px 14px;margin:12px 0"><div class="silver-label" style="margin-bottom:5px">RAISONNEMENT</div><p style="font-size:11px;color:#8aaa7a;line-height:1.8;margin:0">'+(o.raisonnement||'')+'</p></div><div class="decision-row"><div style="padding:10px 12px;background:#00C85306;border:1px solid #00C85320;border-radius:8px"><div style="font-size:7px;color:#00C85366;letter-spacing:2px;margin-bottom:3px">CONFLUENCE</div><div style="font-size:10px;color:#00C853bb;line-height:1.5">'+(o.confluence||'')+'</div></div><div style="padding:10px 12px;background:#ff666606;border:1px solid #ff666620;border-radius:8px"><div style="font-size:7px;color:#ff666666;letter-spacing:2px;margin-bottom:3px">INVALIDATION</div><div style="font-size:10px;color:#ff6666bb;line-height:1.5">'+(o.invalidation||'')+'</div></div></div>'+(o.message?'<div style="margin-top:10px;padding:10px 14px;background:'+c.color+'08;border:1px solid '+c.color+'20;border-radius:8px"><p style="font-size:11px;color:'+c.color+'bb;margin:0;font-style:italic">"'+o.message+'"</p></div>':'')+(lastId?'<div style="margin-top:14px;padding:12px;background:#060e06;border:1px solid #00C85320;border-radius:10px"><div class="silver-label" style="margin-bottom:8px">RESULTAT DU TRADE ?</div><div style="display:flex;gap:7px;flex-wrap:wrap"><button onclick="markOutcome('+lastId+',\'win\')" style="background:#00C85318;border:1px solid #00C85340;color:#00C853;border-radius:6px;padding:7px 14px;font-size:10px;font-weight:700;cursor:pointer">Gagne</button><button onclick="markOutcome('+lastId+',\'loss\')" style="background:#ff666618;border:1px solid #ff666640;color:#ff6666;border-radius:6px;padding:7px 14px;font-size:10px;font-weight:700;cursor:pointer">Perdu</button><button onclick="markOutcome('+lastId+',\'be\')" style="background:#C0C0C018;border:1px solid #C0C0C040;color:#C0C0C0;border-radius:6px;padding:7px 14px;font-size:10px;font-weight:700;cursor:pointer">Break Even</button></div></div>':'')+'</div>';
+  document.getElementById('decisionPanel').innerHTML='<div class="gold-title" style="margin-bottom:10px">DECISION FINALE — REDPILLFX</div><div class="decision-panel" style="background:linear-gradient(135deg,'+c.color+'06,#0d160d);border:2px solid '+c.color+'40;box-shadow:0 0 20px '+c.color+'10"><div style="display:flex;align-items:center;gap:14px;margin-bottom:14px;flex-wrap:wrap"><div style="width:52px;height:52px;border-radius:14px;background:'+c.color+'18;border:2px solid '+c.color+'30;display:flex;align-items:center;justify-content:center;font-size:24px">'+c.icon+'</div><div style="flex:1"><div class="silver-label" style="margin-bottom:3px">DECISION</div><div style="font-size:18px;font-weight:900;color:'+c.color+';font-family:monospace">'+c.label+'</div></div><div style="font-size:36px;font-weight:900;color:'+c.color+';font-family:monospace;text-shadow:0 0 15px '+c.color+'40">'+(o.score_total||0)+'<span style="font-size:14px;color:#2a4a2a">/100</span></div></div><div class="divider"></div><div style="background:#060e06;border-radius:10px;padding:12px 14px;margin:12px 0"><div class="silver-label" style="margin-bottom:5px">RAISONNEMENT REDPILLFX</div><p style="font-size:11px;color:#8aaa7a;line-height:1.8;margin:0">'+(o.raisonnement||'')+'</p></div><div class="decision-row"><div style="padding:10px 12px;background:#00C85306;border:1px solid #00C85320;border-radius:8px"><div style="font-size:7px;color:#00C85366;letter-spacing:2px;margin-bottom:3px">CONFLUENCE</div><div style="font-size:10px;color:#00C853bb;line-height:1.5">'+(o.confluence||'')+'</div></div><div style="padding:10px 12px;background:#ff666606;border:1px solid #ff666620;border-radius:8px"><div style="font-size:7px;color:#ff666666;letter-spacing:2px;margin-bottom:3px">INVALIDATION</div><div style="font-size:10px;color:#ff6666bb;line-height:1.5">'+(o.invalidation||'')+'</div></div></div>'+(o.message?'<div style="margin-top:10px;padding:10px 14px;background:'+c.color+'08;border:1px solid '+c.color+'20;border-radius:8px"><p style="font-size:11px;color:'+c.color+'bb;margin:0;font-style:italic">"'+o.message+'"</p></div>':'')+(lastId?'<div style="margin-top:14px;padding:12px;background:#060e06;border:1px solid #00C85320;border-radius:10px"><div class="silver-label" style="margin-bottom:8px">RESULTAT DU TRADE ?</div><div style="display:flex;gap:7px;flex-wrap:wrap"><button onclick="markOutcome('+lastId+',\'win\')" style="background:#00C85318;border:1px solid #00C85340;color:#00C853;border-radius:6px;padding:7px 14px;font-size:10px;font-weight:700;cursor:pointer">✅ Gagne</button><button onclick="markOutcome('+lastId+',\'loss\')" style="background:#ff666618;border:1px solid #ff666640;color:#ff6666;border-radius:6px;padding:7px 14px;font-size:10px;font-weight:700;cursor:pointer">❌ Perdu</button><button onclick="markOutcome('+lastId+',\'be\')" style="background:#C0C0C018;border:1px solid #C0C0C040;color:#C0C0C0;border-radius:6px;padding:7px 14px;font-size:10px;font-weight:700;cursor:pointer">➖ Break Even</button></div></div>':'')+'</div>';
 }
 
 function markOutcome(id,outcome){const t=trades.find(x=>x.id===id);if(t){t.outcome=outcome;lastId=null;}if(trades[0])renderDecision(trades[0]);}
@@ -845,198 +979,143 @@ async function loadJournal(){
 async function loadStats(){
   try{
     const r=await fetch(BACKEND+'/journal/stats');const s=await r.json();
-    document.getElementById('statsContent').innerHTML='<div class="stat-grid">'+[['TRADES TOTAL',s.total,'#C0C0C0'],['GAGNES',s.wins,'#00C853'],['PERDUS',s.losses,'#ff6666'],['WINRATE',s.winrate+'%',s.winrate>=50?'#00C853':'#ff6666'],['P&L TOTAL',(s.total_pnl>=0?'+':'')+s.total_pnl+'E',s.total_pnl>=0?'#00C853':'#ff6666']].map(([k,v,c])=>'<div class="stat-box"><div class="silver-label" style="margin-bottom:6px">'+k+'</div><div style="font-size:22px;font-weight:900;color:'+c+';font-family:monospace;text-shadow:0 0 8px '+c+'30">'+v+'</div></div>').join('')+'</div>';
+    let html='<div class="stat-grid">'+[['TRADES TOTAL',s.total,'#C0C0C0'],['GAGNES',s.wins,'#00C853'],['PERDUS',s.losses,'#ff6666'],['WINRATE',s.winrate+'%',s.winrate>=50?'#00C853':'#ff6666'],['P&L TOTAL',(s.total_pnl>=0?'+':'')+s.total_pnl+'E',s.total_pnl>=0?'#00C853':'#ff6666']].map(([k,v,c])=>'<div class="stat-box"><div class="silver-label" style="margin-bottom:6px">'+k+'</div><div style="font-size:22px;font-weight:900;color:'+c+';font-family:monospace;text-shadow:0 0 8px '+c+'30">'+v+'</div></div>').join('')+'</div>';
+    if(s.ctx_trend||s.ctx_range||s.ctx_manipulation){
+      html+='<div class="gold-title" style="margin:14px 0 8px">PAR TYPE DE MARCHE</div><div class="stat-grid">';
+      for(const [k,label] of [['ctx_trend','TREND'],['ctx_range','RANGE'],['ctx_manipulation','MANIPULATION']]){
+        if(s[k]) html+='<div class="stat-box"><div class="silver-label" style="margin-bottom:6px">'+label+'</div><div style="font-size:16px;font-weight:900;color:'+(s[k].winrate>=50?'#00C853':'#ff6666')+';font-family:monospace">'+s[k].winrate+'%</div><div style="font-size:9px;color:#3a5a2a">'+s[k].total+' trades</div></div>';
+      }
+      html+='</div>';
+    }
+    document.getElementById('statsContent').innerHTML=html;
   }catch(e){}
 }
 
 function getSession(){const h=new Date().getHours();return h>=7&&h<10?'London Open':h>=13&&h<16?'NY Open':h>=2&&h<6?'Asian Session':'Inter-session';}
 
-// ── DESCRIPTION VISUELLE DU CHART ────────────────────────────
 function generateChartDescription(candles,daily){
   if(!candles||candles.length<10) return '';
-  const last20=candles.slice(-20);
-  const last3=candles.slice(-3);
-  const high20=Math.max(...last20.map(c=>parseFloat(c.h)));
-  const low20=Math.min(...last20.map(c=>parseFloat(c.l)));
-  const lastC=last20[last20.length-1];
-  const prevC=last20[last20.length-2];
-  const lastClose=parseFloat(lastC.c);
-  const lastOpen=parseFloat(lastC.o);
-  const lastHigh=parseFloat(lastC.h);
-  const lastLow=parseFloat(lastC.l);
+  const last20=candles.slice(-20),last3=candles.slice(-3);
+  const high20=Math.max(...last20.map(c=>parseFloat(c.h))),low20=Math.min(...last20.map(c=>parseFloat(c.l)));
+  const lastC=last20[last20.length-1],prevC=last20[last20.length-2];
+  const lastClose=parseFloat(lastC.c),lastOpen=parseFloat(lastC.o),lastHigh=parseFloat(lastC.h),lastLow=parseFloat(lastC.l);
   const mid20=(high20+low20)/2;
-  const last3desc=last3.map((c,i)=>{
-    const o=parseFloat(c.o),cl=parseFloat(c.c),h=parseFloat(c.h),l=parseFloat(c.l);
-    const type=cl>o?'haussiere':'baissiere';
-    return 'B'+(i+1)+':'+type+' O='+o.toFixed(5)+' H='+h.toFixed(5)+' L='+l.toFixed(5)+' C='+cl.toFixed(5);
-  }).join(' | ');
+  const last3desc=last3.map((c,i)=>{const o=parseFloat(c.o),cl=parseFloat(c.c),h=parseFloat(c.h),l=parseFloat(c.l);return 'B'+(i+1)+':'+(cl>o?'haussiere':'baissiere')+' O='+o.toFixed(5)+' H='+h.toFixed(5)+' L='+l.toFixed(5)+' C='+cl.toFixed(5);}).join(' | ');
   let patterns=[];
-  const body=Math.abs(lastClose-lastOpen);
-  const upperWick=lastHigh-Math.max(lastClose,lastOpen);
-  const lowerWick=Math.min(lastClose,lastOpen)-lastLow;
-  if(upperWick>body*2) patterns.push('Pin Bar baissier');
-  if(lowerWick>body*2) patterns.push('Pin Bar haussier');
-  if(body<(high20-low20)*0.01) patterns.push('Doji');
-  if(lastClose>parseFloat(prevC.h)) patterns.push('Engulfing haussier');
-  if(lastClose<parseFloat(prevC.l)) patterns.push('Engulfing baissier');
+  const body=Math.abs(lastClose-lastOpen),upperWick=lastHigh-Math.max(lastClose,lastOpen),lowerWick=Math.min(lastClose,lastOpen)-lastLow;
+  if(upperWick>body*2) patterns.push('Pin Bar baissier (IDC potentiel SELL)');
+  if(lowerWick>body*2) patterns.push('Pin Bar haussier (IDC potentiel BUY)');
+  if(body<(high20-low20)*0.01) patterns.push('Doji (IDC indecision)');
+  if(lastClose>parseFloat(prevC.h)) patterns.push('Engulfing haussier (BOS potentiel)');
+  if(lastClose<parseFloat(prevC.l)) patterns.push('Engulfing baissier (BOS potentiel)');
   let bullH1=0,bearH1=0;
   last20.forEach(c=>{if(parseFloat(c.c)>parseFloat(c.o))bullH1++;else bearH1++;});
   const trendH1=bullH1>bearH1?'BULLISH':'BEARISH';
-  const zone=lastClose>mid20?'PREMIUM (zone de vente)':'DISCOUNT (zone achat)';
+  const zone=lastClose>mid20?'PREMIUM (zone SELL institutionnelle)':'DISCOUNT (zone BUY institutionnelle)';
+  // Detecter equal highs/lows pour liquidite
+  const highs=last20.map(c=>parseFloat(c.h));
+  const lows=last20.map(c=>parseFloat(c.l));
+  const equalHighs=highs.filter(h=>Math.abs(h-high20)<high20*0.0003).length;
+  const equalLows=lows.filter(l=>Math.abs(l-low20)<low20*0.0003).length;
+  const bslInfo=equalHighs>=2?'BSL_FORT ('+equalHighs+' equal highs a '+high20.toFixed(5)+')':'BSL_SIMPLE';
+  const sslInfo=equalLows>=2?'SSL_FORT ('+equalLows+' equal lows a '+low20.toFixed(5)+')':'SSL_SIMPLE';
   let dailyDesc='';
   if(daily&&daily.length>=5){
-    const dlast5=daily.slice(-5);
-    const dhigh=Math.max(...dlast5.map(c=>parseFloat(c.h)));
-    const dlow=Math.min(...dlast5.map(c=>parseFloat(c.l)));
-    const dlastClose=parseFloat(dlast5[dlast5.length-1].c);
-    let dbull=0,dbear=0;
-    dlast5.forEach(c=>{if(parseFloat(c.c)>parseFloat(c.o))dbull++;else dbear++;});
+    const dlast5=daily.slice(-5),dhigh=Math.max(...dlast5.map(c=>parseFloat(c.h))),dlow=Math.min(...dlast5.map(c=>parseFloat(c.l))),dlastClose=parseFloat(dlast5[dlast5.length-1].c);
+    let dbull=0,dbear=0;dlast5.forEach(c=>{if(parseFloat(c.c)>parseFloat(c.o))dbull++;else dbear++;});
     dailyDesc=' | HTF_DAILY: Trend='+(dbull>dbear?'BULLISH':'BEARISH')+' High5j='+dhigh.toFixed(5)+' Low5j='+dlow.toFixed(5)+' LastClose='+dlastClose.toFixed(5);
   }
-  return ' | ANALYSE VISUELLE CHART H1: Zone='+zone+' Trend_H1='+trendH1+' ('+bullH1+'h/'+bearH1+'b sur 20) High20='+high20.toFixed(5)+' Low20='+low20.toFixed(5)+' Mid='+mid20.toFixed(5)+' | 3_DERNIERES_BOUGIES: '+last3desc+' | PATTERNS: '+(patterns.length>0?patterns.join(', '):'Aucun pattern fort detecte')+dailyDesc;
+  return ' | ANALYSE CHART H1: Zone='+zone+' Trend_H1='+trendH1+' ('+bullH1+'h/'+bearH1+'b/20) High20='+high20.toFixed(5)+' Low20='+low20.toFixed(5)+' Mid='+mid20.toFixed(5)+' '+bslInfo+' '+sslInfo+' | 3_BOUGIES: '+last3desc+' | PATTERNS: '+(patterns.length>0?patterns.join(', '):'Aucun pattern IDC/BOS detecte')+dailyDesc;
 }
 
-// ── CHART — M15 / H1 / Daily ─────────────────────────────────
 async function loadChart(){
   const pair=document.getElementById('chartPair').value;
   const tf=(document.getElementById('chartTf')||{value:'H1'}).value||'H1';
   const sym=MT4_SYMBOLS[pair];
   const cv=document.getElementById('candleChart');
-
   function showError(msg){
-    const dpr=window.devicePixelRatio||1;
-    const W=cv.offsetWidth||800;
-    cv.style.width=W+'px';
-    cv.style.height='380px';
-    cv.width=W*dpr;
-    cv.height=380*dpr;
-    const ctx2=cv.getContext('2d');
-    ctx2.scale(dpr,dpr);
-    ctx2.fillStyle='#040d04';
-    ctx2.fillRect(0,0,W,380);
-    ctx2.fillStyle='#ff6666';
-    ctx2.font='14px monospace';
-    ctx2.textAlign='center';
-    ctx2.fillText('\u26a0 '+msg,W/2,190);
+    const dpr=window.devicePixelRatio||1,W=cv.offsetWidth||800;
+    cv.style.width=W+'px';cv.style.height='380px';cv.width=W*dpr;cv.height=380*dpr;
+    const ctx2=cv.getContext('2d');ctx2.scale(dpr,dpr);ctx2.fillStyle='#040d04';ctx2.fillRect(0,0,W,380);
+    ctx2.fillStyle='#ff6666';ctx2.font='14px monospace';ctx2.textAlign='center';ctx2.fillText('⚠ '+msg,W/2,190);
   }
-
   if(!sym){showError('Paire non disponible en MT4');return;}
-
-  // Route selon timeframe
   const TF_ROUTES={'M15':'/m15/','H1':'/candles/','Daily':'/daily/'};
-  const route=TF_ROUTES[tf]||'/candles/';
-  // Nb bougies a afficher selon TF
   const TF_LIMIT={'M15':80,'H1':60,'Daily':60};
-  const limit=TF_LIMIT[tf]||60;
-
   try{
     showError('Chargement '+tf+'...');
-    const r=await fetch(BACKEND+route+sym);
-    if(!r.ok) throw new Error('Bougies '+tf+' non disponibles - EA doit etre actif');
-    const d=await r.json();
-    const candles=d.candles||[];
-    if(!candles.length) throw new Error('Aucune bougie '+tf+' - marche ferme ou EA inactif');
+    const r=await fetch(BACKEND+(TF_ROUTES[tf]||'/candles/')+sym);
+    if(!r.ok) throw new Error('Bougies '+tf+' non disponibles — EA doit etre actif');
+    const d=await r.json();const candles=d.candles||[];
+    if(!candles.length) throw new Error('Aucune bougie '+tf+' — marche ferme ou EA inactif');
     document.getElementById('chartSource').style.display='inline';
     document.getElementById('chartSource').textContent='MT4 '+tf;
-    drawCandles(candles.slice(-limit),pair,tf);
-  }catch(e){
-    showError(e.message);
-  }
+    drawCandles(candles.slice(-(TF_LIMIT[tf]||60)),pair,tf);
+  }catch(e){showError(e.message);}
 }
 
 function drawCandles(candles,pair,tf){
   const cv=document.getElementById('candleChart');
-  const dpr=window.devicePixelRatio||1;
-  const displayW=cv.offsetWidth||800;
-  const displayH=380;
-  cv.style.width=displayW+'px';
-  cv.style.height=displayH+'px';
-  cv.width=displayW*dpr;
-  cv.height=displayH*dpr;
-  const ctx=cv.getContext('2d');
-  ctx.scale(dpr,dpr);
-  const W=displayW,H=displayH;
-  const PAD={t:30,b:40,l:10,r:70};
-  const cW=W-PAD.l-PAD.r,cH=H-PAD.t-PAD.b;
-
+  const dpr=window.devicePixelRatio||1,displayW=cv.offsetWidth||800,displayH=380;
+  cv.style.width=displayW+'px';cv.style.height=displayH+'px';cv.width=displayW*dpr;cv.height=displayH*dpr;
+  const ctx=cv.getContext('2d');ctx.scale(dpr,dpr);
+  const W=displayW,H=displayH,PAD={t:30,b:40,l:10,r:70},cW=W-PAD.l-PAD.r,cH=H-PAD.t-PAD.b;
   ctx.fillStyle='#040d04';ctx.fillRect(0,0,W,H);
-
-  const highs=candles.map(c=>parseFloat(c.h));
-  const lows=candles.map(c=>parseFloat(c.l));
-  const maxP=Math.max(...highs),minP=Math.min(...lows);
-  const range=maxP-minP||0.001;
-
+  const highs=candles.map(c=>parseFloat(c.h)),lows=candles.map(c=>parseFloat(c.l));
+  const maxP=Math.max(...highs),minP=Math.min(...lows),range=maxP-minP||0.001;
   const toY=v=>PAD.t+cH-(((v-minP)/range)*cH);
-  const n=candles.length;
-  const bW=Math.max(2,Math.floor(cW/n)-1);
-  const gap=Math.floor(cW/n);
-
+  const n=candles.length,bW=Math.max(2,Math.floor(cW/n)-1),gap=Math.floor(cW/n);
   ctx.strokeStyle='#0d1a0d';ctx.lineWidth=1;
   for(let i=0;i<=5;i++){
     const y=PAD.t+(cH/5)*i;
     ctx.beginPath();ctx.moveTo(PAD.l,y);ctx.lineTo(W-PAD.r,y);ctx.stroke();
-    const price=(maxP-((range/5)*i)).toFixed(5);
     ctx.fillStyle='#3a5a2a';ctx.font='9px monospace';ctx.textAlign='left';
-    ctx.fillText(price,W-PAD.r+4,y+3);
+    ctx.fillText((maxP-((range/5)*i)).toFixed(5),W-PAD.r+4,y+3);
   }
-
   ctx.fillStyle='#FFD700';ctx.font='bold 12px monospace';ctx.textAlign='left';
-  ctx.fillText(pair+' '+(tf||'H1')+' - '+n+' bougies',PAD.l+5,18);
-
+  ctx.fillText(pair+' '+(tf||'H1')+' — '+n+' bougies',PAD.l+5,18);
   candles.forEach((c,i)=>{
     const o=parseFloat(c.o),h=parseFloat(c.h),l=parseFloat(c.l),cl=parseFloat(c.c);
-    const x=PAD.l+i*gap+gap/2;
-    const isBull=cl>=o;
-    const color=isBull?'#00C853':'#ff6666';
+    const x=PAD.l+i*gap+gap/2,isBull=cl>=o,color=isBull?'#00C853':'#ff6666';
     ctx.strokeStyle=color;ctx.lineWidth=1;
     ctx.beginPath();ctx.moveTo(x,toY(h));ctx.lineTo(x,toY(l));ctx.stroke();
-    const yO=toY(o),yCl=toY(cl);
-    const bodyTop=Math.min(yO,yCl),bodyH=Math.max(2,Math.abs(yO-yCl));
-    ctx.fillStyle=color;
-    ctx.fillRect(x-bW/2,bodyTop,bW,bodyH);
+    const yO=toY(o),yCl=toY(cl),bodyTop=Math.min(yO,yCl),bodyH=Math.max(2,Math.abs(yO-yCl));
+    ctx.fillStyle=color;ctx.fillRect(x-bW/2,bodyTop,bW,bodyH);
   });
-
-  const lastClose=parseFloat(candles[candles.length-1].c);
-  const yLast=toY(lastClose);
+  const lastClose=parseFloat(candles[candles.length-1].c),yLast=toY(lastClose);
   ctx.strokeStyle='#FFD700';ctx.lineWidth=1;ctx.setLineDash([4,4]);
   ctx.beginPath();ctx.moveTo(PAD.l,yLast);ctx.lineTo(W-PAD.r,yLast);ctx.stroke();
-  ctx.setLineDash([]);
-  ctx.fillStyle='#FFD700';ctx.font='bold 10px monospace';ctx.textAlign='left';
+  ctx.setLineDash([]);ctx.fillStyle='#FFD700';ctx.font='bold 10px monospace';ctx.textAlign='left';
   ctx.fillText(lastClose.toFixed(5),W-PAD.r+4,yLast+3);
-
   if(jsLevels&&jsLevels.entry&&jsLevels.entry!=='--'){
-    const levels=[{v:parseFloat(jsLevels.entry),c:'#FFD700',l:'ENTRY'},{v:parseFloat(jsLevels.sl),c:'#ff6666',l:'SL'},{v:parseFloat(jsLevels.tp),c:'#00C853',l:'TP'}];
-    levels.forEach(lv=>{
+    [{v:parseFloat(jsLevels.entry),c:'#FFD700',l:'ENTRY'},{v:parseFloat(jsLevels.sl),c:'#ff6666',l:'SL'},{v:parseFloat(jsLevels.tp),c:'#00C853',l:'TP'}].forEach(lv=>{
       if(!lv.v||isNaN(lv.v)) return;
-      const y=toY(lv.v);
-      if(y<PAD.t||y>H-PAD.b) return;
+      const y=toY(lv.v);if(y<PAD.t||y>H-PAD.b) return;
       ctx.strokeStyle=lv.c;ctx.lineWidth=2;ctx.setLineDash([6,3]);
       ctx.beginPath();ctx.moveTo(PAD.l,y);ctx.lineTo(W-PAD.r,y);ctx.stroke();
-      ctx.setLineDash([]);
-      ctx.fillStyle=lv.c;ctx.font='bold 9px monospace';
+      ctx.setLineDash([]);ctx.fillStyle=lv.c;ctx.font='bold 9px monospace';
       ctx.fillText(lv.l+' '+lv.v.toFixed(5),W-PAD.r+4,y+3);
     });
   }
 }
 
-// ── GLOSSAIRE ──────────────────────────────────────────────
 const GLOSSAIRE=[
-  {t:'BSL',c:'#00d4ff',d:'Buy Side Liquidity - Liquidite au-dessus du marche. Ce sont les stops des vendeurs et les ordres des acheteurs qui attendent au-dessus des hauts recents. Le prix monte pour les collecter avant de redescendre.'},
-  {t:'SSL',c:'#ff6666',d:'Sell Side Liquidity - Liquidite en dessous du marche. Ce sont les stops des acheteurs sous les bas recents. Le prix descend pour les collecter avant de remonter.'},
-  {t:'MSU',c:'#FFD700',d:'Market Structure Update (LIT CYCLE) - Mise a jour de la structure de marche. Cycle en 3 phases: Build Up -> Inducement -> Mitigation.'},
-  {t:'TRAP',c:'#FFD700',d:'Piege - Faux mouvement cree par les institutionnels pour inciter les traders retail a entrer dans la mauvaise direction. Le prix casse un niveau important puis repart dans l\'autre sens.'},
-  {t:'BOS',c:'#C0C0C0',d:'Break of Structure - Cassure de structure. Le prix casse un haut ou un bas significatif, signalant un changement de tendance. Un vrai BOS confirme la direction. Un faux BOS est un piege.'},
-  {t:'CHoCH',c:'#C0C0C0',d:'Change of Character - Changement de caractere du marche. Premier signe d\'un possible retournement de tendance, moins fort qu\'un BOS.'},
-  {t:'OB',c:'#f59e0b',d:'Order Block - Zone de commandes institutionnelles. La derniere bougie avant un fort mouvement. Le prix revient souvent sur ces zones pour remplir les ordres restants.'},
-  {t:'FVG',c:'#f59e0b',d:'Fair Value Gap - Desequilibre de prix. Zone ou le prix a bouge trop vite. Le prix revient souvent combler ce desequilibre avant de continuer dans la tendance.'},
-  {t:'IPA',c:'#a78bfa',d:'Inefficiency Price Area - Zone de prix inefficace, similaire au FVG. Zone non couverte que le prix cherchera a revisiter.'},
-  {t:'EPA',c:'#a78bfa',d:'Equilibrium Price Area - Zone d\'equilibre du prix. Le milieu d\'une range ou d\'un FVG. Niveau cle ou le prix peut trouver un support ou une resistance.'},
-  {t:'Kill Zone',c:'#00C853',d:'Zone horaire a fort volume institutionnel. London Open: 7h-10h. NY Open: 13h-16h. C\'est dans ces fenetres que les vrais moves directionnels se produisent.'},
-  {t:'RR',c:'#00C853',d:'Risk/Reward - Ratio Risque/Rendement. Un RR de 3:1 signifie que pour 1 euro risque, on vise 3 euros de gain. Minimum recommande: 3:1.'},
-  {t:'BE',c:'#C0C0C0',d:'Break Even - Deplacer le Stop Loss au prix d\'entree une fois la premiere cible atteinte. Permet de securiser le trade sans risque de perte.'},
-  {t:'HTF',c:'#C0C0C0',d:'Higher Time Frame - Timeframe superieur. Daily ou H4. Donne la direction macro. Toujours analyser le HTF avant le LTF.'},
-  {t:'LTF',c:'#C0C0C0',d:'Lower Time Frame - Timeframe inferieur. H1 ou M15. Utilise pour affiner l\'entree apres avoir identifie la direction sur le HTF.'},
-  {t:'IDC',c:'#fb923c',d:'Indecision Candle - Bougie d\'indecision (doji, pin bar). Souvent le signal que le prix va repartir dans l\'autre sens. Chercher les IDC dans les zones cles.'},
+  {t:'LIQUIDITE = CAUSE',c:'#FFD700',d:'Principe fondamental RedPillFX. Sans prise de liquidite prealable = pas de vrai move. Le marche gravite naturellement vers les pools de liquidite (BSL/SSL).'},
+  {t:'MOUVEMENT = EFFET',c:'#FFD700',d:'Le move directionnel est la consequence de la prise de liquidite. Plus la cause est grande (longue accumulation) = plus l effet est violent. Cycle perpetuel: Cause → Effet → Nouvelle Cause.'},
+  {t:'BSL',c:'#00d4ff',d:'Buy Side Liquidity — Liquidite au-dessus des highs recents. Stops des vendeurs + ordres acheteurs en attente. Equal Highs = BSL fort (concentration maximale). Le prix monte les collecter avant de redescendre (Buy to Sell).'},
+  {t:'SSL',c:'#ff6666',d:'Sell Side Liquidity — Liquidite en dessous des lows recents. Stops des acheteurs + ordres vendeurs. Equal Lows = SSL fort. Le prix descend les collecter avant de remonter (Sell to Buy).'},
+  {t:'TRAP',c:'#FFA500',d:'Faux mouvement institutionnel pour collecter la liquidite. Buy to Sell: prix monte prendre BSL puis rejette pour vendre. Sell to Buy: prix descend prendre SSL puis rejette pour acheter. OBLIGATOIRE avant entree.'},
+  {t:'SMC TRAP',c:'#ff6666',d:'Piege specifique contre les traders SMC. Faux BOS multiple sur OB/FVG des traders qui pensent comprendre la liquidite. Ces traders DEVIENNENT la liquidite. Signal: fuir, ne pas entrer.'},
+  {t:'CISD',c:'#00C853',d:'Change In State of Delivery — Changement de livraison du prix. Confirmation du retournement apres TRAP. Le prix change de comportement: etait vendeur → devient acheteur (ou inverse). Confirme la direction reelle.'},
+  {t:'IFVG',c:'#e879f9',d:'Inversion Fair Value Gap — Zone de reequilibrage apres MSU/CISD. Le FVG qui servait de resistance devient support (ou inverse). Zone d entree aggressive valide apres confirmation CISD.'},
+  {t:'BPL',c:'#00d4ff',d:'Breaker Block (ICT) — Prix casse en haut ET en bas (double breakout). Entree sur RETEST du BPL uniquement. TF optimaux: 3min, 5min, 15min. Beaucoup de faux signaux en 1min. Outil de placement, pas signal seul.'},
+  {t:'Strong High/Low',c:'#C0C0C0',d:'High ou Low qui a PREALABLEMENT recupere de la liquidite avant de se former. C est le niveau le plus puissant. Sans prise de liquidite prealable = NO STRONG = niveau faible a ignorer.'},
+  {t:'Structure Externe',c:'#C0C0C0',d:'Structure HTF (Daily, H4, H1) — donne la direction macro. Analyser EN PREMIER avant toute decision. Fake BOS vs True BOS: Fake BOS = partie du TRAP (ne pas invalider setup). True BOS = direction reelle confirmee.'},
+  {t:'LIT CYCLE',c:'#FFD700',d:'Build Up (Asia, accumulation silencieuse) → Inducement (prise liquidite, faux move) → Mitigation (retour sur OB/FVG) → Expansion (vrai move directionnel). Identifier la phase en cours pour anticiper le prochain move.'},
+  {t:'OTE',c:'#4ade80',d:'Optimal Trade Entry — Zone d entree optimale dans un FVG ou BPL. Generalement 50-79% du retracement du FVG. Combine avec IDC pour confirmation precise.'},
+  {t:'IDC',c:'#FFA500',d:'Indecision Candle — Doji, pin bar, inside bar en zone cle. Signal que le prix va repartir dans l autre sens. Chercher IDC dans POI pour confirmation entree. IDC + BPL + FVG = setup haute probabilite.'},
+  {t:'POI',c:'#FFD700',d:'Point of Interest — Zone d entree institutionnelle valide. Deux types: Continuation (pullback sur SSL/BSL → POI → rebond) ou Retournement (prise BSL → CISD → POI baissier → move down). POI valide UNIQUEMENT si liquidite prise AVANT.'},
+  {t:'Kill Zone',c:'#00C853',d:'Fenetre horaire a fort volume institutionnel. London Open 7h-10h = principale (moves sur liquidity grab Asia). NY Open 13h30-16h = deuxieme Kill Zone. Asia 00h-07h = Build Up silencieux uniquement. Inter-session 16h-21h = eviter absolument.'},
 ];
 
 function renderGlossaire(){
@@ -1045,28 +1124,17 @@ function renderGlossaire(){
   grid.innerHTML=GLOSSAIRE.map(g=>'<div style="background:#060e06;border:1px solid '+g.c+'22;border-left:3px solid '+g.c+';border-radius:8px;padding:10px 12px"><div style="font-size:11px;font-weight:900;color:'+g.c+';font-family:monospace;margin-bottom:5px">'+g.t+'</div><div style="font-size:10px;color:#6a8a5a;line-height:1.6">'+g.d+'</div></div>').join('');
 }
 
-// ── SCHEDULER ──────────────────────────────────────────────
 let schedulerActive=false,schedulerInterval=null,lastAutoAnalysis={london:null,ny:null};
 
 function startScheduler(){
   if(schedulerActive) return;
   schedulerActive=true;
-  console.log('Scheduler demarre');
   schedulerInterval=setInterval(async()=>{
-    const now=new Date();
-    const h=now.getHours(),m=now.getMinutes(),day=now.getDay();
+    const now=new Date(),h=now.getHours(),m=now.getMinutes(),day=now.getDay();
     if(day===0||day===6) return;
     const todayStr=now.toDateString();
-    if(h===7&&m===0&&lastAutoAnalysis.london!==todayStr){
-      lastAutoAnalysis.london=todayStr;
-      await sendTelegram('Trading Master V5 - London Open - Analyse automatique en cours...');
-      await runAutoAnalysis('London Open');
-    }
-    if(h===13&&m===30&&lastAutoAnalysis.ny!==todayStr){
-      lastAutoAnalysis.ny=todayStr;
-      await sendTelegram('Trading Master V5 - NY Open - Analyse automatique en cours...');
-      await runAutoAnalysis('NY Open');
-    }
+    if(h===7&&m===0&&lastAutoAnalysis.london!==todayStr){lastAutoAnalysis.london=todayStr;await sendTelegram('Trading Master V5 RedPillFX — London Open — Analyse liquidite en cours...');await runAutoAnalysis('London Open');}
+    if(h===13&&m===30&&lastAutoAnalysis.ny!==todayStr){lastAutoAnalysis.ny=todayStr;await sendTelegram('Trading Master V5 RedPillFX — NY Open — Analyse liquidite en cours...');await runAutoAnalysis('NY Open');}
   },30000);
   document.getElementById('schedulerBtn').textContent='Scheduler ON';
   document.getElementById('schedulerBtn').style.background='#00C85320';
@@ -1098,26 +1166,21 @@ async function runAutoAnalysis(sessionName){
       const sym=MT4_SYMBOLS[pair];
       const mt4=await getPriceMT4(pair);
       let price=mt4?mt4.bid:null;
-      if(!price&&sym){
-        try{const rc=await fetch(BACKEND+'/candles/'+sym);if(rc.ok){const dc=await rc.json();const c=dc.candles||[];if(c.length)price=parseFloat(c[c.length-1].c);}}catch(e){}
-      }
+      if(!price&&sym){try{const rc=await fetch(BACKEND+'/candles/'+sym);if(rc.ok){const dc=await rc.json();const c=dc.candles||[];if(c.length)price=parseFloat(c[c.length-1].c);}}catch(e){}}
       const avCandles=await getAlphaVantageDaily(pair);
       let dailyCtx='';
       if(avCandles&&avCandles.length>=10){
         const last10=avCandles.slice(-10);
-        const dh=Math.max(...last10.map(c=>c.h));
-        const dl=Math.min(...last10.map(c=>c.l));
-        const dc=last10[last10.length-1].c;
-        const dt=dc>last10[0].c?'bullish':'bearish';
-        dailyCtx=' Daily_HTF: Trend='+dt+' High='+dh.toFixed(5)+' Low='+dl.toFixed(5)+' Close='+dc.toFixed(5);
+        const dh=Math.max(...last10.map(c=>c.h)),dl=Math.min(...last10.map(c=>c.l)),dc2=last10[last10.length-1].c;
+        const dt=dc2>last10[0].c?'bullish':'bearish';
+        dailyCtx=' Daily_HTF:'+dt+' High='+dh.toFixed(5)+' Low='+dl.toFixed(5)+' BSL_potentiel='+dh.toFixed(5)+' SSL_potentiel='+dl.toFixed(5);
       }
-      const prompt='Paire:'+pair+' TF:H1 Session:'+sessionName+' Jour:'+days[now.getDay()]+' Heure:'+h+'h'+(price?' Prix:'+price.toFixed(5):'')+dailyCtx;
-      const sys='Reponds UNIQUEMENT avec un objet JSON brut. Orchestrateur SMC rapide. Format: {"score":75,"decision":"SIGNAL","bias":"long","resume":"1 phrase","entry":"niveau","sl":"niveau","tp":"niveau"}';
+      const prompt='Paire:'+pair+' TF:H1 Session:'+sessionName+' Jour:'+days[now.getDay()]+' Heure:'+h+'h'+(price?' Prix:'+price.toFixed(5):'')+dailyCtx+' Analyse la liquidite disponible selon RedPillFX. Liquidite=Cause, Mouvement=Effet.';
+      const sys='Reponds UNIQUEMENT avec un objet JSON brut. Orchestrateur RedPillFX rapide. Verifier liquidite disponible avant signal. Format: {"score":75,"decision":"SIGNAL","bias":"long","trap_identifie":true,"liquidite_disponible":"SSL a X.XXXXX","resume":"1 phrase","entry":"niveau","sl":"niveau","tp":"niveau"}';
       const r=await aiCall(sys,prompt,500);
-      const score=r.score||0;
-      if(score>=65){
+      if((r.score||0)>=65){
         const isL=r.bias==='long';
-        await sendTelegram('SIGNAL AUTO - '+sessionName+'\n'+(isL?'ACHETER':'VENDRE')+' '+pair+'\nH1 | Score: '+score+'/100\nEntree: '+(r.entry||'--')+'\nSL: '+(r.sl||'--')+'\nTP: '+(r.tp||'--'));
+        await sendTelegram('SIGNAL AUTO — '+sessionName+'\n'+(isL?'⬆️ ACHETER':'⬇️ VENDRE')+' '+pair+'\nH1 | Score: '+r.score+'/100'+(r.trap_identifie?'\n✅ TRAP identifie':'\n⚠️ TRAP non confirme')+(r.liquidite_disponible?'\n💧 '+r.liquidite_disponible:'')+'\nEntree: '+(r.entry||'--')+'\nSL: '+(r.sl||'--')+'\nTP: '+(r.tp||'--'));
       }
       await new Promise(res=>setTimeout(res,2000));
     }catch(e){}
