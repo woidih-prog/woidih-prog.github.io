@@ -263,6 +263,37 @@ POI CONTINUATION vs RETOURNEMENT:
 
 BPL (Breaker Block): Prix casse en haut (prend liquidite High) ET casse en bas (prend liquidite Low). Entree sur RETEST du BPL uniquement. Meilleures TF: 3min, 5min, 15min. Beaucoup de faux signals en 1min. On ne trade PAS le BPL — on trade la liquidite, le BPL est l outil de placement.
 
+HIERARCHIE DES INDUCEMENTS REDPILLFX:
+DEFINITION: La liquidite = activer les stops, take profits et break even des traders. Le marche vient chercher cette liquidite (cause) pour creer un move directionnel (effet). Sans prise de l inducement = pas de move = NE PAS ENTRER.
+REGLE FONDAMENTALE: Avant toute entree, visualiser et identifier les inducements. Si l inducement n est pas encore pris = ATTENDRE OBLIGATOIREMENT.
+
+MINEUR INDUCEMENTS (intrajournaliers):
+- Timeframe: M1, M3, M5
+- Horizon: Meme journee uniquement
+- Ce que c est: Equal highs / equal lows de la journee en cours sur M1/M5
+- Loi: Pour que le marche cree un effet (move), il doit d abord prendre la cause (inducement mineur)
+- Entree uniquement APRES prise de l inducement mineur
+
+MOYEN INDUCEMENTS (plurijournaliers):
+- Timeframe: M5 a M15
+- Horizon: 2-3 jours maximum, 1 semaine max
+- Ce que c est: PDH/PDL (Previous Day High/Low) et niveaux des journees precedentes sur M5/M15
+- Necessite de regarder vers la gauche sur plusieurs jours
+- Plus puissants que les mineurs (plus de liquidite accumulee)
+- Au-dela d une semaine = Majeur inducement
+
+MAJEUR INDUCEMENTS (multiweeks):
+- Timeframe: M15, H1, H4, Daily et au-dessus
+- Horizon: Plusieurs semaines/mois
+- Ce que c est: Niveaux HTF majeurs, equal highs/lows de plusieurs semaines
+- Les plus puissants = le plus de liquidite = moves les plus forts
+
+CONFLUENCE INDUCEMENTS:
+- Mineur + Moyen + Majeur alignes dans meme direction = confluence maximale = signal tres fort (+5pts bonus)
+- Mineur seul = signal faible, prudence
+- Moyen + Majeur alignes = signal fort (+3pts bonus)
+- Aucun inducement identifie = NE PAS TRADER absolument
+
 CHECKLIST TRADE REDPILLFX (trade reel du 12/06/2026):
 1. Prise de liquidite externe confirmee
 2. Cycle de cause a effet identifie
@@ -285,7 +316,11 @@ REGLES DE SCORING REDPILLFX:
 - Aucune prise de liquidite visible = -6pts (signal invalide)
 - Liquidite proche non collectee dans direction opposee = -4pts
 - Score minimum 8/20 si session London/NY active + prix disponible
-- Ne jamais mettre 0 sauf condition explicitement invalide`;
+- Ne jamais mettre 0 sauf condition explicitement invalide
+- Inducement Mineur+Moyen+Majeur alignes = +5pts bonus confluence maximale
+- Inducement Moyen+Majeur alignes = +3pts bonus
+- Aucun inducement identifie = NE PAS TRADER = score 0 Agent Liquidite
+- PDH/PDL non encore collecte dans direction = inducement moyen present`;
 
 async function getAlphaVantageDaily(pair){
   const AV_SYMBOLS={"EUR/USD":"EUR","GBP/USD":"GBP","USD/JPY":"JPY","GBP/JPY":"GBP","XAU/USD":"XAU","USD/CAD":"CAD","AUD/USD":"AUD","NZD/USD":"NZD","EUR/JPY":"EUR","USD/CHF":"CHF","EUR/GBP":"EUR"};
@@ -918,15 +953,19 @@ async function launch(forcePair){
     trades.unshift(t);lastId=t.id;
     if(trades.length>100) trades=trades.slice(0,100);
 
-    if((o.score_total||0)>=65&&o.decision!=='ATTENDRE'){
-      const ftmoOk=!(results.risk&&results.risk.ftmo_ok===false);
-      const trapInfo=(trapOk?'\n✅ TRAP confirme':'\n⚠️ TRAP non confirme')+(cisdOk?'\n✅ CISD confirme':'')+(msuOk?'\n✅ MSU detecte':'');
+    const trapInfo=(trapOk?'\n✅ TRAP confirme':'\n⚠️ TRAP non confirme')+(cisdOk?'\n✅ CISD confirme':'')+(msuOk?'\n✅ MSU detecte':'');
+    const ftmoOk=!(results.risk&&results.risk.ftmo_ok===false);
+    const isL=o.bias==='long';
+
+    if(o.decision==='ATTENDRE'&&(o.score_total||0)>=50){
+      // Signal ATTENDRE mais score suffisant — envoyer avec boutons Je prends / Je passe
+      const waitMsg=(isL?'⬆️ ACHETER':'⬇️ VENDRE')+' '+targetPair+'\n'+selectedTf+' | Score: '+o.score_total+'/100\n⏳ ORCHESTRATEUR: ATTENDRE\nEntree: '+o.entry+'\nSL: '+o.sl+'\nTP: '+o.tp+'\nRR: '+o.rr+trapInfo+'\n\nTu prends ce trade quand même ?';
+      try{await fetch(BACKEND+'/telegram',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text:waitMsg,trade_id:realTradeId,wait_override:true})});}catch(e){}
+    } else if((o.score_total||0)>=65&&o.decision!=='ATTENDRE'){
       if(!ftmoOk){
-        const isLftmo=o.bias==='long';
-        const ftmoMsg=(isLftmo?'⬆️ ACHETER':'⬇️ VENDRE')+' '+targetPair+'\n'+selectedTf+' | Score: '+o.score_total+'/100\n⚠️ BLOQUE AGENT RISK (FTMO)\nEntree: '+o.entry+'\nSL: '+o.sl+'\nTP: '+o.tp+'\nRR: '+o.rr+trapInfo+'\n\nPrends-tu ce trade quand même ?';
+        const ftmoMsg=(isL?'⬆️ ACHETER':'⬇️ VENDRE')+' '+targetPair+'\n'+selectedTf+' | Score: '+o.score_total+'/100\n⚠️ BLOQUE AGENT RISK (FTMO)\nEntree: '+o.entry+'\nSL: '+o.sl+'\nTP: '+o.tp+'\nRR: '+o.rr+trapInfo+'\n\nPrends-tu ce trade quand même ?';
         try{await fetch(BACKEND+'/telegram',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text:ftmoMsg,trade_id:realTradeId,ftmo_override:true})});}catch(e){}
       } else {
-        const isL=o.bias==='long';
         const tgMsg=(isL?'⬆️ ACHETER':'⬇️ VENDRE')+' '+targetPair+'\n'+selectedTf+' | Score: '+o.score_total+'/100\n'+(mt4Source?'📡 MT4 Live':'Calcule')+'\nEntree: '+o.entry+'\nSL: '+o.sl+'\nTP: '+o.tp+'\nRR: '+o.rr+'\nRisque: 1% capital'+trapInfo+'\n\nResultat du trade ?';
         try{await fetch(BACKEND+'/telegram',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text:tgMsg,trade_id:realTradeId})});}catch(e){}
       }
@@ -1115,6 +1154,10 @@ const GLOSSAIRE=[
   {t:'OTE',c:'#4ade80',d:'Optimal Trade Entry — Zone d entree optimale dans un FVG ou BPL. Generalement 50-79% du retracement du FVG. Combine avec IDC pour confirmation precise.'},
   {t:'IDC',c:'#FFA500',d:'Indecision Candle — Doji, pin bar, inside bar en zone cle. Signal que le prix va repartir dans l autre sens. Chercher IDC dans POI pour confirmation entree. IDC + BPL + FVG = setup haute probabilite.'},
   {t:'POI',c:'#FFD700',d:'Point of Interest — Zone d entree institutionnelle valide. Deux types: Continuation (pullback sur SSL/BSL → POI → rebond) ou Retournement (prise BSL → CISD → POI baissier → move down). POI valide UNIQUEMENT si liquidite prise AVANT.'},
+  {t:'Inducement MINEUR',c:'#FFA500',d:'Liquidite intrajournaliere sur M1/M3/M5. Equal highs/lows de la journee en cours. Doit etre collecte AVANT toute entree. Horizon: meme journee uniquement. Loi: sans prise inducement = pas de move.'},
+  {t:'Inducement MOYEN',c:'#FFA500',d:'PDH/PDL (Previous Day High/Low) et niveaux des 2-3 derniers jours sur M5/M15. Plus puissant que le mineur. Horizon: 1 semaine max. Au-dela = Majeur. Regarder vers la gauche sur plusieurs jours.'},
+  {t:'Inducement MAJEUR',c:'#FFA500',d:'Niveaux HTF majeurs sur M15/H1/H4/Daily. Equal highs/lows de plusieurs semaines. Le plus de liquidite = moves les plus forts. Confluence Mineur+Moyen+Majeur = signal maximum.'},
+  {t:'PDH/PDL',c:'#FFA500',d:'Previous Day High/Low — Haut et bas de la journee precedente. Niveau de Moyen Inducement par excellence. Le prix va souvent chercher le PDH ou PDL avant de continuer. Surveiller quotidiennement.'},
   {t:'Kill Zone',c:'#00C853',d:'Fenetre horaire a fort volume institutionnel. London Open 7h-10h = principale (moves sur liquidity grab Asia). NY Open 13h30-16h = deuxieme Kill Zone. Asia 00h-07h = Build Up silencieux uniquement. Inter-session 16h-21h = eviter absolument.'},
 ];
 
