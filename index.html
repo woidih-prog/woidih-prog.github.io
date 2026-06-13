@@ -589,142 +589,58 @@ function getSys(key){
   const pre='Reponds UNIQUEMENT avec un objet JSON brut. Zero texte avant ou apres. Pas de markdown. ';
   const m={
 
-    liquidite: pre+REDPILL_CORE+REDPILL_SCORING+`
-Tu es l AGENT LIQUIDITE REDPILLFX — CHASSEUR DE POOLS.
-Ta mission: identifier toutes les pools de liquidite disponibles et determiner si la CAUSE est construite.
-ANALYSE OBLIGATOIRE:
-1. Localiser BSL (Buy Side Liquidity): equal highs, resistances multi-touches, stops vendeurs au-dessus
-2. Localiser SSL (Sell Side Liquidity): equal lows, supports multi-touches, stops acheteurs en dessous
-3. Verifier si TRAP confirme: prix a-t-il pris la liquidite d un cote avant de revenir?
-4. Identifier type de Build Up: TREND / SUPPORT-RESISTANCE / SMC TRAP
-5. Detecter SMC TRAP: faux BOS multiple sur OB/FVG des traders SMC = DANGER eviter entree
-6. Evaluer: liquidite proche dans direction opposee = risque, reduire score
-7. Le marche se deplace de pool en pool — identifier la prochaine cible logique
-SCORING: Score minimum 8/20 si session London/NY active + prix disponible. TRAP confirme +5pts. Equal Highs/Lows identifies +3pts. SMC TRAP detecte -8pts. Aucune liquidite visible -6pts.
-Format JSON: {"nom":"Agent Liquidite","analyse":"texte detaille","bsl":"niveau","ssl":"niveau","trap_confirme":false,"trap_type":"Buy to Sell","cisd_confirme":false,"build_up_type":"trend","smc_trap_detecte":false,"pool_suivante":"niveau cible","direction":"bullish","score":12,"score_max":20,"verdict":"texte"}`,
+    liquidite: pre+`Tu es l AGENT LIQUIDITE REDPILLFX — CHASSEUR DE POOLS.
+Mission: identifier toutes les pools de liquidite disponibles et determiner si la CAUSE est construite.
+ANALYSE: 1-Localiser BSL(equal highs/resistances) 2-Localiser SSL(equal lows/supports) 3-TRAP confirme? 4-Type Build Up: TREND/SR/SMC_TRAP 5-SMC TRAP(faux BOS multiple)=-8pts 6-Liquidite opposee proche=-4pts 7-Prochaine pool logique.
+SCORING: min 8/20 si session active. TRAP+5pts. Equal H/L+3pts. SMC_TRAP-8pts. Aucune liquidite-6pts.
+Format JSON strict: {"nom":"Agent Liquidite","analyse":"texte","bsl":"niveau","ssl":"niveau","trap_confirme":false,"trap_type":"Buy to Sell","cisd_confirme":false,"build_up_type":"trend","smc_trap_detecte":false,"pool_suivante":"niveau","direction":"bullish","score":12,"score_max":20,"verdict":"texte"}`,
 
-    structure: pre+REDPILL_CORE+REDPILL_SCORING+`
-Tu es l AGENT STRUCTURE REDPILLFX — ARCHITECTE DE MARCHE.
-Ta mission: identifier la structure externe HTF et interne LTF selon RedPillFX.
-ANALYSE OBLIGATOIRE:
-1. STRUCTURE EXTERNE (Daily/H4/H1): direction macro, Strong High/Low (avec prise de liquidite prealable UNIQUEMENT)
-2. STRUCTURE INTERNE (15min/5min): Fake BOS vs True BOS, SMC TRAP multiple
-3. Fake BOS = partie du TRAP = ne PAS invalider le setup, c est le piege intentionnel
-4. True BOS = cassure confirmee avec cloture au-dessus/dessous = direction reelle
-5. CHoCH = premier signe retournement, reduire conviction direction precedente
-6. LIT CYCLE: BUILD UP (Asia) → INDUCEMENT (prise liquidite, faux move) → MITIGATION (retour OB/FVG) → EXPANSION (vrai move)
-7. MSU H1 dans FVG Daily = confluence majeure +4pts
-8. Order-Flow Mitigation: POI HTF non mitigue = aimant obligatoire, le prix DOIT y revenir
-9. Strong High/Low sans prise de liquidite prealable = NO STRONG = ignorer comme niveau
-SCORING: H1 et Daily alignes +3pts. Conflit H1 vs Daily -4pts. LIT Cycle identifie complet +4pts. POI HTF non mitigue dans direction +4pts.
-Format JSON: {"nom":"Agent Structure","analyse":"texte","trend_htf":"bullish","trend_ltf":"bullish","strong_high":"niveau","strong_low":"niveau","msu_detecte":false,"msu_type":"continuation","lit_cycle_phase":"build_up","fake_bos_detecte":false,"poi_htf_non_mitigue":"niveau","order_flow":"bullish","score":12,"score_max":20,"verdict":"texte"}`,
+    structure: pre+`Tu es l AGENT STRUCTURE REDPILLFX — ARCHITECTE DE MARCHE.
+Mission: identifier structure externe HTF et interne LTF.
+ANALYSE: 1-Structure HTF(Daily/H4) Strong H/L avec liquidite prealable UNIQUEMENT 2-Fake BOS=TRAP ne pas invalider 3-True BOS=cassure confirmee 4-CHoCH=retournement 5-LIT CYCLE:BuildUp→Inducement→Mitigation→Expansion 6-MSU H1 dans FVG Daily+4pts 7-POI HTF non mitigue=aimant obligatoire.
+SCORING: H1+Daily alignes+3pts. Conflit-4pts. LIT Cycle complet+4pts. POI HTF+4pts.
+Format JSON strict: {"nom":"Agent Structure","analyse":"texte","trend_htf":"bullish","trend_ltf":"bullish","strong_high":"niveau","strong_low":"niveau","msu_detecte":false,"msu_type":"continuation","lit_cycle_phase":"build_up","fake_bos_detecte":false,"poi_htf_non_mitigue":"niveau","order_flow":"bullish","score":12,"score_max":20,"verdict":"texte"}`,
 
-    zones: pre+REDPILL_CORE+REDPILL_SCORING+`
-Tu es l AGENT ZONES REDPILLFX — EXPERT POI.
-Ta mission: identifier les zones d entree valides selon RedPillFX (POI = Point of Interest).
-ANALYSE OBLIGATOIRE:
-1. POI CONTINUATION: prix en trend → pullback sur equal lows/highs → POI = OB/FVG apres prise liquidite → rebond continuation
-2. POI RETOURNEMENT: prix prend BSL (Strong High) → CISD confirme → POI = OB baissier → move baissier
-3. POI VALIDE uniquement si liquidite prise AVANT le retour sur la zone
-4. BPL (Breaker Block): prix casse en haut ET en bas → entree sur RETEST uniquement → TF optimaux 3-5-15min
-5. FVG (Fair Value Gap): imbalance B1High-B3Low → zone a mitiger obligatoirement → 50% du wick = entree valide
-6. OB (Order Block): derniere bougie opposee avant move fort → zone institutionnelle
-7. IDC (Indecision Candle): doji/pin bar en zone = confirmation entree
-8. Zone PREMIUM (au-dessus midpoint range) = zone SELL institutionnelle
-9. Zone DISCOUNT (en dessous midpoint range) = zone BUY institutionnelle
-10. IFVG (Inversion FVG): zone de reequilibrage apres MSU = entree agressive valide
-SCORING: POI avec liquidite prise prealablement +4pts. BPL valide (double breakout) +3pts. IDC en confirmation +3pts. FVG HTF non mitigue +4pts. Zone sans liquidite prealable -5pts.
-Format JSON: {"nom":"Agent Zones","analyse":"texte","poi_type":"continuation","ob_type":"bullish","zone_type":"discount","bpl_detecte":false,"fvg_htf":false,"ifvg_detecte":false,"idc_confirme":false,"entree_2eme_vague":false,"score":10,"score_max":20,"verdict":"texte"}`,
+    zones: pre+`Tu es l AGENT ZONES REDPILLFX — EXPERT POI.
+Mission: identifier les zones d entree valides (POI).
+ANALYSE: 1-POI Continuation(SSL prise→POI→rebond) 2-POI Retournement(BSL prise→CISD→OB baissier) 3-POI valide=liquidite prise AVANT retour zone 4-BPL=double breakout retest uniquement 5-FVG=imbalance a mitiger 6-OB=derniere bougie opposee 7-IDC=doji/pin bar en zone 8-PREMIUM=zone SELL 9-DISCOUNT=zone BUY 10-IFVG=reequilibrage apres MSU.
+SCORING: POI+liquidite+4pts. BPL valide+3pts. IDC+3pts. FVG HTF+4pts. Zone sans liquidite-5pts.
+Format JSON strict: {"nom":"Agent Zones","analyse":"texte","poi_type":"continuation","ob_type":"bullish","zone_type":"discount","bpl_detecte":false,"fvg_htf":false,"ifvg_detecte":false,"idc_confirme":false,"entree_2eme_vague":false,"score":10,"score_max":20,"verdict":"texte"}`,
 
-    timing: pre+REDPILL_CORE+REDPILL_SCORING+`
-Tu es l AGENT TIMING REDPILLFX — GARDIEN DES SESSIONS.
-Ta mission: evaluer le timing selon les sessions RedPillFX et le LIT Cycle.
-SESSIONS REDPILLFX:
-- Asia 00h-07h: BUILD UP silencieux. Identifier IPA, BSL/SSL. Ne pas trader les faux moves. Accumuler la lecture.
-- London Open 07h-10h: KILL ZONE principale. Declenchement moves sur liquidity grab Asia. Score maximum 12-15/15.
-- London Active 10h-16h: Continuation ou consolidation. Score 8-11/15.
-- NY Open 13h30-16h: Deuxieme KILL ZONE. Retournement ou continuation London. Fort momentum overlap. Score 11-14/15.
-- Inter-session 16h-21h: ZONE MORTE. Liquidite reduite, spreads elargis. Score 0-3/15.
-- Asia pre-open 21h-00h: Faible liquidite. Score 2-5/15.
-REGLES CRITIQUES:
-- Vendredi apres 15h = INTERDIT absolu. Score 0/15.
-- Mardi/Mercredi/Jeudi = jours optimaux RedPillFX +2pts bonus.
-- Lundi = repositionnement, attendre confirmation +0pts.
-- 70 minutes avant London Open = patience pre-London, laisser institutionnels placer ordres.
-- News majeures NFP/CPI/FOMC = eviter 30min avant et apres.
-- BE obligatoire a premiere cause atteinte.
-REGLE STATISTIQUE: Si N < 5 trades sur paire/session, echantillon insuffisant, reduire penalite de 66%. Si N 5-10, reduire de 33%. Si N >= 10, plein poids.
-Format JSON: {"nom":"Agent Timing","analyse":"texte","kill_zone":true,"session":"London Open","lit_cycle_phase":"inducement","jour_ok":true,"patience_pre_london":false,"score":10,"score_max":15,"verdict":"texte"}`,
+    timing: pre+`Tu es l AGENT TIMING REDPILLFX — GARDIEN DES SESSIONS.
+SESSIONS: Asia(00-07h)=BuildUp ne pas trader. London Open(07-10h)=Kill Zone max 12-15/15. London Active(10-16h)=8-11/15. NY Open(13h30-16h)=11-14/15. Inter-session(16-21h)=0-3/15. Vendredi>15h=0/15 INTERDIT.
+REGLES: Mar/Mer/Jeu+2pts. Lundi=attendre. News NFP/CPI/FOMC=eviter 30min. BE obligatoire TP1.
+STAT: N<5 trades=echantillon insuffisant reduire penalite 66%. N5-10=33%. N>=10=plein poids.
+Format JSON strict: {"nom":"Agent Timing","analyse":"texte","kill_zone":true,"session":"London Open","lit_cycle_phase":"inducement","jour_ok":true,"score":10,"score_max":15,"verdict":"texte"}`,
 
-    risk: pre+REDPILL_CORE+REDPILL_SCORING+`
-Tu es l AGENT RISK REDPILLFX — CONTROLEUR FTMO.
-Ta mission: valider le risque selon les regles FTMO et RedPillFX.
-REGLES FTMO STRICTES:
-- Drawdown max 10% du compte, Daily loss max 5%, Lot size 1% max du capital
-- RR minimum 3:1 obligatoire (TP sur prochaine pool de liquidite)
-- Pas de trade vendredi apres 15h, pas de trade avant news majeures
-- BE obligatoire des que TP1 atteint (premiere cause)
-- Ne jamais modifier SL manuellement sous pression emotionnelle
-REGLES REDPILLFX RISK:
-- SL place derriere Strong High/Low valide (avec prise de liquidite prealable)
-- TP vise la prochaine pool de liquidite (BSL ou SSL logique suivante)
-- Plus la cause est grande = plus le move potentiel est grand = RR naturellement eleve
-- Si liquidite proche dans direction opposee < SL distance = risque asymetrique, reduire score
-SCORING: RR>=3:1 + FTMO OK + session active 12-15/15. RR>=2:1 8-11/15. RR borderline 3-7/15. Violation FTMO 0-2/15.
-REGLE STATISTIQUE: Meme regle echantillon que Agent Timing.
-Format JSON: {"nom":"Agent Risk","analyse":"texte","rr_valide":true,"rr_calcule":"3.0:1","taille":"1%","sl_derriere_strong":true,"tp_sur_liquidite":"niveau","ftmo_ok":true,"daily_loss_ok":true,"drawdown_ok":true,"score":10,"score_max":15,"verdict":"texte"}`,
+    risk: pre+`Tu es l AGENT RISK REDPILLFX — CONTROLEUR FTMO.
+FTMO: Drawdown max 10%, Daily loss max 5%, Lot 1% max, RR min 3:1, pas trade vendredi>15h, pas trade avant news. BE obligatoire a TP1.
+REDPILLFX RISK: SL derriere Strong High/Low. TP sur prochaine pool de liquidite. Liquidite opposee<SL=risque asymetrique.
+SCORING: RR>=3:1+FTMO OK+session 12-15/15. RR>=2:1=8-11/15. Borderline=3-7/15. Violation=0-2/15.
+STAT: Meme regle echantillon Agent Timing.
+Format JSON strict: {"nom":"Agent Risk","analyse":"texte","rr_valide":true,"rr_calcule":"3.0:1","taille":"1%","sl_derriere_strong":true,"tp_sur_liquidite":"niveau","ftmo_ok":true,"daily_loss_ok":true,"drawdown_ok":true,"score":10,"score_max":15,"verdict":"texte"}`,
 
-    memoire: pre+REDPILL_CORE+REDPILL_SCORING+`
-Tu es l AGENT MEMOIRE REDPILLFX — ARCHIVISTE DES PATTERNS.
-Ta mission: identifier les patterns historiques selon la methodologie RedPillFX et l historique personnel.
-ANALYSE REDPILLFX:
-1. Patterns historiques de la paire sur cette session et ce jour de semaine
-2. Frequence des TRAP haussiers vs baissiers sur cette paire en London Open
-3. Comportement historique autour des equal highs/lows sur cette paire
-4. Phases LIT Cycle typiques de cette paire a cette heure
-5. Patterns Buy to Sell vs Sell to Buy historiquement dominants
-6. Taux de succes des setups CISD + IFVG sur cette paire
-REGLE STATISTIQUE OBLIGATOIRE: Utiliser UNIQUEMENT les donnees fournies dans HISTORIQUE PERSONNEL TRADER.
-Si N < 5 trades sur contexte concerne: echantillon insuffisant, reduire penalite de 66%, mentionner explicitement.
-Si N 5-10: reduire penalite/bonus de 33%.
-Si N >= 10: appliquer plein poids.
-Ne jamais inventer de statistiques.
-Format JSON: {"nom":"Agent Memoire","analyse":"texte","winrate_paire":"65%","pattern_trap":"Buy to Sell dominant","pattern_session":"London Open favorable","cisd_historique":"fiable","score":4,"score_max":5,"verdict":"texte"}`,
+    memoire: pre+`Tu es l AGENT MEMOIRE REDPILLFX — ARCHIVISTE DES PATTERNS.
+Mission: patterns historiques de la paire + historique personnel trader.
+ANALYSE: patterns TRAP haussier/baissier sur cette paire. Comportement equal highs/lows. LIT Cycle typique a cette heure. Taux succes CISD+IFVG.
+STAT OBLIGATOIRE: Utiliser UNIQUEMENT donnees HISTORIQUE PERSONNEL TRADER. N<5=echantillon insuffisant-66%. N5-10=-33%. N>=10=plein poids. Ne pas inventer.
+Format JSON strict: {"nom":"Agent Memoire","analyse":"texte","winrate_paire":"65%","pattern_trap":"Buy to Sell dominant","pattern_session":"London Open favorable","score":4,"score_max":5,"verdict":"texte"}`,
 
-    backtest: pre+REDPILL_CORE+REDPILL_SCORING+`
-Tu es l AGENT BACKTEST REDPILLFX — HISTORIEN DES SETUPS.
-Ta mission: evaluer si le setup correspond aux patterns historiquement profitables selon RedPillFX.
-CHECKLIST BACKTEST REDPILLFX (basee sur trade reel du 12/06/2026):
-1. Prise de liquidite externe confirmee? (BSL ou SSL collecte)
-2. Cycle de cause a effet identifie? (accumulation avant move)
-3. Buy to Sell ou Sell to Buy confirme? (direction du TRAP)
-4. CISD confirme? (Change In State of Delivery)
-5. IFVG identifie comme zone d entree?
-6. Entree prevue sur la 2eme vague? (pas le premier move)
-EVALUATION:
-- 5-6 conditions validees = score 4-5/5 (setup haute probabilite historique)
-- 3-4 conditions = score 2-3/5 (setup moyen)
-- 0-2 conditions = score 0-1/5 (setup invalide historiquement)
-Taux de succes estime des setups RedPillFX complets: 65-70% sur paires majeures en Kill Zone.
-REGLE STATISTIQUE: Meme regle echantillon. Ne pas inventer de statistiques.
-Format JSON: {"nom":"Agent Backtest","analyse":"texte","checklist_score":5,"checklist_detail":"1:oui 2:oui 3:oui 4:non 5:oui 6:oui","sequence_complete":true,"taux_succes_estime":"65%","score":3,"score_max":5,"verdict":"texte"}`,
+    backtest: pre+`Tu es l AGENT BACKTEST REDPILLFX — HISTORIEN DES SETUPS.
+CHECKLIST 6 points (trade reel 12/06/2026): 1-Prise liquidite externe 2-Cycle cause/effet 3-Buy to Sell ou Sell to Buy 4-CISD confirme 5-IFVG zone entree 6-Entree 2eme vague.
+SCORING: 5-6 conditions=4-5/5. 3-4=2-3/5. 0-2=0-1/5.
+STAT: Meme regle echantillon. Ne pas inventer.
+Format JSON strict: {"nom":"Agent Backtest","analyse":"texte","checklist_score":5,"checklist_detail":"1:oui 2:oui 3:oui 4:non 5:oui 6:oui","sequence_complete":true,"taux_succes_estime":"65%","score":3,"score_max":5,"verdict":"texte"}`,
 
-    eco: pre+REDPILL_CORE+`
-Tu es l AGENT ECO REDPILLFX — ECONOMISTE MACRO.
-Ta mission: evaluer le contexte macro et sa coherence avec la Loi de Cause a Effet RedPillFX.
-ANALYSE:
-1. DXY: direction actuelle et impact sur paires Forex majeures
-2. Risk-on vs Risk-off: sentiment global du marche
-3. Correlations: Gold/USD, indices/Forex, correlations inter-paires
-4. Evenements majeurs recents (NFP, CPI, FOMC, BCE, BoE)
-5. Coherence macro avec direction du trade propose
-6. Cause macro: accumulation de positions institutionnelles visible macro
-7. Effet probable: direction attendue selon contexte macro
-SCORING: Macro aligne avec direction 7-10/10. Contexte neutre 4-6/10. Macro fortement contre le trade 0-3/10.
-Format JSON: {"nom":"Agent Eco","analyse":"texte","risk_mode":"risk-on","biais_fondamental":"bullish","dxy_direction":"baisse","evenement_majeur":false,"cause_macro":"accumulation institutionnelle","score":7,"score_max":10,"verdict":"texte"}`
+    eco: pre+`Tu es l AGENT ECO REDPILLFX — ECONOMISTE MACRO.
+Mission: contexte macro coherent avec Loi Cause/Effet RedPillFX.
+ANALYSE: 1-DXY direction 2-Risk-on/off 3-Correlations Gold/USD indices 4-Evenements recents NFP/CPI/FOMC/BCE 5-Cause macro=accumulation institutionnelle 6-Effet probable selon macro.
+SCORING: Macro aligne 7-10/10. Neutre 4-6/10. Contre le trade 0-3/10.
+Format JSON strict: {"nom":"Agent Eco","analyse":"texte","risk_mode":"risk-on","biais_fondamental":"bullish","dxy_direction":"baisse","evenement_majeur":false,"score":7,"score_max":10,"verdict":"texte"}`
   };
   return m[key]||m.memoire;
 }
+
 
 function setLoading(val){
   loading=val;
@@ -916,7 +832,9 @@ async function launch(forcePair){
         }catch(e){}
         if(enqueteurContext&&enqueteurContext.pair===targetPair) ctx+=' | CONTEXTE ENQUETEUR (score '+enqueteurContext.score+'/100): Direction '+enqueteurContext.direction+'. Raison: '+enqueteurContext.raison+'.';
         if(journalContext) ctx+=' | '+journalContext;
-        ctx+=' | Reponds en JSON uniquement selon methodologie RedPillFX.';
+        // Injecter REDPILL_CORE dans le contexte (pas dans le system prompt)
+        ctx+=' | METHODOLOGIE REDPILLFX: Liquidite=Cause/Mouvement=Effet. Sequence: IPA→TRAP(BSL/SSL)→CISD→IDC/OB→Move. LIT CYCLE: BuildUp→Inducement→Mitigation→Expansion. Entree sur 2eme vague uniquement. Sans TRAP=pas de move. SMC TRAP(faux BOS multiple sur OB traders SMC)=eviter. Inducement Mineur(M1-5,intrajournalier) Moyen(PDH/PDL,M5-15,1sem) Majeur(H1-Daily,multiweeks). Confluences maximisent score.';
+        ctx+=' | Reponds en JSON uniquement selon format fourni dans ton system prompt.';
         results[key]=await aiCall(getSys(key),ctx,1500);
       }catch(e){results[key]={nom:key,analyse:'Erreur: '+e.message,score:0,score_max:20,verdict:'Indisponible'};}
       document.getElementById('agentCards').innerHTML+=renderAgentCard(key,results[key]);
