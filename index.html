@@ -911,7 +911,7 @@ async function launch(forcePair){
     const ftmoOk=!(results.risk&&results.risk.ftmo_ok===false);
     const isL=o.bias==='long';
 
-    if(o.decision==='ATTENDRE'&&(o.score_total||0)>=65){
+    if(o.decision==='ATTENDRE'&&(o.score_total||0)>=50){
       // Signal ATTENDRE mais score suffisant — envoyer avec boutons Je prends / Je passe
       const sensLabel=isL?'⬆️ ACHAT (LONG)':'⬇️ VENTE (SHORT)';
       const waitMsg=sensLabel+' '+targetPair+'\n'+selectedTf+' | Score: '+o.score_total+'/100\n⏳ ORCHESTRATEUR: ATTENDRE\nEntree: '+o.entry+'\nSL: '+o.sl+'\nTP: '+o.tp+'\nRR: '+o.rr+trapInfo+'\n\nTu prends ce trade quand même ?';
