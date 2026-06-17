@@ -118,6 +118,82 @@ window.addEventListener('load', () => {
   </div>
 </div>
 
+<!-- BARRE SESSIONS — TOUJOURS VISIBLE -->
+<div id="sessionBar" style="background:#060e06;border-bottom:1px solid #1a2e1a;padding:8px 16px;display:flex;align-items:center;gap:6px;overflow-x:auto;flex-wrap:nowrap">
+  <div id="sess_asia" class="sess-chip"></div>
+  <div id="sess_london_pre" class="sess-chip"></div>
+  <div id="sess_london" class="sess-chip"></div>
+  <div id="sess_ny" class="sess-chip"></div>
+  <div id="sess_dead" class="sess-chip"></div>
+  <div style="margin-left:auto;font-size:9px;color:#3a5a2a;font-family:monospace;white-space:nowrap" id="clockDisplay"></div>
+</div>
+
+<style>
+.sess-chip{border-radius:6px;padding:4px 10px;font-size:9px;font-weight:700;font-family:monospace;white-space:nowrap;border:1px solid transparent;transition:all .3s}
+.sess-chip.active{box-shadow:0 0 10px currentColor}
+</style>
+
+<script>
+function updateSessions(){
+  const now=new Date();
+  const h=now.getHours(),m=now.getMinutes();
+  const totalMin=h*60+m;
+  const day=now.getDay(); // 0=dim, 6=sam
+  const weekend=day===0||day===6;
+
+  // Heure Paris affichée
+  document.getElementById('clockDisplay').textContent=
+    now.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit',second:'2-digit'})+' Paris';
+
+  // Définition des sessions (heure Paris)
+  const sessions=[
+    {id:'sess_asia',    label:'🌏 ASIA',       start:0,   end:420,  color:'#4a6aaa', paires:'JPY · AUD · NZD'},
+    {id:'sess_london_pre',label:'⏳ PRÉ-LONDON',start:360, end:420,  color:'#FFD700', paires:'Patience — attendre 7h'},
+    {id:'sess_london',  label:'🏛️ LONDON',      start:420, end:960,  color:'#00C853', paires:'EUR · GBP · XAU'},
+    {id:'sess_ny',      label:'🗽 NEW YORK',    start:810, end:960,  color:'#FF6B35', paires:'USD · CAD · NAS'},
+    {id:'sess_dead',    label:'💤 FERMÉ',       start:960, end:1440, color:'#444444', paires:'Éviter absolument'},
+  ];
+
+  sessions.forEach(s=>{
+    const el=document.getElementById(s.id);
+    if(!el) return;
+    const active=!weekend && totalMin>=s.start && totalMin<s.end;
+    const future=!weekend && totalMin<s.start;
+
+    if(weekend){
+      el.style.cssText=`background:#0a0a0a;border-color:#1a1a1a;color:#333;`;
+      if(s.id==='sess_asia') el.textContent='🌏 WEEKEND — Crypto uniquement';
+      else el.textContent='';
+      el.className='sess-chip';
+      return;
+    }
+
+    if(active){
+      // Kill Zone spéciale
+      const isKZ=(s.id==='sess_london'&&totalMin>=420&&totalMin<600)||
+                 (s.id==='sess_ny'&&totalMin>=810&&totalMin<960);
+      el.style.cssText=`background:${s.color}20;border-color:${s.color};color:${s.color};`;
+      el.textContent=(isKZ?'🎯 ':'')+s.label+(isKZ?' — KILL ZONE':' — ACTIVE')+' · '+s.paires;
+      el.className='sess-chip active';
+    } else if(future){
+      // Calculer countdown
+      const restMin=s.start-totalMin;
+      const rh=Math.floor(restMin/60),rm=restMin%60;
+      const countdown=rh>0?`${rh}h${rm.toString().padStart(2,'0')}`:`${rm}min`;
+      el.style.cssText=`background:#0a120a;border-color:#1a2e1a;color:#3a5a3a;`;
+      el.textContent=s.label+' dans '+countdown;
+      el.className='sess-chip';
+    } else {
+      el.style.cssText=`background:transparent;border-color:transparent;color:#1a2e1a;`;
+      el.textContent='';
+      el.className='sess-chip';
+    }
+  });
+}
+updateSessions();
+setInterval(updateSessions,10000);
+</script>
+
 <div class="container">
   <div class="tabs">
     <button class="tab active" onclick="showTab('enqueteur',this)">🔍 Enqueteur</button>
@@ -213,6 +289,49 @@ window.addEventListener('load', () => {
           </select>
         </div>
         <div><div class="silver-label">P&amp;L (euros)</div><input id="j_pnl" placeholder="150" type="number" style="width:100%;background:#060e06;border:1px solid #1a2e1a;color:#00C853;border-radius:6px;padding:7px 10px;font-size:11px;font-family:monospace"></div>
+      </div>
+      <!-- NOUVEAUX CHAMPS — QUALITÉ DU TRADE -->
+      <div class="divider" style="margin:10px 0"></div>
+      <div style="font-size:8px;color:#FFD700;letter-spacing:2px;margin-bottom:8px">QUALITÉ DU TRADE — INDÉPENDANT DU RÉSULTAT</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:10px">
+        <div>
+          <div class="silver-label">DIRECTION CORRECTE ?</div>
+          <select id="j_direction_ok" style="width:100%;background:#060e06;border:1px solid #1a2e1a;color:#e8e8e8;border-radius:6px;padding:7px 10px;font-size:11px">
+            <option value="">Non renseigné</option>
+            <option value="oui">✅ Oui</option>
+            <option value="non">❌ Non</option>
+          </select>
+        </div>
+        <div>
+          <div class="silver-label">ENTRÉE CORRECTE ?</div>
+          <select id="j_entree_ok" style="width:100%;background:#060e06;border:1px solid #1a2e1a;color:#e8e8e8;border-radius:6px;padding:7px 10px;font-size:11px">
+            <option value="">Non renseigné</option>
+            <option value="oui">✅ Oui</option>
+            <option value="non">❌ Non</option>
+          </select>
+        </div>
+        <div>
+          <div class="silver-label">SORTIE CORRECTE ?</div>
+          <select id="j_sortie_ok" style="width:100%;background:#060e06;border:1px solid #1a2e1a;color:#e8e8e8;border-radius:6px;padding:7px 10px;font-size:11px">
+            <option value="">Non renseigné</option>
+            <option value="oui">✅ Oui</option>
+            <option value="non">❌ Non — SL déplacé manuellement</option>
+            <option value="be_force">⚠️ BE forcé (pas de mauvais trade)</option>
+            <option value="tp_partiel">➖ TP partiel</option>
+          </select>
+        </div>
+      </div>
+      <div style="margin-bottom:10px">
+        <div class="silver-label">RAISON SORTIE ANTICIPÉE (si applicable)</div>
+        <select id="j_raison_sortie" style="width:100%;background:#060e06;border:1px solid #1a2e1a;color:#e8e8e8;border-radius:6px;padding:7px 10px;font-size:11px">
+          <option value="">Aucune — sortie normale</option>
+          <option value="peur">😰 Peur / émotion</option>
+          <option value="ny_trap">🗽 Retournement NY Open 13h30</option>
+          <option value="sl_manuel">🖐️ Déplacement SL manuel</option>
+          <option value="news">📰 News imprévue</option>
+          <option value="be_preventif">🛡️ BE préventif (bonne décision)</option>
+          <option value="trailing_manquant">⚙️ Trailing stop absent</option>
+        </select>
       </div>
       <div style="margin-bottom:10px"><div class="silver-label">COMMENTAIRE</div><textarea id="j_commentaire" placeholder="Pourquoi ce trade ? Qu'est-ce qui s'est passe ?" style="width:100%;background:#060e06;border:1px solid #1a2e1a;color:#e8e8e8;border-radius:6px;padding:8px 10px;font-size:11px;height:60px;resize:none"></textarea></div>
       <button onclick="addManualTrade()" style="width:100%;background:linear-gradient(135deg,#FFD700,#FFA500);color:#000;border-radius:8px;padding:10px;font-size:11px;font-weight:900;font-family:monospace;cursor:pointer">+ AJOUTER AU JOURNAL</button>
@@ -947,11 +1066,33 @@ function renderDecision(o){
 function markOutcome(id,outcome){const t=trades.find(x=>x.id===id);if(t){t.outcome=outcome;lastId=null;}if(trades[0])renderDecision(trades[0]);}
 
 async function addManualTrade(){
-  const trade={date:new Date().toLocaleString('fr-FR'),pair:document.getElementById('j_pair').value||'--',tf:document.getElementById('j_tf').value||'--',session:getSession(),score:0,decision:'MANUEL',bias:'--',entry:document.getElementById('j_entry').value||'--',sl:document.getElementById('j_sl').value||'--',tp:document.getElementById('j_tp').value||'--',rr:document.getElementById('j_rr').value||'--',resultat:document.getElementById('j_resultat').value||'',pnl:parseFloat(document.getElementById('j_pnl').value)||null,commentaire:document.getElementById('j_commentaire').value||''};
+  const trade={
+    date:new Date().toLocaleString('fr-FR'),
+    pair:document.getElementById('j_pair').value||'--',
+    tf:document.getElementById('j_tf').value||'--',
+    session:getSession(),
+    score:0,decision:'MANUEL',bias:'--',
+    entry:document.getElementById('j_entry').value||'--',
+    sl:document.getElementById('j_sl').value||'--',
+    tp:document.getElementById('j_tp').value||'--',
+    rr:document.getElementById('j_rr').value||'--',
+    resultat:document.getElementById('j_resultat').value||'',
+    pnl:parseFloat(document.getElementById('j_pnl').value)||null,
+    commentaire:document.getElementById('j_commentaire').value||'',
+    direction_ok:document.getElementById('j_direction_ok').value||'',
+    entree_ok:document.getElementById('j_entree_ok').value||'',
+    sortie_ok:document.getElementById('j_sortie_ok').value||'',
+    raison_sortie:document.getElementById('j_raison_sortie').value||''
+  };
   try{
     await fetch(BACKEND+'/journal',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(trade)});
     ['j_pair','j_tf','j_entry','j_sl','j_tp','j_rr','j_commentaire'].forEach(id=>document.getElementById(id).value='');
-    document.getElementById('j_resultat').value='';document.getElementById('j_pnl').value='';
+    document.getElementById('j_resultat').value='';
+    document.getElementById('j_pnl').value='';
+    document.getElementById('j_direction_ok').value='';
+    document.getElementById('j_entree_ok').value='';
+    document.getElementById('j_sortie_ok').value='';
+    document.getElementById('j_raison_sortie').value='';
     loadJournal();
   }catch(e){alert('Erreur: '+e.message);}
 }
