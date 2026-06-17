@@ -462,17 +462,7 @@ const ICONS     = {liquidite:"💧",structure:"📊",zones:"🎯",timing:"⏰",r
 const AGENT_KEYS= ["liquidite","structure","zones","timing","risk","memoire","backtest","eco"];
 const STEPS     = ["Liquidite","Structure","Zones","Timing","Risk","Memoire","Backtest","Eco","Synthese"];
 
-const MT4_SYMBOLS = {
-  "EUR/USD":"EURUSD","GBP/USD":"GBPUSD","USD/JPY":"USDJPY",
-  "GBP/JPY":"GBPJPY","EUR/GBP":"EURGBP","EUR/JPY":"EURJPY",
-  "USD/CAD":"USDCAD","USD/CHF":"USDCHF","AUD/USD":"AUDUSD",
-  "NZD/USD":"NZDUSD","GBP/CHF":"GBPCHF","AUD/JPY":"AUDJPY",
-  "CAD/JPY":"CADJPY","NZD/JPY":"NZDJPY",
-  "XAU/USD":"XAUUSDr","XAG/USD":"XAGUSD",
-  "BTC/USD":"BTCUSD","ETH/USD":"ETHUSD","SOL/USD":"SOLUSD",
-  "NAS100":"NAS100","SPX500":"SPX500","DAX40":"DAX40","US30":"US30",
-  "WTI":"WTIUSD","BRENT":"BRENTUSD"
-};
+const MT4_SYMBOLS = {"EUR/USD":"EURUSD","GBP/USD":"GBPUSD","USD/JPY":"USDJPY","GBP/JPY":"GBPJPY","EUR/GBP":"EURGBP","EUR/JPY":"EURJPY","USD/CAD":"USDCAD","USD/CHF":"USDCHF","AUD/USD":"AUDUSD","NZD/USD":"NZDUSD","GBP/CHF":"GBPCHF","AUD/JPY":"AUDJPY","CAD/JPY":"CADJPY","NZD/JPY":"NZDJPY","XAU/USD":"XAUUSDr","XAG/USD":"XAGUSD","BTC/USD":"BTCUSD","ETH/USD":"ETHUSD","SOL/USD":"SOLUSD","NAS100":"NAS100","SPX500":"SPX500","DAX40":"DAX40","US30":"US30","WTI":"WTIUSD","BRENT":"BRENTUSD"};
 
 let selectedPair="EUR/USD",selectedTf="H1",loading=false,trades=[],lastId=null,enqueteurContext=null,jsLevels=null;
 
@@ -643,6 +633,8 @@ async function runEnquete(){
 
   let dailyResume='';
   for(const sym of ['EURUSD','GBPUSD','XAUUSDr','USDJPY','GBPJPY','AUDUSD','NZDUSD','USDCAD','USDCHF','EURGBP','EURJPY','GBPCHF','AUDJPY']){
+    try{
+      const rd=await fetch(BACKEND+'/daily/'+sym);
       if(rd.ok){
         const dd=await rd.json();
         const daily=dd.candles||[];
