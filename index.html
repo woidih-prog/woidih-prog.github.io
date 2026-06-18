@@ -210,10 +210,23 @@ setInterval(updateSessions,10000);
         <div class="gold-title">📊 CHART MT4 LIVE</div>
         <div style="display:flex;gap:6px;align-items:center">
           <select id="chartPair" style="background:#060e06;border:1px solid #1a2e1a;color:#FFD700;border-radius:6px;padding:5px 8px;font-size:10px;font-family:monospace">
-            <option>EUR/USD</option><option>GBP/USD</option><option>USD/JPY</option>
-            <option>GBP/JPY</option><option>EUR/JPY</option><option>USD/CAD</option>
-            <option>USD/CHF</option><option>AUD/USD</option><option>NZD/USD</option>
-            <option>EUR/GBP</option><option>GBP/CHF</option><option>XAU/USD</option><option>XAG/USD</option>
+            <optgroup label="FOREX MAJEURES">
+              <option>EUR/USD</option><option>GBP/USD</option><option>USD/JPY</option>
+              <option>USD/CAD</option><option>USD/CHF</option><option>AUD/USD</option><option>NZD/USD</option>
+            </optgroup>
+            <optgroup label="FOREX CROISÉES">
+              <option>GBP/JPY</option><option>EUR/JPY</option><option>EUR/GBP</option>
+              <option>GBP/CHF</option><option>AUD/JPY</option><option>CAD/JPY</option>
+            </optgroup>
+            <optgroup label="MÉTAUX">
+              <option>XAU/USD</option><option>XAG/USD</option>
+            </optgroup>
+            <optgroup label="INDICES">
+              <option>NAS100</option><option>SPX500</option><option>DAX40</option><option>US30</option>
+            </optgroup>
+            <optgroup label="CRYPTO">
+              <option>BTC/USD</option><option>ETH/USD</option><option>SOL/USD</option>
+            </optgroup>
           </select>
           <select id="chartTf" style="background:#060e06;border:1px solid #1a2e1a;color:#C0C0C0;border-radius:6px;padding:5px 8px;font-size:10px;font-family:monospace">
             <option value="M15">M15</option>
@@ -455,7 +468,7 @@ async function getAlphaVantageDaily(pair){
   }catch(e){return null;}
 }
 
-const ALL_PAIRS = ["EUR/USD","GBP/USD","USD/JPY","GBP/JPY","EUR/GBP","EUR/JPY","USD/CAD","USD/CHF","AUD/USD","NZD/USD","GBP/CHF","XAU/USD","XAG/USD","WTI","BRENT","BTC/USD","ETH/USD","BNB/USD","SOL/USD","XRP/USD","ADA/USD","NAS100","SPX500","DAX40"];
+const ALL_PAIRS = ["EUR/USD","GBP/USD","USD/JPY","GBP/JPY","EUR/GBP","EUR/JPY","USD/CAD","USD/CHF","AUD/USD","NZD/USD","GBP/CHF","AUD/JPY","CAD/JPY","XAU/USD","XAG/USD","NAS100","SPX500","DAX40","US30","BTC/USD","ETH/USD","SOL/USD","WTI","BRENT"];
 const TFS       = ["M15","H1","H4","Daily"];
 const COLORS    = {liquidite:"#00d4ff",structure:"#C0C0C0",zones:"#FFD700",timing:"#00C853",risk:"#ff6666",memoire:"#FFA500",backtest:"#e879f9",eco:"#4ade80"};
 const ICONS     = {liquidite:"💧",structure:"📊",zones:"🎯",timing:"⏰",risk:"🛡️",memoire:"🧠",backtest:"📈",eco:"🌍"};
