@@ -753,8 +753,9 @@ Format JSON strict: {"nom":"Agent Liquidite","analyse":"texte","bsl":"niveau","s
 
     structure: pre+`Tu es l AGENT STRUCTURE REDPILLFX — ARCHITECTE DE MARCHE.
 Mission: identifier structure externe HTF et interne LTF.
-ANALYSE: 1-Structure HTF(Daily/H4) Strong H/L avec liquidite prealable UNIQUEMENT 2-Fake BOS=TRAP ne pas invalider 3-True BOS=cassure confirmee 4-CHoCH=retournement 5-LIT CYCLE:BuildUp→Inducement→Mitigation→Expansion 6-MSU H1 dans FVG Daily+4pts 7-POI HTF non mitigue=aimant obligatoire.
-SCORING: H1+Daily alignes+3pts. Conflit-4pts. LIT Cycle complet+4pts. POI HTF+4pts.
+SCORING POSITIF: Daily trend clair+5pts. H1 aligne avec Daily+4pts. LIT Cycle identifie+3pts. MSU H1 dans FVG Daily+4pts. BOS confirme+2pts. CHoCH visible+2pts.
+SCORING NEGATIF: Conflit H1 vs Daily-3pts (pas -4). Fake BOS detecte-2pts (c est un TRAP normal pas une erreur). Aucune structure visible-4pts.
+IMPORTANT: Un score de 10-14/20 est NORMAL sur un bon setup. Ne pas chercher la perfection — chercher la direction dominante. Daily bearish + prix en PREMIUM = score 12+ meme sans MSU.
 Format JSON strict: {"nom":"Agent Structure","analyse":"texte","trend_htf":"bullish","trend_ltf":"bullish","strong_high":"niveau","strong_low":"niveau","msu_detecte":false,"msu_type":"continuation","lit_cycle_phase":"build_up","fake_bos_detecte":false,"poi_htf_non_mitigue":"niveau","order_flow":"bullish","score":12,"score_max":20,"verdict":"texte"}`,
 
     zones: pre+`Tu es l AGENT ZONES REDPILLFX — EXPERT POI.
@@ -1012,9 +1013,12 @@ async function launch(forcePair){
     const liqBear=liqDir==='bearish'||liqDir==='short';
     const htfBull=htfDir==='bullish',htfBear=htfDir==='bearish';
     const contradiction=(liqBull&&htfBear)||(liqBear&&htfBull);
-    // SMC TRAP detecte = bloquer aussi
-    const gateBlocked=contradiction||smcTrapDetecte;
-    const gateRaison=smcTrapDetecte?'SMC TRAP DETECTE':contradiction?'CONTRADICTION LIQUIDITE/STRUCTURE HTF':'';
+    // SMC TRAP = penalite -10pts (ne bloque plus seul)
+    // Blocage uniquement si contradiction FORTE (les deux agents bien scores)
+    const contradictionForte=contradiction&&(results.liquidite?.score||0)>=14&&(results.structure?.score||0)>=14;
+    if(smcTrapDetecte) total=Math.max(0,total-10);
+    const gateBlocked=contradictionForte;
+    const gateRaison=contradictionForte?'CONTRADICTION LIQUIDITE/STRUCTURE HTF':'';
     const dec=gateBlocked?'ATTENDRE':total>=86?'EXECUTION':total>=61?'SIGNAL':'ATTENDRE';
     // ──────────────────────────────────────────────────────────
 
