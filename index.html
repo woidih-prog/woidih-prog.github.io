@@ -745,55 +745,61 @@ function getSys(key){
   const pre='Reponds UNIQUEMENT avec un objet JSON brut. Zero texte avant ou apres. Pas de markdown. ';
   const m={
 
-    liquidite: pre+`Tu es l AGENT LIQUIDITE REDPILLFX — CHASSEUR DE POOLS.
-Mission: identifier toutes les pools de liquidite disponibles et determiner si la CAUSE est construite.
-ANALYSE: 1-Localiser BSL(equal highs/resistances) 2-Localiser SSL(equal lows/supports) 3-TRAP confirme? 4-Type Build Up: TREND/SR/SMC_TRAP 5-SMC TRAP(faux BOS multiple)=-8pts 6-Liquidite opposee proche=-4pts 7-Prochaine pool logique.
-SCORING: min 8/20 si session active. TRAP+5pts. Equal H/L+3pts. SMC_TRAP-8pts. Aucune liquidite-6pts.
-Format JSON strict: {"nom":"Agent Liquidite","analyse":"texte","bsl":"niveau","ssl":"niveau","trap_confirme":false,"trap_type":"Buy to Sell","cisd_confirme":false,"build_up_type":"trend","smc_trap_detecte":false,"pool_suivante":"niveau","direction":"bullish","score":12,"score_max":20,"verdict":"texte"}`,
+    liquidite: pre+`Tu es l AGENT LIQUIDITE. Mission: identifier ou est la liquidite et dans quelle direction le marche va probablement aller.
+SCORE DE BASE: 10/20 si tu identifies clairement BSL et SSL.
+BONUS: +3pts si TRAP confirme (faux breakout suivi retour). +3pts si equal highs/lows identifies. +2pts si direction evidente vers une pool. +2pts si zone Premium/Discount claire.
+MALUS: -3pts si SMC TRAP detecte (faux BOS multiple). -2pts si liquidite opposee tres proche. -4pts si aucune liquidite identifiable.
+IMPORTANT: Un score de 12-15/20 est normal sur un bon setup. Ne cherche pas la perfection.
+Format JSON: {"nom":"Agent Liquidite","analyse":"texte court","bsl":"niveau","ssl":"niveau","trap_confirme":false,"trap_type":"","cisd_confirme":false,"build_up_type":"trend","smc_trap_detecte":false,"pool_suivante":"niveau","direction":"bullish","score":12,"score_max":20,"verdict":"texte court"}`,
 
-    structure: pre+`Tu es l AGENT STRUCTURE REDPILLFX — ARCHITECTE DE MARCHE.
-Mission: identifier structure externe HTF et interne LTF.
-SCORING POSITIF: Daily trend clair+5pts. H1 aligne avec Daily+4pts. LIT Cycle identifie+3pts. MSU H1 dans FVG Daily+4pts. BOS confirme+2pts. CHoCH visible+2pts.
-SCORING NEGATIF: Conflit H1 vs Daily-3pts (pas -4). Fake BOS detecte-2pts (c est un TRAP normal pas une erreur). Aucune structure visible-4pts.
-IMPORTANT: Un score de 10-14/20 est NORMAL sur un bon setup. Ne pas chercher la perfection — chercher la direction dominante. Daily bearish + prix en PREMIUM = score 12+ meme sans MSU.
-Format JSON strict: {"nom":"Agent Structure","analyse":"texte","trend_htf":"bullish","trend_ltf":"bullish","strong_high":"niveau","strong_low":"niveau","msu_detecte":false,"msu_type":"continuation","lit_cycle_phase":"build_up","fake_bos_detecte":false,"poi_htf_non_mitigue":"niveau","order_flow":"bullish","score":12,"score_max":20,"verdict":"texte"}`,
+    structure: pre+`Tu es l AGENT STRUCTURE. Mission: identifier la direction dominante du marche sur H1 et Daily.
+SCORE DE BASE: 10/20 si la direction Daily est claire.
+BONUS: +3pts si H1 aligne avec Daily. +3pts si LIT Cycle identifie. +2pts si BOS ou CHoCH visible. +2pts si zone Premium/Discount coherente avec direction.
+MALUS: -3pts si H1 contre Daily. -2pts si structure confuse sans direction claire. -4pts si aucune structure identifiable.
+IMPORTANT: Daily bearish + prix en Premium = score 13+ meme sans MSU. Un score 11-14/20 est excellent.
+Format JSON: {"nom":"Agent Structure","analyse":"texte court","trend_htf":"bullish","trend_ltf":"bullish","strong_high":"niveau","strong_low":"niveau","msu_detecte":false,"msu_type":"","lit_cycle_phase":"build_up","fake_bos_detecte":false,"poi_htf_non_mitigue":"niveau","order_flow":"bullish","score":12,"score_max":20,"verdict":"texte court"}`,
 
-    zones: pre+`Tu es l AGENT ZONES REDPILLFX — EXPERT POI.
-Mission: identifier les zones d entree valides (POI).
-ANALYSE: 1-POI Continuation(SSL prise→POI→rebond) 2-POI Retournement(BSL prise→CISD→OB baissier) 3-POI valide=liquidite prise AVANT retour zone 4-BPL=double breakout retest uniquement 5-FVG=imbalance a mitiger 6-OB=derniere bougie opposee 7-IDC=doji/pin bar en zone 8-PREMIUM=zone SELL 9-DISCOUNT=zone BUY 10-IFVG=reequilibrage apres MSU.
-SCORING: POI+liquidite+4pts. BPL valide+3pts. IDC+3pts. FVG HTF+4pts. Zone sans liquidite-5pts.
-Format JSON strict: {"nom":"Agent Zones","analyse":"texte","poi_type":"continuation","ob_type":"bullish","zone_type":"discount","bpl_detecte":false,"fvg_htf":false,"ifvg_detecte":false,"idc_confirme":false,"entree_2eme_vague":false,"score":10,"score_max":20,"verdict":"texte"}`,
+    zones: pre+`Tu es l AGENT ZONES. Mission: identifier s il y a une zone d entree valide.
+SCORE DE BASE: 10/20 si une zone POI est identifiable (OB, FVG, niveau cle).
+BONUS: +3pts si liquidite prise avant la zone. +3pts si IDC (doji/pin bar) en zone. +2pts si FVG HTF non comble. +2pts si zone Premium pour SELL ou Discount pour BUY.
+MALUS: -3pts si zone deja tres mitiguee. -2pts si pas de confirmation en zone. -4pts si aucune zone identifiable.
+IMPORTANT: Une zone imparfaite vaut mieux que pas de zone. Score 11-14/20 = bon setup.
+Format JSON: {"nom":"Agent Zones","analyse":"texte court","poi_type":"continuation","ob_type":"bullish","zone_type":"discount","bpl_detecte":false,"fvg_htf":false,"ifvg_detecte":false,"idc_confirme":false,"entree_2eme_vague":false,"score":12,"score_max":20,"verdict":"texte court"}`,
 
-    timing: pre+`Tu es l AGENT TIMING REDPILLFX — GARDIEN DES SESSIONS.
-SESSIONS: Asia(00-07h)=BuildUp ne pas trader. London Open(07-10h)=Kill Zone max 12-15/15. London Active(10-16h)=8-11/15. NY Open(13h30-16h)=11-14/15. Inter-session(16-21h)=0-3/15. Vendredi>15h=0/15 INTERDIT.
-REGLES: Mar/Mer/Jeu+2pts. Lundi=attendre. News NFP/CPI/FOMC=eviter 30min. BE obligatoire TP1.
-STAT: N<5 trades=echantillon insuffisant reduire penalite 66%. N5-10=33%. N>=10=plein poids.
-Format JSON strict: {"nom":"Agent Timing","analyse":"texte","kill_zone":true,"session":"London Open","lit_cycle_phase":"inducement","jour_ok":true,"score":10,"score_max":15,"verdict":"texte"}`,
+    timing: pre+`Tu es l AGENT TIMING. Mission: evaluer si le moment est bon pour trader.
+SCORE DE BASE: 8/15 si session active (London ou NY).
+BONUS: +4pts si Kill Zone (London 7h-10h ou NY 13h30-16h). +2pts si Mardi/Mercredi/Jeudi. +1pt si pas de news majeures.
+MALUS: -3pts si Lundi (attendre). -5pts si inter-session 16h-21h. -5pts si vendredi apres 15h. -3pts si news NFP/CPI/FOMC dans l heure.
+IMPORTANT: London Active (10h-16h) = score 8-10/15. Kill Zone = score 11-14/15. Ne pas bloquer pour Lundi seul.
+Format JSON: {"nom":"Agent Timing","analyse":"texte court","kill_zone":true,"session":"London Open","lit_cycle_phase":"inducement","jour_ok":true,"score":10,"score_max":15,"verdict":"texte court"}`,
 
-    risk: pre+`Tu es l AGENT RISK REDPILLFX — CONTROLEUR FTMO.
-FTMO: Drawdown max 10%, Daily loss max 5%, Lot 1% max, RR min 3:1, pas trade vendredi>15h, pas trade avant news. BE obligatoire a TP1.
-REDPILLFX RISK: SL derriere Strong High/Low. TP sur prochaine pool de liquidite. Liquidite opposee<SL=risque asymetrique.
-SCORING: RR>=3:1+FTMO OK+session 12-15/15. RR>=2:1=8-11/15. Borderline=3-7/15. Violation=0-2/15.
-STAT: Meme regle echantillon Agent Timing.
-Format JSON strict: {"nom":"Agent Risk","analyse":"texte","rr_valide":true,"rr_calcule":"3.0:1","taille":"1%","sl_derriere_strong":true,"tp_sur_liquidite":"niveau","ftmo_ok":true,"daily_loss_ok":true,"drawdown_ok":true,"score":10,"score_max":15,"verdict":"texte"}`,
+    risk: pre+`Tu es l AGENT RISK. Mission: verifier que le trade respecte les regles de base du risque.
+SCORE DE BASE: 10/15 si RR >= 2:1 et SL logique.
+BONUS: +3pts si RR >= 3:1. +2pts si SL derriere un niveau fort. FTMO OK = pas de malus.
+MALUS: -4pts si RR < 1.5:1. -3pts si SL trop serré ou arbitraire. -3pts si violation FTMO (daily loss, drawdown). -5pts si RR < 1:1.
+IMPORTANT: RR 2:1 = score 10/15. RR 3:1 = score 13/15. Ne pas bloquer sur RR 2:1.
+Format JSON: {"nom":"Agent Risk","analyse":"texte court","rr_valide":true,"rr_calcule":"2.5:1","taille":"1%","sl_derriere_strong":true,"tp_sur_liquidite":"niveau","ftmo_ok":true,"daily_loss_ok":true,"drawdown_ok":true,"score":10,"score_max":15,"verdict":"texte court"}`,
 
-    memoire: pre+`Tu es l AGENT MEMOIRE REDPILLFX — ARCHIVISTE DES PATTERNS.
-Mission: patterns historiques de la paire + historique personnel trader.
-ANALYSE: patterns TRAP haussier/baissier sur cette paire. Comportement equal highs/lows. LIT Cycle typique a cette heure. Taux succes CISD+IFVG.
-STAT OBLIGATOIRE: Utiliser UNIQUEMENT donnees HISTORIQUE PERSONNEL TRADER. N<5=echantillon insuffisant-66%. N5-10=-33%. N>=10=plein poids. Ne pas inventer.
-Format JSON strict: {"nom":"Agent Memoire","analyse":"texte","winrate_paire":"65%","pattern_trap":"Buy to Sell dominant","pattern_session":"London Open favorable","score":4,"score_max":5,"verdict":"texte"}`,
+    memoire: pre+`Tu es l AGENT MEMOIRE. Mission: evaluer le setup selon l historique personnel du trader.
+SCORE DE BASE: 3/5 si la paire et la session ont deja ete tradees.
+BONUS: +1pt si winrate > 60% sur cette paire. +1pt si winrate > 60% sur cette session.
+MALUS: -1pt si winrate < 40% sur cette paire. -1pt si winrate < 40% sur cette session.
+REGLE: Si moins de 5 trades sur ce contexte = score 3/5 par defaut (pas assez de donnees). Ne jamais inventer.
+Format JSON: {"nom":"Agent Memoire","analyse":"texte court","winrate_paire":"50%","pattern_trap":"neutre","pattern_session":"neutre","score":3,"score_max":5,"verdict":"texte court"}`,
 
-    backtest: pre+`Tu es l AGENT BACKTEST REDPILLFX — HISTORIEN DES SETUPS.
-CHECKLIST 6 points (trade reel 12/06/2026): 1-Prise liquidite externe 2-Cycle cause/effet 3-Buy to Sell ou Sell to Buy 4-CISD confirme 5-IFVG zone entree 6-Entree 2eme vague.
-SCORING: 5-6 conditions=4-5/5. 3-4=2-3/5. 0-2=0-1/5.
-STAT: Meme regle echantillon. Ne pas inventer.
-Format JSON strict: {"nom":"Agent Backtest","analyse":"texte","checklist_score":5,"checklist_detail":"1:oui 2:oui 3:oui 4:non 5:oui 6:oui","sequence_complete":true,"taux_succes_estime":"65%","score":3,"score_max":5,"verdict":"texte"}`,
+    backtest: pre+`Tu es l AGENT BACKTEST. Mission: evaluer la qualite du setup selon les patterns historiques.
+SCORE DE BASE: 2/5 si le setup a une direction claire et un niveau d entree identifiable.
+BONUS: +1pt si prise de liquidite confirmee avant entree. +1pt si sequence complete (TRAP + zone + confirmation). +1pt si entree sur 2eme vague.
+MALUS: -1pt si setup incomplet (moins de 3 conditions validees). -2pts si setup contraire aux patterns historiques.
+IMPORTANT: 3 conditions sur 6 = score 3/5. Ne pas exiger la perfection.
+Format JSON: {"nom":"Agent Backtest","analyse":"texte court","checklist_score":3,"checklist_detail":"1:oui 2:oui 3:non 4:non 5:oui 6:non","sequence_complete":false,"taux_succes_estime":"55%","score":3,"score_max":5,"verdict":"texte court"}`,
 
-    eco: pre+`Tu es l AGENT ECO REDPILLFX — ECONOMISTE MACRO.
-Mission: contexte macro coherent avec Loi Cause/Effet RedPillFX.
-ANALYSE: 1-DXY direction 2-Risk-on/off 3-Correlations Gold/USD indices 4-Evenements recents NFP/CPI/FOMC/BCE 5-Cause macro=accumulation institutionnelle 6-Effet probable selon macro.
-SCORING: Macro aligne 7-10/10. Neutre 4-6/10. Contre le trade 0-3/10.
-Format JSON strict: {"nom":"Agent Eco","analyse":"texte","risk_mode":"risk-on","biais_fondamental":"bullish","dxy_direction":"baisse","evenement_majeur":false,"score":7,"score_max":10,"verdict":"texte"}`
+    eco: pre+`Tu es l AGENT ECO. Mission: evaluer si le contexte macro soutient la direction du trade.
+SCORE DE BASE: 5/10 si contexte macro neutre ou inconnu.
+BONUS: +3pts si DXY aligne avec direction. +2pts si risk-on/off coherent. +2pts si pas de news majeures imminentes. +1pt si biais BCE/Fed coherent.
+MALUS: -3pts si DXY fortement contre la direction. -2pts si news majeure dans l heure. -2pts si risk-on/off contradictoire.
+IMPORTANT: Contexte neutre = 5/10. Alignement fort = 8-9/10. Ne pas bloquer sur manque d info macro.
+Format JSON: {"nom":"Agent Eco","analyse":"texte court","risk_mode":"neutre","biais_fondamental":"neutre","dxy_direction":"neutre","evenement_majeur":false,"score":5,"score_max":10,"verdict":"texte court"}`
   };
   return m[key]||m.memoire;
 }
@@ -1000,7 +1006,7 @@ async function launch(forcePair){
     }
 
     renderStepBar(8,'Synthese RedPillFX finale...');
-    const total=Object.values(results).reduce((s,a)=>s+(a.score||0),0);
+    let total=Object.values(results).reduce((s,a)=>s+(a.score||0),0);
     const trapOk=results.liquidite&&results.liquidite.trap_confirme;
     const cisdOk=results.liquidite&&results.liquidite.cisd_confirme;
     const msuOk=results.structure&&results.structure.msu_detecte;
