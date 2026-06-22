@@ -136,16 +136,17 @@ window.addEventListener('load', () => {
 <script>
 function updateSessions(){
   const now=new Date();
-  const h=now.getHours(),m=now.getMinutes();
+  const h=now.getUTCHours(),m=now.getUTCMinutes();
   const totalMin=h*60+m;
-  const day=now.getDay(); // 0=dim, 6=sam
+  const day=now.getUTCDay(); // 0=dim, 6=sam
   const weekend=day===0||day===6;
 
-  // Heure Paris affichée
+  // Horloge : GMT = l'heure sur laquelle les décisions sont prises, + Paris pour info
   document.getElementById('clockDisplay').textContent=
-    now.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit',second:'2-digit'})+' Paris';
+    now.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit',timeZone:'UTC'})+' GMT (décision) · '+
+    now.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})+' Paris';
 
-  // Définition des sessions (heure Paris)
+  // Définition des sessions (heure GMT/UTC — comme les marchés)
   const sessions=[
     {id:'sess_asia',    label:'🌏 ASIA',       start:0,   end:420,  color:'#4a6aaa', paires:'JPY · AUD · NZD'},
     {id:'sess_london_pre',label:'⏳ PRÉ-LONDON',start:360, end:420,  color:'#FFD700', paires:'Patience — attendre 7h'},
@@ -643,7 +644,7 @@ async function runEnquete(){
   const btn=document.getElementById('btnEnquete');
   btn.disabled=true;btn.textContent='ENQUETE EN COURS...';
   document.getElementById('enqueteResult').innerHTML='';
-  const now=new Date(),h=now.getHours();
+  const now=new Date(),h=now.getUTCHours();
   const sess=h>=7&&h<10?'London Open':h>=10&&h<16?'London Active':h>=13&&h<16?'NY Open':h>=2&&h<6?'Asian Session':'Inter-session';
   const days=['Dimanche','Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi'];
 
@@ -703,7 +704,7 @@ async function runEnquete(){
     }
   }
   try{
-    let prompt='Heure:'+now.toLocaleTimeString('fr-FR')+' Session:'+sess+' Jour:'+days[now.getDay()]+'\nPaires disponibles: '+ALL_PAIRS.join(', ');
+    let prompt='Heure:'+now.toLocaleTimeString('fr-FR')+' Session:'+sess+' Jour:'+days[now.getUTCDay()]+'\nPaires disponibles: '+ALL_PAIRS.join(', ');
     if(candlesResume) prompt+='\nBOUGIES MT4 H1 (5 dernieres): '+candlesResume;
     if(dailyResume) prompt+='\nBOUGIES DAILY HTF (5 derniers jours): '+dailyResume;
     prompt+='\nEXPLORE TOUTES CES PAIRES — ne pas rester sur les memes 5 habituelles. Cherche des opportunites sur NZD, CAD, CHF, indices, crypto, paires croisees. Varie tes recommandations.';
@@ -864,7 +865,7 @@ async function launch(forcePair){
   document.getElementById('agentCards').innerHTML='';
   document.getElementById('decisionPanel').innerHTML='';
 
-  const now=new Date(),h=now.getHours();
+  const now=new Date(),h=now.getUTCHours();
   const session=h>=7&&h<10?'London Open':h>=10&&h<16?'London Active':h>=13&&h<16?'NY Open':h>=2&&h<6?'Asian Session':'Inter-session';
   const days=['Dimanche','Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi'];
   const results={};let smcData=null,mt4Source=false,mt4=null,candleContext='';
@@ -978,7 +979,7 @@ async function launch(forcePair){
       const key=AGENT_KEYS[i];
       renderStepBar(i,'Agent '+(i+1)+'/8 — '+(key.charAt(0).toUpperCase()+key.slice(1))+' en cours...');
       try{
-        let ctx='Paire:'+targetPair+' TF:'+selectedTf+' Session:'+session+' Jour:'+days[now.getDay()]+' Heure:'+h+'h';
+        let ctx='Paire:'+targetPair+' TF:'+selectedTf+' Session:'+session+' Jour:'+days[now.getUTCDay()]+' Heure:'+h+'h';
         if(smcData) ctx+=' | Prix LIVE:'+smcData.price+' Bid:'+(smcData.bid||smcData.price)+' Ask:'+(smcData.ask||smcData.price)+' BSL_estime:'+smcData.bsl+' SSL_estime:'+smcData.ssl;
         if(candleContext) ctx+=candleContext;
         if(dailyContext) ctx+=dailyContext;
@@ -1173,7 +1174,7 @@ async function loadStats(){
   }catch(e){}
 }
 
-function getSession(){const h=new Date().getHours();return h>=7&&h<10?'London Open':h>=13&&h<16?'NY Open':h>=2&&h<6?'Asian Session':'Inter-session';}
+function getSession(){const h=new Date().getUTCHours();return h>=7&&h<10?'London Open':h>=13&&h<16?'NY Open':h>=2&&h<6?'Asian Session':'Inter-session';}
 
 function generateChartDescription(candles,daily){
   if(!candles||candles.length<10) return '';
@@ -1316,7 +1317,7 @@ function startScheduler(){
   if(schedulerActive) return;
   schedulerActive=true;
   schedulerInterval=setInterval(async()=>{
-    const now=new Date(),h=now.getHours(),m=now.getMinutes(),day=now.getDay();
+    const now=new Date(),h=now.getUTCHours(),m=now.getUTCMinutes(),day=now.getUTCDay();
     if(day===0||day===6) return;
     const todayStr=now.toDateString();
     if(h===7&&m===0&&lastAutoAnalysis.london!==todayStr){lastAutoAnalysis.london=todayStr;await sendTelegram('Trading Master V5 RedPillFX — London Open — Analyse liquidite en cours...');await runAutoAnalysis('London Open');}
@@ -1347,7 +1348,7 @@ async function runAutoAnalysis(sessionName){
   for(const pair of paires){
     try{
       selectedPair=pair;
-      const now=new Date(),h=now.getHours();
+      const now=new Date(),h=now.getUTCHours();
       const days=['Dimanche','Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi'];
       const sym=MT4_SYMBOLS[pair];
       const mt4=await getPriceMT4(pair);
@@ -1361,7 +1362,7 @@ async function runAutoAnalysis(sessionName){
         const dt=dc2>last10[0].c?'bullish':'bearish';
         dailyCtx=' Daily_HTF:'+dt+' High='+dh.toFixed(5)+' Low='+dl.toFixed(5)+' BSL_potentiel='+dh.toFixed(5)+' SSL_potentiel='+dl.toFixed(5);
       }
-      const prompt='Paire:'+pair+' TF:H1 Session:'+sessionName+' Jour:'+days[now.getDay()]+' Heure:'+h+'h'+(price?' Prix:'+price.toFixed(5):'')+dailyCtx+' Analyse la liquidite disponible selon RedPillFX. Liquidite=Cause, Mouvement=Effet.';
+      const prompt='Paire:'+pair+' TF:H1 Session:'+sessionName+' Jour:'+days[now.getUTCDay()]+' Heure:'+h+'h'+(price?' Prix:'+price.toFixed(5):'')+dailyCtx+' Analyse la liquidite disponible selon RedPillFX. Liquidite=Cause, Mouvement=Effet.';
       const sys='Reponds UNIQUEMENT avec un objet JSON brut. Orchestrateur RedPillFX rapide. Verifier liquidite disponible avant signal. Format: {"score":75,"decision":"SIGNAL","bias":"long","trap_identifie":true,"liquidite_disponible":"SSL a X.XXXXX","resume":"1 phrase","entry":"niveau","sl":"niveau","tp":"niveau"}';
       const r=await aiCall(sys,prompt,500);
       if((r.score||0)>=65){
