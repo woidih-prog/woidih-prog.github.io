@@ -494,7 +494,7 @@ const MT4_SYMBOLS = {
   "AUD/CHF":"AUDCHF.r","GBP/CAD":"GBPCAD.r","EUR/CAD":"EURCAD.r",
   "EUR/CHF":"EURCHF.r","EUR/NZD":"EURNZD.r","AUD/NZD":"AUDNZD.r",
   "GBP/NZD":"GBPNZD.r","CHF/JPY":"CHFJPY.r","CAD/CHF":"CADCHF.r",
-  "XAU/USD":"XAUUSDr","XAG/USD":"XAGUSD.r",
+  "XAU/USD":"XAUUSD.r","XAG/USD":"XAGUSD.r",
   "NAS100":"NAS100.r","SPX500":"US500.r","DAX40":"GER40.r",
   "US30":"US30.r","UK100":"UK100.r","JPN225":"JPN225.r",
   "BTC/USD":"BTCUSD.r","ETH/USD":"ETHUSD.r","SOL/USD":"SOLUSD.r",
@@ -649,7 +649,7 @@ async function runEnquete(){
   const days=['Dimanche','Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi'];
 
   let candlesResume='';
-  const pairesAVerifier=['EURUSD.r','GBPUSD.r','XAUUSDr','USDJPY.r','GBPJPY.r','AUDUSD.r','NZDUSD.r','USDCAD.r','USDCHF.r','EURGBP.r','EURJPY.r','GBPCHF.r','AUDJPY.r','CADJPY.r','NZDJPY.r','GBPCAD.r','EURCAD.r','NAS100.r','US500.r','GER40.r','BTCUSD.r','ETHUSD.r','SOLUSD.r'];
+  const pairesAVerifier=['EURUSD.r','GBPUSD.r','XAUUSD.r','USDJPY.r','GBPJPY.r','AUDUSD.r','NZDUSD.r','USDCAD.r','USDCHF.r','EURGBP.r','EURJPY.r','GBPCHF.r','AUDJPY.r','CADJPY.r','NZDJPY.r','GBPCAD.r','EURCAD.r','NAS100.r','US500.r','GER40.r','BTCUSD.r','ETHUSD.r','SOLUSD.r'];
   for(const sym of pairesAVerifier){
     try{
       const rc=await fetch(BACKEND+'/candles/'+sym);
@@ -670,7 +670,7 @@ async function runEnquete(){
   }
 
   let dailyResume='';
-  for(const sym of ['EURUSD.r','GBPUSD.r','XAUUSDr','USDJPY.r','GBPJPY.r','AUDUSD.r','NZDUSD.r','USDCAD.r','USDCHF.r','EURGBP.r','EURJPY.r','GBPCHF.r','AUDJPY.r','CADJPY.r','GBPCAD.r','EURCAD.r']){
+  for(const sym of ['EURUSD.r','GBPUSD.r','XAUUSD.r','USDJPY.r','GBPJPY.r','AUDUSD.r','NZDUSD.r','USDCAD.r','USDCHF.r','EURGBP.r','EURJPY.r','GBPCHF.r','AUDJPY.r','CADJPY.r','GBPCAD.r','EURCAD.r']){
     try{
       const rd=await fetch(BACKEND+'/daily/'+sym);
       if(rd.ok){
