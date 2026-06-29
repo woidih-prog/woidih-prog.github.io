@@ -485,21 +485,22 @@ const ICONS     = {liquidite:"💧",structure:"📊",zones:"🎯",timing:"⏰",r
 const AGENT_KEYS= ["liquidite","structure","zones","timing","risk","memoire","backtest","eco"];
 const STEPS     = ["Liquidite","Structure","Zones","Timing","Risk","Memoire","Backtest","Eco","Synthese"];
 
+// ── NOMS ADMIRAL MARKETS (plus de suffixe .r) ──
 const MT4_SYMBOLS = {
-  "EUR/USD":"EURUSD.r","GBP/USD":"GBPUSD.r","USD/JPY":"USDJPY.r",
-  "GBP/JPY":"GBPJPY.r","EUR/JPY":"EURJPY.r","EUR/GBP":"EURGBP.r",
-  "USD/CAD":"USDCAD.r","USD/CHF":"USDCHF.r","AUD/USD":"AUDUSD.r",
-  "NZD/USD":"NZDUSD.r","GBP/CHF":"GBPCHF.r","AUD/JPY":"AUDJPY.r",
-  "CAD/JPY":"CADJPY.r","NZD/JPY":"NZDJPY.r","AUD/CAD":"AUDCAD.r",
-  "AUD/CHF":"AUDCHF.r","GBP/CAD":"GBPCAD.r","EUR/CAD":"EURCAD.r",
-  "EUR/CHF":"EURCHF.r","EUR/NZD":"EURNZD.r","AUD/NZD":"AUDNZD.r",
-  "GBP/NZD":"GBPNZD.r","CHF/JPY":"CHFJPY.r","CAD/CHF":"CADCHF.r",
-  "XAU/USD":"XAUUSD.r","XAG/USD":"XAGUSD.r",
-  "NAS100":"NAS100.r","SPX500":"US500.r","DAX40":"GER40.r",
-  "US30":"US30.r","UK100":"UK100.r","JPN225":"JPN225.r",
-  "BTC/USD":"BTCUSD.r","ETH/USD":"ETHUSD.r","SOL/USD":"SOLUSD.r",
-  "XRP/USD":"XRPUSD.r","BNB/USD":"BNBUSD.r","ADA/USD":"ADAUSD.r",
-  "BRENT":"SpotBrent.r","WTI":"SpotCrude.r"
+  "EUR/USD":"EURUSD","GBP/USD":"GBPUSD","USD/JPY":"USDJPY",
+  "GBP/JPY":"GBPJPY","EUR/JPY":"EURJPY","EUR/GBP":"EURGBP",
+  "USD/CAD":"USDCAD","USD/CHF":"USDCHF","AUD/USD":"AUDUSD",
+  "NZD/USD":"NZDUSD","GBP/CHF":"GBPCHF","AUD/JPY":"AUDJPY",
+  "CAD/JPY":"CADJPY","NZD/JPY":"NZDJPY","AUD/CAD":"AUDCAD",
+  "AUD/CHF":"AUDCHF","GBP/CAD":"GBPCAD","EUR/CAD":"EURCAD",
+  "EUR/CHF":"EURCHF","EUR/NZD":"EURNZD","AUD/NZD":"AUDNZD",
+  "GBP/NZD":"GBPNZD","CHF/JPY":"CHFJPY","CAD/CHF":"CADCHF",
+  "XAU/USD":"GOLD","XAG/USD":"SILVER",
+  "NAS100":"US100","SPX500":"[SP500]","DAX40":"GERMANY40",
+  "US30":"[DJI30]","UK100":"[FTSE100]","JPN225":"[NIKKEI225]",
+  "BTC/USD":"BTCUSD","ETH/USD":"ETHUSD","SOL/USD":"SOLUSD",
+  "XRP/USD":"XRPUSD","BNB/USD":"BNBUSD","ADA/USD":"ADAUSD",
+  "BRENT":"BRENT","WTI":"CRUDOIL"
 };
 
 let selectedPair="EUR/USD",selectedTf="H1",loading=false,trades=[],lastId=null,enqueteurContext=null,jsLevels=null;
@@ -649,7 +650,7 @@ async function runEnquete(){
   const days=['Dimanche','Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi'];
 
   let candlesResume='';
-  const pairesAVerifier=['EURUSD.r','GBPUSD.r','XAUUSD.r','USDJPY.r','GBPJPY.r','AUDUSD.r','NZDUSD.r','USDCAD.r','USDCHF.r','EURGBP.r','EURJPY.r','GBPCHF.r','AUDJPY.r','CADJPY.r','NZDJPY.r','GBPCAD.r','EURCAD.r','NAS100.r','US500.r','GER40.r','BTCUSD.r','ETHUSD.r','SOLUSD.r'];
+  const pairesAVerifier=['EURUSD','GBPUSD','GOLD','USDJPY','GBPJPY','AUDUSD','NZDUSD','USDCAD','USDCHF','EURGBP','EURJPY','GBPCHF','AUDJPY','CADJPY','NZDJPY','GBPCAD','EURCAD','US100','[SP500]','GERMANY40','BTCUSD','ETHUSD','SOLUSD'];
   for(const sym of pairesAVerifier){
     try{
       const rc=await fetch(BACKEND+'/candles/'+sym);
@@ -670,7 +671,7 @@ async function runEnquete(){
   }
 
   let dailyResume='';
-  for(const sym of ['EURUSD.r','GBPUSD.r','XAUUSD.r','USDJPY.r','GBPJPY.r','AUDUSD.r','NZDUSD.r','USDCAD.r','USDCHF.r','EURGBP.r','EURJPY.r','GBPCHF.r','AUDJPY.r','CADJPY.r','GBPCAD.r','EURCAD.r']){
+  for(const sym of ['EURUSD','GBPUSD','GOLD','USDJPY','GBPJPY','AUDUSD','NZDUSD','USDCAD','USDCHF','EURGBP','EURJPY','GBPCHF','AUDJPY','CADJPY','GBPCAD','EURCAD']){
     try{
       const rd=await fetch(BACKEND+'/daily/'+sym);
       if(rd.ok){
