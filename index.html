@@ -218,15 +218,21 @@ setInterval(updateSessions,10000);
             <optgroup label="FOREX CROISÉES">
               <option>GBP/JPY</option><option>EUR/JPY</option><option>EUR/GBP</option>
               <option>GBP/CHF</option><option>AUD/JPY</option><option>CAD/JPY</option>
+              <option>NZD/JPY</option><option>AUD/CAD</option><option>AUD/CHF</option>
+              <option>GBP/CAD</option><option>EUR/CAD</option><option>EUR/CHF</option>
             </optgroup>
             <optgroup label="MÉTAUX">
               <option>XAU/USD</option><option>XAG/USD</option>
             </optgroup>
             <optgroup label="INDICES">
-              <option>NAS100</option><option>SPX500</option><option>DAX40</option><option>US30</option>
+              <option>NAS100</option><option>SPX500</option><option>DAX40</option><option>US30</option><option>UK100</option>
+            </optgroup>
+            <optgroup label="ÉNERGIE">
+              <option>BRENT</option><option>WTI</option>
             </optgroup>
             <optgroup label="CRYPTO">
               <option>BTC/USD</option><option>ETH/USD</option><option>SOL/USD</option>
+              <option>XRP/USD</option><option>BNB/USD</option><option>ADA/USD</option>
             </optgroup>
           </select>
           <select id="chartTf" style="background:#060e06;border:1px solid #1a2e1a;color:#C0C0C0;border-radius:6px;padding:5px 8px;font-size:10px;font-family:monospace">
@@ -469,13 +475,16 @@ async function getAlphaVantageDaily(pair){
   }catch(e){return null;}
 }
 
+// ── v5.08 : liste alignee sur le robot MT4 (28 instruments Admiral)
+// + 6 cryptos via Binance. Retires : EUR/NZD, AUD/NZD, GBP/NZD,
+// CHF/JPY, CAD/CHF, JPN225 (inexistants chez Admiral demo).
 const ALL_PAIRS = [
   "EUR/USD","GBP/USD","USD/JPY","GBP/JPY","EUR/JPY","EUR/GBP",
   "USD/CAD","USD/CHF","AUD/USD","NZD/USD","GBP/CHF","AUD/JPY",
   "CAD/JPY","NZD/JPY","AUD/CAD","AUD/CHF","GBP/CAD","EUR/CAD",
-  "EUR/CHF","EUR/NZD","AUD/NZD","GBP/NZD","CHF/JPY","CAD/CHF",
+  "EUR/CHF",
   "XAU/USD","XAG/USD",
-  "NAS100","SPX500","DAX40","US30","UK100","JPN225",
+  "NAS100","SPX500","DAX40","US30","UK100",
   "BTC/USD","ETH/USD","SOL/USD","XRP/USD","BNB/USD","ADA/USD",
   "BRENT","WTI"
 ];
@@ -485,7 +494,7 @@ const ICONS     = {liquidite:"💧",structure:"📊",zones:"🎯",timing:"⏰",r
 const AGENT_KEYS= ["liquidite","structure","zones","timing","risk","memoire","backtest","eco"];
 const STEPS     = ["Liquidite","Structure","Zones","Timing","Risk","Memoire","Backtest","Eco","Synthese"];
 
-// ── NOMS ADMIRAL MARKETS (plus de suffixe .r) ──
+// ── NOMS ADMIRAL MARKETS (alignes robot v5.08) ──
 const MT4_SYMBOLS = {
   "EUR/USD":"EURUSD","GBP/USD":"GBPUSD","USD/JPY":"USDJPY",
   "GBP/JPY":"GBPJPY","EUR/JPY":"EURJPY","EUR/GBP":"EURGBP",
@@ -493,15 +502,18 @@ const MT4_SYMBOLS = {
   "NZD/USD":"NZDUSD","GBP/CHF":"GBPCHF","AUD/JPY":"AUDJPY",
   "CAD/JPY":"CADJPY","NZD/JPY":"NZDJPY","AUD/CAD":"AUDCAD",
   "AUD/CHF":"AUDCHF","GBP/CAD":"GBPCAD","EUR/CAD":"EURCAD",
-  "EUR/CHF":"EURCHF","EUR/NZD":"EURNZD","AUD/NZD":"AUDNZD",
-  "GBP/NZD":"GBPNZD","CHF/JPY":"CHFJPY","CAD/CHF":"CADCHF",
+  "EUR/CHF":"EURCHF",
   "XAU/USD":"GOLD","XAG/USD":"SILVER",
   "NAS100":"US100","SPX500":"[SP500]","DAX40":"GERMANY40",
-  "US30":"[DJI30]","UK100":"[FTSE100]","JPN225":"[NIKKEI225]",
+  "US30":"[DJI30]","UK100":"[FTSE100]",
   "BTC/USD":"BTCUSD","ETH/USD":"ETHUSD","SOL/USD":"SOLUSD",
   "XRP/USD":"XRPUSD","BNB/USD":"BNBUSD","ADA/USD":"ADAUSD",
   "BRENT":"BRENT","WTI":"CRUDOIL"
 };
+
+// ── Cryptos : donnees en direct de Binance (pas de MT4) ──
+const CRYPTO_PAIRS=['BTC/USD','ETH/USD','SOL/USD','XRP/USD','BNB/USD','ADA/USD'];
+const CRYPTO_BINANCE={'BTC/USD':'BTCUSDT','ETH/USD':'ETHUSDT','SOL/USD':'SOLUSDT','XRP/USD':'XRPUSDT','BNB/USD':'BNBUSDT','ADA/USD':'ADAUSDT'};
 
 let selectedPair="EUR/USD",selectedTf="H1",loading=false,trades=[],lastId=null,enqueteurContext=null,jsLevels=null;
 
@@ -521,6 +533,15 @@ async function getPriceMT4(pair){
     }
     return null;
   }catch(e){return null;}
+}
+
+// ── GEL WEEK-END : demande au serveur si le forex est ouvert ──
+async function isForexOpen(){
+  try{
+    const r=await fetch(BACKEND+'/market-status');
+    if(r.ok){const j=await r.json();return j.forex_open!==false;}
+  }catch(e){}
+  return true;
 }
 
 function initControls(){
@@ -649,8 +670,15 @@ async function runEnquete(){
   const sess=h>=7&&h<10?'London Open':h>=10&&h<16?'London Active':h>=13&&h<16?'NY Open':h>=2&&h<6?'Asian Session':'Inter-session';
   const days=['Dimanche','Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi'];
 
+  // ── GEL WEEK-END : verifier l'etat du marche aupres du serveur ──
+  const forexOpen=await isForexOpen();
+  if(!forexOpen){
+    document.getElementById('enqueteResult').innerHTML='<div style="background:#FFD70010;border:1px solid #FFD70040;border-radius:10px;padding:12px 16px;margin-bottom:12px;color:#FFD700;font-size:11px;font-family:monospace">🔒 MARCHE FOREX FERME — week-end. Analyse limitee aux cryptos. Reouverture dimanche 23h Paris.</div>';
+  }
+
   let candlesResume='';
-  const pairesAVerifier=['EURUSD','GBPUSD','GOLD','USDJPY','GBPJPY','AUDUSD','NZDUSD','USDCAD','USDCHF','EURGBP','EURJPY','GBPCHF','AUDJPY','CADJPY','NZDJPY','GBPCAD','EURCAD','US100','[SP500]','GERMANY40','BTCUSD','ETHUSD','SOLUSD'];
+  // v5.08 : les 28 instruments du robot MT4, tous scannes (le week-end : aucun)
+  const pairesAVerifier=forexOpen?['EURUSD','GBPUSD','USDJPY','GBPJPY','EURJPY','USDCAD','USDCHF','AUDUSD','NZDUSD','EURGBP','GBPCHF','AUDJPY','CADJPY','NZDJPY','AUDCAD','AUDCHF','GBPCAD','EURCAD','EURCHF','GOLD','SILVER','US100','[SP500]','[DJI30]','GERMANY40','[FTSE100]','BRENT','CRUDOIL']:[];
   for(const sym of pairesAVerifier){
     try{
       const rc=await fetch(BACKEND+'/candles/'+sym);
@@ -670,26 +698,42 @@ async function runEnquete(){
     }catch(e){}
   }
 
-  let dailyResume='';
-  for(const sym of ['EURUSD','GBPUSD','GOLD','USDJPY','GBPJPY','AUDUSD','NZDUSD','USDCAD','USDCHF','EURGBP','EURJPY','GBPCHF','AUDJPY','CADJPY','GBPCAD','EURCAD']){
+  // ── CRYPTOS en direct depuis Binance (le robot MT4 ne les envoie plus) ──
+  const cryptoList=[['BTCUSD','BTCUSDT'],['ETHUSD','ETHUSDT'],['SOLUSD','SOLUSDT'],['XRPUSD','XRPUSDT'],['BNBUSD','BNBUSDT'],['ADAUSD','ADAUSDT']];
+  for(const cp of cryptoList){
     try{
-      const rd=await fetch(BACKEND+'/daily/'+sym);
-      if(rd.ok){
-        const dd=await rd.json();
-        const daily=dd.candles||[];
-        if(daily.length>=5){
-          const last5d=daily.slice(-5);
-          const dlastClose=parseFloat(last5d[last5d.length-1].c);
-          const dfirstClose=parseFloat(last5d[0].c);
-          const dhigh=Math.max(...last5d.map(c=>parseFloat(c.h)));
-          const dlow=Math.min(...last5d.map(c=>parseFloat(c.l)));
-          const dtrend=dlastClose>dfirstClose?'up':'down';
-          dailyResume+=sym+"_D: "+dtrend+" H="+dhigh.toFixed(5)+" L="+dlow.toFixed(5)+" | ";
-        }
+      const rb=await fetch('https://api.binance.com/api/v3/klines?symbol='+cp[1]+'&interval=1h&limit=5');
+      const db=await rb.json();
+      if(db&&db.length>=5){
+        const lastC=+db[db.length-1][4],firstC=+db[0][4];
+        const hiC=Math.max(...db.map(c=>+c[2])),loC=Math.min(...db.map(c=>+c[3]));
+        candlesResume+=cp[0]+": Close="+lastC.toFixed(2)+" H="+hiC.toFixed(2)+" L="+loC.toFixed(2)+" "+(lastC>firstC?'up':'down')+" | ";
       }
     }catch(e){}
   }
-  if(!dailyResume){
+
+  let dailyResume='';
+  if(forexOpen){
+    for(const sym of ['EURUSD','GBPUSD','GOLD','USDJPY','GBPJPY','AUDUSD','NZDUSD','USDCAD','USDCHF','EURGBP','EURJPY','GBPCHF','AUDJPY','CADJPY','GBPCAD','EURCAD']){
+      try{
+        const rd=await fetch(BACKEND+'/daily/'+sym);
+        if(rd.ok){
+          const dd=await rd.json();
+          const daily=dd.candles||[];
+          if(daily.length>=5){
+            const last5d=daily.slice(-5);
+            const dlastClose=parseFloat(last5d[last5d.length-1].c);
+            const dfirstClose=parseFloat(last5d[0].c);
+            const dhigh=Math.max(...last5d.map(c=>parseFloat(c.h)));
+            const dlow=Math.min(...last5d.map(c=>parseFloat(c.l)));
+            const dtrend=dlastClose>dfirstClose?'up':'down';
+            dailyResume+=sym+"_D: "+dtrend+" H="+dhigh.toFixed(5)+" L="+dlow.toFixed(5)+" | ";
+          }
+        }
+      }catch(e){}
+    }
+  }
+  if(!dailyResume&&forexOpen){
     for(const pair of ['EUR/USD','GBP/USD','XAU/USD','USD/JPY']){
       try{
         const avC=await getAlphaVantageDaily(pair);
@@ -708,6 +752,7 @@ async function runEnquete(){
     let prompt='Heure:'+now.toLocaleTimeString('fr-FR')+' Session:'+sess+' Jour:'+days[now.getUTCDay()]+'\nPaires disponibles: '+ALL_PAIRS.join(', ');
     if(candlesResume) prompt+='\nBOUGIES MT4 H1 (5 dernieres): '+candlesResume;
     if(dailyResume) prompt+='\nBOUGIES DAILY HTF (5 derniers jours): '+dailyResume;
+    if(!forexOpen) prompt+='\nMARCHE FERME (week-end) : forex, metaux, indices et petroles sont FERMES, leurs donnees sont figees. Ne proposer QUE des cryptos (BTC/USD, ETH/USD, SOL/USD, XRP/USD, BNB/USD, ADA/USD). Aucune opportunite forex.';
     prompt+='\nEXPLORE TOUTES CES PAIRES — ne pas rester sur les memes 5 habituelles. Cherche des opportunites sur NZD, CAD, CHF, indices, crypto, paires croisees. Varie tes recommandations.';
     const r=await aiCall(ENQUETEUR_SYS,prompt,2500);
     renderEnquete(r);
@@ -731,7 +776,7 @@ function renderEnquete(r){
     });
   }
   if(r.conseil_du_jour) html+='<div style="background:linear-gradient(135deg,#FFD70008,#00C85308);border:1px solid #FFD70025;border-radius:12px;padding:14px 16px;margin-top:8px"><p style="font-size:11px;color:#FFD700cc;margin:0;font-style:italic">"'+r.conseil_du_jour+'"</p></div>';
-  document.getElementById('enqueteResult').innerHTML=html;
+  document.getElementById('enqueteResult').innerHTML+=html;
 }
 
 function analyzeFromEnquete(pair,raison,direction,score){
@@ -859,6 +904,18 @@ function renderAgentCard(key,data){
 async function launch(forcePair){
   const targetPair=forcePair||selectedPair;
   if(loading) return;
+
+  // ── GEL WEEK-END : pas d'analyse forex quand le marche est ferme ──
+  if(CRYPTO_PAIRS.indexOf(targetPair)===-1){
+    const openNow=await isForexOpen();
+    if(!openNow){
+      const eb=document.getElementById('errorBox');
+      eb.textContent='🔒 MARCHE FERME (week-end) — '+targetPair+' sera analysable a la reouverture dimanche 23h Paris. Seules les cryptos sont disponibles ce week-end.';
+      eb.style.display='block';
+      return;
+    }
+  }
+
   setLoading(true);
   ['errorBox','smcData'].forEach(id=>{const el=document.getElementById(id);el.style.display='none';});
   document.getElementById('signalBanner').innerHTML='';
@@ -1164,6 +1221,9 @@ async function loadStats(){
   try{
     const r=await fetch(BACKEND+'/journal/stats');const s=await r.json();
     let html='<div class="stat-grid">'+[['TRADES TOTAL',s.total,'#C0C0C0'],['GAGNES',s.wins,'#00C853'],['PERDUS',s.losses,'#ff6666'],['WINRATE',s.winrate+'%',s.winrate>=50?'#00C853':'#ff6666'],['P&L TOTAL',(s.total_pnl>=0?'+':'')+s.total_pnl+'E',s.total_pnl>=0?'#00C853':'#ff6666']].map(([k,v,c])=>'<div class="stat-box"><div class="silver-label" style="margin-bottom:6px">'+k+'</div><div style="font-size:22px;font-weight:900;color:'+c+';font-family:monospace;text-shadow:0 0 8px '+c+'30">'+v+'</div></div>').join('')+'</div>';
+    if(s.hors_systeme&&s.hors_systeme.total>0){
+      html+='<div class="card" style="border-color:#FFA50030;margin-top:4px"><div style="font-size:8px;color:#FFA500;letter-spacing:2px;margin-bottom:6px">🦊 COÛT DE L\'INDISCIPLINE</div><div style="font-size:11px;color:#8aaa7a">'+s.hors_systeme.total+' trades hors système — PnL cumulé : <span style="font-weight:900;color:'+(s.hors_systeme.pnl>=0?'#00C853':'#ff6666')+';font-family:monospace">'+(s.hors_systeme.pnl>=0?'+':'')+s.hors_systeme.pnl+'€</span> <span style="font-size:9px;color:#3a5a2a">(exclus de la mémoire des agents)</span></div></div>';
+    }
     if(s.ctx_trend||s.ctx_range||s.ctx_manipulation){
       html+='<div class="gold-title" style="margin:14px 0 8px">PAR TYPE DE MARCHE</div><div class="stat-grid">';
       for(const [k,label] of [['ctx_trend','TREND'],['ctx_range','RANGE'],['ctx_manipulation','MANIPULATION']]){
@@ -1223,6 +1283,23 @@ async function loadChart(){
     const ctx2=cv.getContext('2d');ctx2.scale(dpr,dpr);ctx2.fillStyle='#040d04';ctx2.fillRect(0,0,W,380);
     ctx2.fillStyle='#ff6666';ctx2.font='14px monospace';ctx2.textAlign='center';ctx2.fillText('⚠ '+msg,W/2,190);
   }
+  // ── Cryptos : bougies en direct de Binance (le robot MT4 ne les envoie plus) ──
+  if(CRYPTO_BINANCE[pair]){
+    const BIN_TF={'M15':'15m','H1':'1h','Daily':'1d'};
+    const BIN_LIMIT={'M15':80,'H1':60,'Daily':60};
+    try{
+      showError('Chargement '+tf+' (Binance)...');
+      const rb=await fetch('https://api.binance.com/api/v3/klines?symbol='+CRYPTO_BINANCE[pair]+'&interval='+(BIN_TF[tf]||'1h')+'&limit='+(BIN_LIMIT[tf]||60));
+      if(!rb.ok) throw new Error('Binance indisponible');
+      const db=await rb.json();
+      if(!db||!db.length) throw new Error('Aucune bougie Binance');
+      const candles=db.map(c=>({t:''+c[0],o:''+c[1],h:''+c[2],l:''+c[3],c:''+c[4]}));
+      document.getElementById('chartSource').style.display='inline';
+      document.getElementById('chartSource').textContent='BINANCE '+tf;
+      drawCandles(candles,pair,tf);
+    }catch(e){showError(e.message);}
+    return;
+  }
   if(!sym){showError('Paire non disponible en MT4');return;}
   const TF_ROUTES={'M15':'/m15/','H1':'/candles/','Daily':'/daily/'};
   const TF_LIMIT={'M15':80,'H1':60,'Daily':60};
@@ -1233,7 +1310,7 @@ async function loadChart(){
     const d=await r.json();const candles=d.candles||[];
     if(!candles.length) throw new Error('Aucune bougie '+tf+' — marche ferme ou EA inactif');
     document.getElementById('chartSource').style.display='inline';
-    document.getElementById('chartSource').textContent='MT4 '+tf;
+    document.getElementById('chartSource').textContent='MT4 '+tf+(d.market_open===false?' · MARCHE FERME':(d.stale?' · DONNEES FIGEES':''));
     drawCandles(candles.slice(-(TF_LIMIT[tf]||60)),pair,tf);
   }catch(e){showError(e.message);}
 }
