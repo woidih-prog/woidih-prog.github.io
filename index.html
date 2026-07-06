@@ -754,7 +754,7 @@ async function runEnquete(){
     if(dailyResume) prompt+='\nBOUGIES DAILY HTF (5 derniers jours): '+dailyResume;
     if(!forexOpen) prompt+='\nMARCHE FERME (week-end) : forex, metaux, indices et petroles sont FERMES, leurs donnees sont figees. Ne proposer QUE des cryptos (BTC/USD, ETH/USD, SOL/USD, XRP/USD, BNB/USD, ADA/USD). Aucune opportunite forex.';
     prompt+='\nEXPLORE TOUTES CES PAIRES — ne pas rester sur les memes 5 habituelles. Cherche des opportunites sur NZD, CAD, CHF, indices, crypto, paires croisees. Varie tes recommandations.';
-    const r=await aiCall(ENQUETEUR_SYS,prompt,2500);
+    const r=await aiCall(ENQUETEUR_SYS,prompt,4000);
     renderEnquete(r);
   }catch(e){document.getElementById('enqueteResult').innerHTML='<div class="error-box">'+e.message+'</div>';}
   btn.disabled=false;btn.textContent="LANCER L'ENQUETE";
