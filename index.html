@@ -762,7 +762,9 @@ async function runEnquete(){
 
 function renderEnquete(r){
   const sc=r.sentiment==='risk-on'?'#00C853':r.sentiment==='risk-off'?'#ff6666':'#FFD700';
-  let html='<div class="card" style="margin-bottom:14px;border-color:#FFD70020;margin-top:14px"><div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap"><span class="chip" style="background:'+sc+'20;border:1px solid '+sc+'40;color:'+sc+'">'+(r.session_actuelle||'--')+'</span><span class="chip" style="background:'+sc+'20;border:1px solid '+sc+'40;color:'+sc+'">Sentiment: '+(r.sentiment||'--')+'</span><span class="chip" style="background:#C0C0C020;border:1px solid #C0C0C040;color:#C0C0C0">DXY: '+(r.dxy||'--')+'</span></div><p style="font-size:11px;color:#8aaa7a;line-height:1.7;font-style:italic">'+(r.resume_macro||'')+'</p></div>';
+  // Afficher l'erreur reelle si l'appel IA a echoue (au lieu de tirets muets)
+  const macroTxt=r.resume_macro||((r.analyse&&r.analyse.indexOf('Erreur')===0)?('⚠️ '+r.analyse+' — reessaie dans 2 minutes'):'');
+  let html='<div class="card" style="margin-bottom:14px;border-color:#FFD70020;margin-top:14px"><div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap"><span class="chip" style="background:'+sc+'20;border:1px solid '+sc+'40;color:'+sc+'">'+(r.session_actuelle||'--')+'</span><span class="chip" style="background:'+sc+'20;border:1px solid '+sc+'40;color:'+sc+'">Sentiment: '+(r.sentiment||'--')+'</span><span class="chip" style="background:#C0C0C020;border:1px solid #C0C0C040;color:#C0C0C0">DXY: '+(r.dxy||'--')+'</span></div><p style="font-size:11px;color:'+(macroTxt.indexOf('⚠️')===0?'#ff6666':'#8aaa7a')+';line-height:1.7;font-style:italic">'+macroTxt+'</p></div>';
   if(r.top_opportunites&&r.top_opportunites.length){
     html+='<div class="gold-title" style="margin-bottom:10px">TOP OPPORTUNITES — LIQUIDITE IDENTIFIEE</div>';
     r.top_opportunites.forEach(op=>{
