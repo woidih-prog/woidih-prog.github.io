@@ -660,7 +660,8 @@ async function aiCall(sys,prompt,maxT=1200){
 const ENQUETEUR_SYS=`Reponds UNIQUEMENT avec un objet JSON brut. Zero texte avant ou apres. Pas de markdown.
 Tu es L'ENQUETEUR REDPILLFX. Mission: identifier les paires avec LIQUIDITE DISPONIBLE + CAUSE CONSTRUITE.
 REGLES FILTRAGE: Ne proposer une paire que si liquidite identifiable (BSL ou SSL) ET cause construite (accumulation visible) ET session favorable. Privilegier equal highs/lows non collectes. EVITER paires sans direction claire (risque SMC TRAP). Le marche se deplace de liquidite en liquidite — identifier la prochaine pool logique.
-Format STRICT: {"session_actuelle":"London Open","sentiment":"risk-on","dxy":"hausse","resume_macro":"2 phrases max","top_opportunites":[{"rang":1,"paire":"EUR/USD","direction":"ACHETER","raison":"1 phrase avec liquidite identifiee","session_ideale":"London Open","score_opportunite":82,"liquidite_cible":"SSL a 1.0820","cause_construite":true}],"paires_eviter":[{"paire":"USD/JPY","raison":"texte court"}],"conseil_du_jour":"1 phrase RedPillFX"}`;
+MAXIMUM 5 opportunites, raisons en 1 phrase COURTE (15 mots max), paires_eviter 2 maximum. Reponse compacte obligatoire.
+Format STRICT: {"session_actuelle":"London Open","sentiment":"risk-on","dxy":"hausse","resume_macro":"2 phrases max","top_opportunites":[{"rang":1,"paire":"EUR/USD","direction":"ACHETER","raison":"1 phrase courte","session_ideale":"London Open","score_opportunite":82,"liquidite_cible":"SSL a 1.0820","cause_construite":true}],"paires_eviter":[{"paire":"USD/JPY","raison":"texte court"}],"conseil_du_jour":"1 phrase RedPillFX"}`;
 
 async function runEnquete(){
   const btn=document.getElementById('btnEnquete');
@@ -692,7 +693,8 @@ async function runEnquete(){
           const high=Math.max(...last5.map(c=>parseFloat(c.h)));
           const low=Math.min(...last5.map(c=>parseFloat(c.l)));
           const trend=lastClose>firstClose?'up':'down';
-          candlesResume+=sym+": Close="+lastClose.toFixed(5)+" H="+high.toFixed(5)+" L="+low.toFixed(5)+" "+trend+" | ";
+          const dp=lastClose>50?2:4;
+          candlesResume+=sym+":"+lastClose.toFixed(dp)+" H"+high.toFixed(dp)+" L"+low.toFixed(dp)+" "+trend+"|";
         }
       }
     }catch(e){}
@@ -714,7 +716,7 @@ async function runEnquete(){
 
   let dailyResume='';
   if(forexOpen){
-    for(const sym of ['EURUSD','GBPUSD','GOLD','USDJPY','GBPJPY','AUDUSD','NZDUSD','USDCAD','USDCHF','EURGBP','EURJPY','GBPCHF','AUDJPY','CADJPY','GBPCAD','EURCAD']){
+    for(const sym of ['EURUSD','GBPUSD','GOLD','USDJPY','GBPJPY','AUDUSD','USDCAD','US100']){
       try{
         const rd=await fetch(BACKEND+'/daily/'+sym);
         if(rd.ok){
@@ -727,7 +729,8 @@ async function runEnquete(){
             const dhigh=Math.max(...last5d.map(c=>parseFloat(c.h)));
             const dlow=Math.min(...last5d.map(c=>parseFloat(c.l)));
             const dtrend=dlastClose>dfirstClose?'up':'down';
-            dailyResume+=sym+"_D: "+dtrend+" H="+dhigh.toFixed(5)+" L="+dlow.toFixed(5)+" | ";
+            const ddp=dlastClose>50?2:4;
+            dailyResume+=sym+"_D:"+dtrend+" H"+dhigh.toFixed(ddp)+" L"+dlow.toFixed(ddp)+"|";
           }
         }
       }catch(e){}
@@ -754,7 +757,7 @@ async function runEnquete(){
     if(dailyResume) prompt+='\nBOUGIES DAILY HTF (5 derniers jours): '+dailyResume;
     if(!forexOpen) prompt+='\nMARCHE FERME (week-end) : forex, metaux, indices et petroles sont FERMES, leurs donnees sont figees. Ne proposer QUE des cryptos (BTC/USD, ETH/USD, SOL/USD, XRP/USD, BNB/USD, ADA/USD). Aucune opportunite forex.';
     prompt+='\nEXPLORE TOUTES CES PAIRES — ne pas rester sur les memes 5 habituelles. Cherche des opportunites sur NZD, CAD, CHF, indices, crypto, paires croisees. Varie tes recommandations.';
-    const r=await aiCall(ENQUETEUR_SYS,prompt,4000);
+    const r=await aiCall(ENQUETEUR_SYS,prompt,3000);
     renderEnquete(r);
   }catch(e){document.getElementById('enqueteResult').innerHTML='<div class="error-box">'+e.message+'</div>';}
   btn.disabled=false;btn.textContent="LANCER L'ENQUETE";
