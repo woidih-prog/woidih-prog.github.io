@@ -475,6 +475,21 @@ async function getAlphaVantageDaily(pair){
   }catch(e){return null;}
 }
 
+// ── A : Daily des CRYPTOS via Binance (le serveur MT4 ne les a pas) ──
+// Meme logique que le H1 crypto : on va chercher les bougies journalieres
+// directement chez Binance. Renvoie un tableau {t,o,h,l,c} ou null.
+async function getBinanceDaily(pair){
+  const sym=CRYPTO_BINANCE[pair];
+  if(!sym) return null;
+  try{
+    const r=await fetch('https://api.binance.com/api/v3/klines?symbol='+sym+'&interval=1d&limit=60');
+    if(!r.ok) return null;
+    const d=await r.json();
+    if(!d||!d.length) return null;
+    return d.map(c=>({t:''+c[0],o:parseFloat(c[1]),h:parseFloat(c[2]),l:parseFloat(c[3]),c:parseFloat(c[4])}));
+  }catch(e){return null;}
+}
+
 // ── v5.08 : liste alignee sur le robot MT4 (28 instruments Admiral)
 // + 6 cryptos via Binance. Retires : EUR/NZD, AUD/NZD, GBP/NZD,
 // CHF/JPY, CAD/CHF, JPN225 (inexistants chez Admiral demo).
@@ -1014,6 +1029,20 @@ async function launch(forcePair){
         }
       }catch(e){}
     }
+    // A : pour les cryptos, le Daily vient de Binance (MT4 renvoie 404)
+    if(!dailyContext && CRYPTO_BINANCE[targetPair]){
+      try{
+        const binDaily=await getBinanceDaily(targetPair);
+        if(binDaily&&binDaily.length>=20){
+          const last20=binDaily.slice(-20);
+          const dcloses=last20.map(c=>c.c),dmaxP=Math.max(...last20.map(c=>c.h)),dminP=Math.min(...last20.map(c=>c.l));
+          const dlastClose=dcloses[dcloses.length-1],dtrend=dlastClose>dcloses[0]?'bullish':'bearish';
+          let dbullCount=0,dbearCount=0;
+          for(let i=1;i<last20.length;i++){if(last20[i].c>last20[i].o)dbullCount++;else dbearCount++;}
+          dailyContext=' | BOUGIES DAILY HTF Binance (20j): High='+dmaxP.toFixed(5)+' Low='+dminP.toFixed(5)+' LastClose='+dlastClose.toFixed(5)+' Trend_HTF='+dtrend+' Haussieres='+dbullCount+'/19 Baissieres='+dbearCount+'/19.';
+        }
+      }catch(e){}
+    }
     if(!dailyContext){
       try{
         const avCandles=await getAlphaVantageDaily(targetPair);
@@ -1099,7 +1128,9 @@ async function launch(forcePair){
         if(smcData) ctx+=' | Prix LIVE:'+smcData.price+' Bid:'+(smcData.bid||smcData.price)+' Ask:'+(smcData.ask||smcData.price)+' BSL_estime:'+smcData.bsl+' SSL_estime:'+smcData.ssl;
         if(h1Rsi!==null) ctx+=' | RSI_H1='+h1Rsi.toFixed(1)+' (zone '+(h1Rsi>=RSI_HAUT?'EXTREME HAUTE — interdit de vendre contre / acheter un sommet epuise':h1Rsi<=RSI_BAS?'EXTREME BASSE — interdit d acheter un couteau / vendre un creux epuise':'neutre')+')';
         if(candleContext) ctx+=candleContext;
+        // B : donnee Daily absente = on le DIT a l'agent (il ne doit rien inventer)
         if(dailyContext) ctx+=dailyContext;
+        else ctx+=' | DAILY INDISPONIBLE : aucune donnee journaliere HTF recuperee. NE PAS affirmer de tendance Daily (bullish/bearish). Baser l analyse UNIQUEMENT sur H1 et reduire la confiance. Ecrire explicitement "Daily indisponible" dans l analyse.';
         try{
           const mt4sym=MT4_SYMBOLS[targetPair];
           if(mt4sym){
@@ -1125,6 +1156,9 @@ async function launch(forcePair){
 
     renderStepBar(8,'Synthese RedPillFX finale...');
     let total=Object.values(results).reduce((s,a)=>s+(a.score||0),0);
+    // C : penalite automatique si le Daily HTF manque (robustesse)
+    const dailyManquant=(dailyContext==='');
+    if(dailyManquant) total=Math.max(0,total-15);
     const trapOk=results.liquidite&&results.liquidite.trap_confirme;
     const cisdOk=results.liquidite&&results.liquidite.cisd_confirme;
     const msuOk=results.structure&&results.structure.msu_detecte;
@@ -1186,6 +1220,7 @@ async function launch(forcePair){
       }catch(e){}
     }
 
+    const mentionDaily=dailyManquant?' [ANALYSE SANS CONFIRMATION DAILY — score reduit de 15 pts, tendance de fond non verifiee]':'';
     const raisonnementFinal=gateBlocked?
       'GATE OVERRIDE ('+gateRaison+'): '+
       (smcTrapDetecte?'SMC TRAP detecte — les traders SMC sont la liquidite, ne pas entrer. ':'')+
@@ -1193,7 +1228,7 @@ async function launch(forcePair){
       (rsiInconnu?'La boussole RSI est indisponible : pas assez de bougies H1 pour la calculer. Le systeme refuse de trader sans ce garde-fou. Relancer dans 1-2 min. ':'')+
       (rsiBlocked&&!rsiInconnu?'Le journal montre 8+ pertes sur des entrees en zone RSI extreme (ventes au creux, achats au sommet). Attendre le retour du RSI en zone neutre ou une vraie confirmation de retournement. ':'')+
       'Score ignore: '+total+'/100':
-      oRaw.raisonnement||'Analyse RedPillFX completee.';
+      (oRaw.raisonnement||'Analyse RedPillFX completee.')+mentionDaily;
 
     const o={score_total:total,decision:dec,bias:finalBias,raisonnement:raisonnementFinal,confluence:gateBlocked?'--':oRaw.confluence||'--',invalidation:gateBlocked?(smcTrapDetecte?'SMC TRAP actif — attendre resolution':'Contradiction Liquidite/Structure HTF'):oRaw.invalidation||'--',message:gateBlocked?'Liquidite = Cause. Attendre que la cause soit construite.':oRaw.message||'--',entry:jsLevels?jsLevels.entry:'--',sl:jsLevels?jsLevels.sl:'--',tp:jsLevels?jsLevels.tp:'--',rr:jsLevels?jsLevels.rr:'--',lot:lotInfo?lotInfo.lots:null,order_type:(smcData&&jsLevels)?orderTypeFor(finalBias,jsLevels.entry,smcData.bid||smcData.price,targetPair):'',pair:targetPair,tf:selectedTf,gate_blocked:gateBlocked,trap_ok:trapOk,cisd_ok:cisdOk};
 
