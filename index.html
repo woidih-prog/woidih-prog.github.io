@@ -105,7 +105,7 @@ window.addEventListener('load', () => {
     <div class="logo">💰</div>
     <div>
       <div class="title">TRADING MASTER V5</div>
-      <div class="subtitle">REDPILLFX · 8 AGENTS SMC · LIQUIDITE = CAUSE · MOUVEMENT = EFFET</div>
+      <div class="subtitle">L’ŒIL DU RENARD · 8 AGENTS SMC · LIQUIDITE = CAUSE · MOUVEMENT = EFFET</div>
     </div>
   </div>
   <div style="display:flex;align-items:center;gap:8px">
@@ -248,7 +248,7 @@ setInterval(updateSessions,10000);
       <canvas id="candleChart" style="width:100%;height:380px;margin-top:12px;border-radius:8px;background:#040d04"></canvas>
     </div>
     <div class="card" style="border-color:#C0C0C020;margin-top:4px">
-      <div class="gold-title" style="margin-bottom:10px">📖 GLOSSAIRE REDPILLFX — TERMES EXPLIQUES</div>
+      <div class="gold-title" style="margin-bottom:10px">📖 GLOSSAIRE L’ŒIL DU RENARD — TERMES EXPLIQUES</div>
       <div class="divider"></div>
       <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:8px;margin-top:12px" id="glossaireGrid"></div>
     </div>
@@ -257,7 +257,7 @@ setInterval(updateSessions,10000);
   <!-- TAB ENQUETEUR -->
   <div id="tab-enqueteur" style="display:block">
     <div class="card" style="border-color:#FFD70020">
-      <div class="gold-title" style="margin-bottom:4px">🔍 L'ENQUETEUR — FILTRE REDPILLFX</div>
+      <div class="gold-title" style="margin-bottom:4px">🔍 L'ENQUETEUR — FILTRE L’ŒIL DU RENARD</div>
       <div class="divider"></div>
       <div style="font-size:11px;color:#4a6a3a;margin-bottom:14px;font-style:italic">Identifie les paires avec liquidite disponible + cause construite → clique pour analyser</div>
       <button class="btn-enquete" id="btnEnquete" onclick="runEnquete()">🔍 LANCER L'ENQUETE</button>
@@ -284,7 +284,7 @@ setInterval(updateSessions,10000);
     <div id="smcData" style="display:none" class="card"></div>
     <div id="signalBanner"></div>
     <div id="agentGrid" style="display:none">
-      <div class="gold-title" style="margin-bottom:12px">RAPPORTS DES 8 AGENTS REDPILLFX</div>
+      <div class="gold-title" style="margin-bottom:12px">RAPPORTS DES 8 AGENTS L’ŒIL DU RENARD</div>
       <div class="agent-grid" id="agentCards"></div>
     </div>
     <div id="decisionPanel"></div>
@@ -365,7 +365,7 @@ setInterval(updateSessions,10000);
     <div id="statsContent"></div>
   </div>
 
-  <div class="footer">⚠️ Outil educatif uniquement · Ne constitue pas un conseil en investissement · Trading Master V5 — RedPillFX Methodology</div>
+  <div class="footer">⚠️ Outil educatif uniquement · Ne constitue pas un conseil en investissement · Trading Master V5 — L’Œil du Renard Methodology</div>
 </div>
 
 <script>
@@ -373,9 +373,9 @@ const BACKEND = "https://trading-master-backend.onrender.com";
 const API_URL  = BACKEND + "/anthropic";
 const AV_KEY   = "UCP44WUC4UHAJ2I8";
 
-// ── REDPILLFX CORE — injecte dans tous les agents ─────────────
+// ── L’ŒIL DU RENARD CORE — injecte dans tous les agents ─────────────
 const REDPILL_CORE = `
-METHODOLOGIE REDPILLFX COMPLETE — LOI FONDAMENTALE:
+METHODOLOGIE L’ŒIL DU RENARD COMPLETE — LOI FONDAMENTALE:
 LIQUIDITE = CAUSE / MOUVEMENT = EFFET.
 Le marche se deplace UNIQUEMENT de pool de liquidite en pool de liquidite.
 Sans prise de liquidite prealable = pas de vrai move = ne pas entrer.
@@ -402,7 +402,7 @@ POI CONTINUATION vs RETOURNEMENT:
 
 BPL (Breaker Block): Prix casse en haut (prend liquidite High) ET casse en bas (prend liquidite Low). Entree sur RETEST du BPL uniquement. Meilleures TF: 3min, 5min, 15min. Beaucoup de faux signals en 1min. On ne trade PAS le BPL — on trade la liquidite, le BPL est l outil de placement.
 
-HIERARCHIE DES INDUCEMENTS REDPILLFX:
+HIERARCHIE DES INDUCEMENTS L’ŒIL DU RENARD:
 DEFINITION: La liquidite = activer les stops, take profits et break even des traders. Le marche vient chercher cette liquidite (cause) pour creer un move directionnel (effet). Sans prise de l inducement = pas de move = NE PAS ENTRER.
 REGLE FONDAMENTALE: Avant toute entree, visualiser et identifier les inducements. Si l inducement n est pas encore pris = ATTENDRE OBLIGATOIREMENT.
 
@@ -433,7 +433,7 @@ CONFLUENCE INDUCEMENTS:
 - Moyen + Majeur alignes = signal fort (+3pts bonus)
 - Aucun inducement identifie = NE PAS TRADER absolument
 
-CHECKLIST TRADE REDPILLFX (trade reel du 12/06/2026):
+CHECKLIST TRADE L’ŒIL DU RENARD (trade reel du 12/06/2026):
 1. Prise de liquidite externe confirmee
 2. Cycle de cause a effet identifie
 3. Buy to Sell ou Sell to Buy confirme
@@ -444,7 +444,7 @@ CHECKLIST TRADE REDPILLFX (trade reel du 12/06/2026):
 REGLES SESSION: London Open 7h-10h = Kill Zone principale (declenchement sur liquidity grab Asia). London Active 10h-16h = continuation. NY Open 13h30-16h = deuxieme Kill Zone. Asia 00h-07h = Build Up silencieux, identifier IPA et liquidite, ne pas trader. Inter-session 16h-21h = eviter absolument. Vendredi apres 15h = INTERDIT.`;
 
 const REDPILL_SCORING = `
-REGLES DE SCORING REDPILLFX:
+REGLES DE SCORING L’ŒIL DU RENARD:
 - TRAP confirme sur TF analyse = +5pts bonus OBLIGATOIRE
 - Strong High/Low identifie avec prise de liquidite prealable = +3pts
 - POI valide (liquidite prise avant retour zone) = +4pts
@@ -642,7 +642,7 @@ async function testTelegram(){
   const btn=document.getElementById('btnTg');
   btn.textContent='...';btn.className='btn-tg';
   try{
-    const r=await fetch(BACKEND+"/telegram",{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text:'Trading Master V5 — RedPillFX Edition — Backend + Telegram + MT4 operationnels'})});
+    const r=await fetch(BACKEND+"/telegram",{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text:'Trading Master V5 — L’Œil du Renard Edition — Backend + Telegram + MT4 operationnels'})});
     const d=await r.json();
     btn.textContent=d.ok?'OK':'ERR';
     btn.className=d.ok?'btn-tg ok':'btn-tg err';
@@ -719,10 +719,10 @@ async function aiCall(sys,prompt,maxT=1200){
 
 // ── ENQUETEUR SYSTEM PROMPT ────────────────────────────────────
 const ENQUETEUR_SYS=`Reponds UNIQUEMENT avec un objet JSON brut. Zero texte avant ou apres. Pas de markdown.
-Tu es L'ENQUETEUR REDPILLFX. Mission: identifier les paires avec LIQUIDITE DISPONIBLE + CAUSE CONSTRUITE.
+Tu es L'ENQUETEUR L’ŒIL DU RENARD. Mission: identifier les paires avec LIQUIDITE DISPONIBLE + CAUSE CONSTRUITE.
 REGLES FILTRAGE: Ne proposer une paire que si liquidite identifiable (BSL ou SSL) ET cause construite (accumulation visible) ET session favorable. Privilegier equal highs/lows non collectes. EVITER paires sans direction claire (risque SMC TRAP). Le marche se deplace de liquidite en liquidite — identifier la prochaine pool logique.
 MAXIMUM 5 opportunites, raisons en 1 phrase COURTE (15 mots max), paires_eviter 2 maximum. Reponse compacte obligatoire.
-Format STRICT: {"session_actuelle":"London Open","sentiment":"risk-on","dxy":"hausse","resume_macro":"2 phrases max","top_opportunites":[{"rang":1,"paire":"EUR/USD","direction":"ACHETER","raison":"1 phrase courte","session_ideale":"London Open","score_opportunite":82,"liquidite_cible":"SSL a 1.0820","cause_construite":true}],"paires_eviter":[{"paire":"USD/JPY","raison":"texte court"}],"conseil_du_jour":"1 phrase RedPillFX"}`;
+Format STRICT: {"session_actuelle":"London Open","sentiment":"risk-on","dxy":"hausse","resume_macro":"2 phrases max","top_opportunites":[{"rang":1,"paire":"EUR/USD","direction":"ACHETER","raison":"1 phrase courte","session_ideale":"London Open","score_opportunite":82,"liquidite_cible":"SSL a 1.0820","cause_construite":true}],"paires_eviter":[{"paire":"USD/JPY","raison":"texte court"}],"conseil_du_jour":"1 phrase L’Œil du Renard"}`;
 
 async function runEnquete(){
   const btn=document.getElementById('btnEnquete');
@@ -853,7 +853,7 @@ function analyzeFromEnquete(pair,raison,direction,score){
   setTimeout(()=>launch(),100);
 }
 
-// ── PROMPTS DES 8 AGENTS REDPILLFX ────────────────────────────
+// ── PROMPTS DES 8 AGENTS L’ŒIL DU RENARD ────────────────────────────
 function getSys(key){
   const pre='Reponds UNIQUEMENT avec un objet JSON brut. Zero texte avant ou apres. Pas de markdown. ';
   const m={
@@ -1145,7 +1145,7 @@ async function launch(forcePair){
         if(enqueteurContext&&enqueteurContext.pair===targetPair) ctx+=' | CONTEXTE ENQUETEUR (score '+enqueteurContext.score+'/100): Direction '+enqueteurContext.direction+'. Raison: '+enqueteurContext.raison+'.';
         if(journalContext) ctx+=' | '+journalContext;
         // Injecter REDPILL_CORE dans le contexte (pas dans le system prompt)
-        ctx+=' | METHODOLOGIE REDPILLFX: Liquidite=Cause/Mouvement=Effet. Sequence: IPA→TRAP(BSL/SSL)→CISD→IDC/OB→Move. LIT CYCLE: BuildUp→Inducement→Mitigation→Expansion. Entree sur 2eme vague uniquement. Sans TRAP=pas de move. SMC TRAP(faux BOS multiple sur OB traders SMC)=eviter. Inducement Mineur(M1-5,intrajournalier) Moyen(PDH/PDL,M5-15,1sem) Majeur(H1-Daily,multiweeks). Confluences maximisent score.';
+        ctx+=' | METHODOLOGIE L’ŒIL DU RENARD: Liquidite=Cause/Mouvement=Effet. Sequence: IPA→TRAP(BSL/SSL)→CISD→IDC/OB→Move. LIT CYCLE: BuildUp→Inducement→Mitigation→Expansion. Entree sur 2eme vague uniquement. Sans TRAP=pas de move. SMC TRAP(faux BOS multiple sur OB traders SMC)=eviter. Inducement Mineur(M1-5,intrajournalier) Moyen(PDH/PDL,M5-15,1sem) Majeur(H1-Daily,multiweeks). Confluences maximisent score.';
         ctx+=' | Reponds en JSON uniquement selon format fourni dans ton system prompt.';
         results[key]=await aiCall(getSys(key),ctx,1500);
       }catch(e){results[key]={nom:key,analyse:'Erreur: '+e.message,score:0,score_max:20,verdict:'Indisponible'};}
@@ -1154,7 +1154,7 @@ async function launch(forcePair){
       await new Promise(r=>setTimeout(r,200));
     }
 
-    renderStepBar(8,'Synthese RedPillFX finale...');
+    renderStepBar(8,'Synthese L’Œil du Renard finale...');
     let total=Object.values(results).reduce((s,a)=>s+(a.score||0),0);
     // C : penalite automatique si le Daily HTF manque (robustesse)
     const dailyManquant=(dailyContext==='');
@@ -1193,13 +1193,13 @@ async function launch(forcePair){
     if(results.eco){if(results.eco.biais_fondamental==='bullish')biasVotes.long+=2;else if(results.eco.biais_fondamental==='bearish')biasVotes.short+=2;}
     const votedBias=biasVotes.long>=biasVotes.short?'long':'short';
 
-    const orchSys='Reponds UNIQUEMENT avec un objet JSON brut. Tu es l ORCHESTRATEUR REDPILLFX. Loi: LIQUIDITE=CAUSE / MOUVEMENT=EFFET. '+
+    const orchSys='Reponds UNIQUEMENT avec un objet JSON brut. Tu es l ORCHESTRATEUR L’ŒIL DU RENARD. Loi: LIQUIDITE=CAUSE / MOUVEMENT=EFFET. '+
       (trapOk?'TRAP confirme. ':'TRAP NON confirme — signal faible. ')+
       (cisdOk?'CISD confirme. ':'')+
       (msuOk?'MSU detecte. ':'')+
       (smcTrapDetecte?'SMC TRAP DETECTE — NE PAS ENTRER. ':'')+
       'Vote agents: long='+biasVotes.long+' short='+biasVotes.short+'. '+
-      'Checklist RedPillFX: 1-Liquidite_externe 2-Cause/Effet 3-Buy_to_Sell_ou_Sell_to_Buy 4-CISD 5-IFVG 6-2eme_vague. '+
+      'Checklist L’Œil du Renard: 1-Liquidite_externe 2-Cause/Effet 3-Buy_to_Sell_ou_Sell_to_Buy 4-CISD 5-IFVG 6-2eme_vague. '+
       'Format: {"score_total":'+total+',"decision":"'+dec+'","bias":"'+votedBias+'","checklist_validee":3,"raisonnement":"texte","confluence":"texte","invalidation":"texte","message":"texte"}';
     const oRaw=await aiCall(orchSys,targetPair+' '+selectedTf+' | '+sum,900);
 
@@ -1228,7 +1228,7 @@ async function launch(forcePair){
       (rsiInconnu?'La boussole RSI est indisponible : pas assez de bougies H1 pour la calculer. Le systeme refuse de trader sans ce garde-fou. Relancer dans 1-2 min. ':'')+
       (rsiBlocked&&!rsiInconnu?'Le journal montre 8+ pertes sur des entrees en zone RSI extreme (ventes au creux, achats au sommet). Attendre le retour du RSI en zone neutre ou une vraie confirmation de retournement. ':'')+
       'Score ignore: '+total+'/100':
-      (oRaw.raisonnement||'Analyse RedPillFX completee.')+mentionDaily;
+      (oRaw.raisonnement||'Analyse L’Œil du Renard completee.')+mentionDaily;
 
     const o={score_total:total,decision:dec,bias:finalBias,raisonnement:raisonnementFinal,confluence:gateBlocked?'--':oRaw.confluence||'--',invalidation:gateBlocked?(smcTrapDetecte?'SMC TRAP actif — attendre resolution':'Contradiction Liquidite/Structure HTF'):oRaw.invalidation||'--',message:gateBlocked?'Liquidite = Cause. Attendre que la cause soit construite.':oRaw.message||'--',entry:jsLevels?jsLevels.entry:'--',sl:jsLevels?jsLevels.sl:'--',tp:jsLevels?jsLevels.tp:'--',rr:jsLevels?jsLevels.rr:'--',lot:lotInfo?lotInfo.lots:null,order_type:(smcData&&jsLevels)?orderTypeFor(finalBias,jsLevels.entry,smcData.bid||smcData.price,targetPair):'',pair:targetPair,tf:selectedTf,gate_blocked:gateBlocked,trap_ok:trapOk,cisd_ok:cisdOk};
 
@@ -1278,13 +1278,13 @@ async function launch(forcePair){
 
 function renderDecision(o){
   const gateBlocked=o.gate_blocked;
-  const cfg={ATTENDRE:{icon:'⏳',color:'#ff6666',label:gateBlocked?'GATE BLOQUE':'ATTENDRE',sub:gateBlocked?'Setup invalide RedPillFX':'Cause non construite'},SIGNAL:{icon:'👁️',color:'#FFD700',label:'SIGNAL DETECTE',sub:'Attendre 2eme vague'},EXECUTION:{icon:'💰',color:'#00C853',label:'EXECUTION POSSIBLE',sub:'Setup RedPillFX confirme'}};
+  const cfg={ATTENDRE:{icon:'⏳',color:'#ff6666',label:gateBlocked?'GATE BLOQUE':'ATTENDRE',sub:gateBlocked?'Setup invalide L’Œil du Renard':'Cause non construite'},SIGNAL:{icon:'👁️',color:'#FFD700',label:'SIGNAL DETECTE',sub:'Attendre 2eme vague'},EXECUTION:{icon:'💰',color:'#00C853',label:'EXECUTION POSSIBLE',sub:'Setup L’Œil du Renard confirme'}};
   const c=cfg[o.decision]||cfg.ATTENDRE;
   if((o.score_total||0)>=65&&o.decision!=='ATTENDRE'){
     const isL=o.bias==='long',cl=isL?'#00C853':'#ff6666';
-    document.getElementById('signalBanner').innerHTML='<div class="signal-banner" style="background:linear-gradient(135deg,'+cl+'10,#FFD70008);border:2px solid '+cl+';box-shadow:0 0 30px '+cl+'20"><div style="text-align:center;margin-bottom:16px"><div style="font-size:10px;color:#FFD700;letter-spacing:3px;margin-bottom:6px">SIGNAL REDPILLFX</div><div style="font-size:30px;font-weight:900;color:'+cl+';font-family:monospace;text-shadow:0 0 15px '+cl+'50">'+(isL?'ACHETER':'VENDRE')+'</div><div style="font-size:9px;color:#4a6a3a;margin-top:4px">'+(o.trap_ok?'✅ TRAP · ':'')+( o.cisd_ok?'✅ CISD · ':'')+'ENTRER SUR 2EME VAGUE</div>'+(o.order_type?'<div style="font-size:10px;color:#FFA500;margin-top:6px;font-family:monospace">'+o.order_type+'</div>':'')+'</div><div class="signal-grid">'+[['ENTREE',o.entry,'#FFD700'],['STOP LOSS',o.sl,'#ff6666'],['TAKE PROFIT',o.tp,'#00C853'],['R:R',o.rr,'#C0C0C0'],['LOT (1% reel)',o.lot||'--','#FFA500']].map(([k,v,col])=>'<div class="signal-box" style="background:#060e0640;border:2px solid '+col+'30"><div style="font-size:8px;color:'+col+';letter-spacing:2px;margin-bottom:4px">'+k+'</div><div style="font-size:20px;font-weight:900;color:'+col+';font-family:monospace">'+(v||'--')+'</div></div>').join('')+'</div></div>';
+    document.getElementById('signalBanner').innerHTML='<div class="signal-banner" style="background:linear-gradient(135deg,'+cl+'10,#FFD70008);border:2px solid '+cl+';box-shadow:0 0 30px '+cl+'20"><div style="text-align:center;margin-bottom:16px"><div style="font-size:10px;color:#FFD700;letter-spacing:3px;margin-bottom:6px">SIGNAL L’ŒIL DU RENARD</div><div style="font-size:30px;font-weight:900;color:'+cl+';font-family:monospace;text-shadow:0 0 15px '+cl+'50">'+(isL?'ACHETER':'VENDRE')+'</div><div style="font-size:9px;color:#4a6a3a;margin-top:4px">'+(o.trap_ok?'✅ TRAP · ':'')+( o.cisd_ok?'✅ CISD · ':'')+'ENTRER SUR 2EME VAGUE</div>'+(o.order_type?'<div style="font-size:10px;color:#FFA500;margin-top:6px;font-family:monospace">'+o.order_type+'</div>':'')+'</div><div class="signal-grid">'+[['ENTREE',o.entry,'#FFD700'],['STOP LOSS',o.sl,'#ff6666'],['TAKE PROFIT',o.tp,'#00C853'],['R:R',o.rr,'#C0C0C0'],['LOT (1% reel)',o.lot||'--','#FFA500']].map(([k,v,col])=>'<div class="signal-box" style="background:#060e0640;border:2px solid '+col+'30"><div style="font-size:8px;color:'+col+';letter-spacing:2px;margin-bottom:4px">'+k+'</div><div style="font-size:20px;font-weight:900;color:'+col+';font-family:monospace">'+(v||'--')+'</div></div>').join('')+'</div></div>';
   }
-  document.getElementById('decisionPanel').innerHTML='<div class="gold-title" style="margin-bottom:10px">DECISION FINALE — REDPILLFX</div><div class="decision-panel" style="background:linear-gradient(135deg,'+c.color+'06,#0d160d);border:2px solid '+c.color+'40;box-shadow:0 0 20px '+c.color+'10"><div style="display:flex;align-items:center;gap:14px;margin-bottom:14px;flex-wrap:wrap"><div style="width:52px;height:52px;border-radius:14px;background:'+c.color+'18;border:2px solid '+c.color+'30;display:flex;align-items:center;justify-content:center;font-size:24px">'+c.icon+'</div><div style="flex:1"><div class="silver-label" style="margin-bottom:3px">DECISION</div><div style="font-size:18px;font-weight:900;color:'+c.color+';font-family:monospace">'+c.label+'</div></div><div style="font-size:36px;font-weight:900;color:'+c.color+';font-family:monospace;text-shadow:0 0 15px '+c.color+'40">'+(o.score_total||0)+'<span style="font-size:14px;color:#2a4a2a">/100</span></div></div><div class="divider"></div><div style="background:#060e06;border-radius:10px;padding:12px 14px;margin:12px 0"><div class="silver-label" style="margin-bottom:5px">RAISONNEMENT REDPILLFX</div><p style="font-size:11px;color:#8aaa7a;line-height:1.8;margin:0">'+(o.raisonnement||'')+'</p></div><div class="decision-row"><div style="padding:10px 12px;background:#00C85306;border:1px solid #00C85320;border-radius:8px"><div style="font-size:7px;color:#00C85366;letter-spacing:2px;margin-bottom:3px">CONFLUENCE</div><div style="font-size:10px;color:#00C853bb;line-height:1.5">'+(o.confluence||'')+'</div></div><div style="padding:10px 12px;background:#ff666606;border:1px solid #ff666620;border-radius:8px"><div style="font-size:7px;color:#ff666666;letter-spacing:2px;margin-bottom:3px">INVALIDATION</div><div style="font-size:10px;color:#ff6666bb;line-height:1.5">'+(o.invalidation||'')+'</div></div></div>'+(o.message?'<div style="margin-top:10px;padding:10px 14px;background:'+c.color+'08;border:1px solid '+c.color+'20;border-radius:8px"><p style="font-size:11px;color:'+c.color+'bb;margin:0;font-style:italic">"'+o.message+'"</p></div>':'')+(lastId?'<div style="margin-top:14px;padding:12px;background:#060e06;border:1px solid #00C85320;border-radius:10px"><div class="silver-label" style="margin-bottom:8px">RESULTAT DU TRADE ?</div><div style="display:flex;gap:7px;flex-wrap:wrap"><button onclick="markOutcome('+lastId+',\'win\')" style="background:#00C85318;border:1px solid #00C85340;color:#00C853;border-radius:6px;padding:7px 14px;font-size:10px;font-weight:700;cursor:pointer">✅ Gagne</button><button onclick="markOutcome('+lastId+',\'loss\')" style="background:#ff666618;border:1px solid #ff666640;color:#ff6666;border-radius:6px;padding:7px 14px;font-size:10px;font-weight:700;cursor:pointer">❌ Perdu</button><button onclick="markOutcome('+lastId+',\'be\')" style="background:#C0C0C018;border:1px solid #C0C0C040;color:#C0C0C0;border-radius:6px;padding:7px 14px;font-size:10px;font-weight:700;cursor:pointer">➖ Break Even</button></div></div>':'')+'</div>';
+  document.getElementById('decisionPanel').innerHTML='<div class="gold-title" style="margin-bottom:10px">DECISION FINALE — L’ŒIL DU RENARD</div><div class="decision-panel" style="background:linear-gradient(135deg,'+c.color+'06,#0d160d);border:2px solid '+c.color+'40;box-shadow:0 0 20px '+c.color+'10"><div style="display:flex;align-items:center;gap:14px;margin-bottom:14px;flex-wrap:wrap"><div style="width:52px;height:52px;border-radius:14px;background:'+c.color+'18;border:2px solid '+c.color+'30;display:flex;align-items:center;justify-content:center;font-size:24px">'+c.icon+'</div><div style="flex:1"><div class="silver-label" style="margin-bottom:3px">DECISION</div><div style="font-size:18px;font-weight:900;color:'+c.color+';font-family:monospace">'+c.label+'</div></div><div style="font-size:36px;font-weight:900;color:'+c.color+';font-family:monospace;text-shadow:0 0 15px '+c.color+'40">'+(o.score_total||0)+'<span style="font-size:14px;color:#2a4a2a">/100</span></div></div><div class="divider"></div><div style="background:#060e06;border-radius:10px;padding:12px 14px;margin:12px 0"><div class="silver-label" style="margin-bottom:5px">RAISONNEMENT L’ŒIL DU RENARD</div><p style="font-size:11px;color:#8aaa7a;line-height:1.8;margin:0">'+(o.raisonnement||'')+'</p></div><div class="decision-row"><div style="padding:10px 12px;background:#00C85306;border:1px solid #00C85320;border-radius:8px"><div style="font-size:7px;color:#00C85366;letter-spacing:2px;margin-bottom:3px">CONFLUENCE</div><div style="font-size:10px;color:#00C853bb;line-height:1.5">'+(o.confluence||'')+'</div></div><div style="padding:10px 12px;background:#ff666606;border:1px solid #ff666620;border-radius:8px"><div style="font-size:7px;color:#ff666666;letter-spacing:2px;margin-bottom:3px">INVALIDATION</div><div style="font-size:10px;color:#ff6666bb;line-height:1.5">'+(o.invalidation||'')+'</div></div></div>'+(o.message?'<div style="margin-top:10px;padding:10px 14px;background:'+c.color+'08;border:1px solid '+c.color+'20;border-radius:8px"><p style="font-size:11px;color:'+c.color+'bb;margin:0;font-style:italic">"'+o.message+'"</p></div>':'')+(lastId?'<div style="margin-top:14px;padding:12px;background:#060e06;border:1px solid #00C85320;border-radius:10px"><div class="silver-label" style="margin-bottom:8px">RESULTAT DU TRADE ?</div><div style="display:flex;gap:7px;flex-wrap:wrap"><button onclick="markOutcome('+lastId+',\'win\')" style="background:#00C85318;border:1px solid #00C85340;color:#00C853;border-radius:6px;padding:7px 14px;font-size:10px;font-weight:700;cursor:pointer">✅ Gagne</button><button onclick="markOutcome('+lastId+',\'loss\')" style="background:#ff666618;border:1px solid #ff666640;color:#ff6666;border-radius:6px;padding:7px 14px;font-size:10px;font-weight:700;cursor:pointer">❌ Perdu</button><button onclick="markOutcome('+lastId+',\'be\')" style="background:#C0C0C018;border:1px solid #C0C0C040;color:#C0C0C0;border-radius:6px;padding:7px 14px;font-size:10px;font-weight:700;cursor:pointer">➖ Break Even</button></div></div>':'')+'</div>';
 }
 
 function markOutcome(id,outcome){const t=trades.find(x=>x.id===id);if(t){t.outcome=outcome;lastId=null;}if(trades[0])renderDecision(trades[0]);}
@@ -1479,7 +1479,7 @@ function drawCandles(candles,pair,tf){
 }
 
 const GLOSSAIRE=[
-  {t:'LIQUIDITE = CAUSE',c:'#FFD700',d:'Principe fondamental RedPillFX. Sans prise de liquidite prealable = pas de vrai move. Le marche gravite naturellement vers les pools de liquidite (BSL/SSL).'},
+  {t:'LIQUIDITE = CAUSE',c:'#FFD700',d:'Principe fondamental L’Œil du Renard. Sans prise de liquidite prealable = pas de vrai move. Le marche gravite naturellement vers les pools de liquidite (BSL/SSL).'},
   {t:'MOUVEMENT = EFFET',c:'#FFD700',d:'Le move directionnel est la consequence de la prise de liquidite. Plus la cause est grande (longue accumulation) = plus l effet est violent. Cycle perpetuel: Cause → Effet → Nouvelle Cause.'},
   {t:'BSL',c:'#00d4ff',d:'Buy Side Liquidity — Liquidite au-dessus des highs recents. Stops des vendeurs + ordres acheteurs en attente. Equal Highs = BSL fort (concentration maximale). Le prix monte les collecter avant de redescendre (Buy to Sell).'},
   {t:'SSL',c:'#ff6666',d:'Sell Side Liquidity — Liquidite en dessous des lows recents. Stops des acheteurs + ordres vendeurs. Equal Lows = SSL fort. Le prix descend les collecter avant de remonter (Sell to Buy).'},
@@ -1516,8 +1516,8 @@ function startScheduler(){
     const now=new Date(),h=now.getUTCHours(),m=now.getUTCMinutes(),day=now.getUTCDay();
     if(day===0||day===6) return;
     const todayStr=now.toDateString();
-    if(h===7&&m===0&&lastAutoAnalysis.london!==todayStr){lastAutoAnalysis.london=todayStr;await sendTelegram('Trading Master V5 RedPillFX — London Open — Analyse liquidite en cours...');await runAutoAnalysis('London Open');}
-    if(h===13&&m===30&&lastAutoAnalysis.ny!==todayStr){lastAutoAnalysis.ny=todayStr;await sendTelegram('Trading Master V5 RedPillFX — NY Open — Analyse liquidite en cours...');await runAutoAnalysis('NY Open');}
+    if(h===7&&m===0&&lastAutoAnalysis.london!==todayStr){lastAutoAnalysis.london=todayStr;await sendTelegram('Trading Master V5 L’Œil du Renard — London Open — Analyse liquidite en cours...');await runAutoAnalysis('London Open');}
+    if(h===13&&m===30&&lastAutoAnalysis.ny!==todayStr){lastAutoAnalysis.ny=todayStr;await sendTelegram('Trading Master V5 L’Œil du Renard — NY Open — Analyse liquidite en cours...');await runAutoAnalysis('NY Open');}
   },30000);
   document.getElementById('schedulerBtn').textContent='Scheduler ON';
   document.getElementById('schedulerBtn').style.background='#00C85320';
@@ -1558,8 +1558,8 @@ async function runAutoAnalysis(sessionName){
         const dt=dc2>last10[0].c?'bullish':'bearish';
         dailyCtx=' Daily_HTF:'+dt+' High='+dh.toFixed(5)+' Low='+dl.toFixed(5)+' BSL_potentiel='+dh.toFixed(5)+' SSL_potentiel='+dl.toFixed(5);
       }
-      const prompt='Paire:'+pair+' TF:H1 Session:'+sessionName+' Jour:'+days[now.getUTCDay()]+' Heure:'+h+'h'+(price?' Prix:'+price.toFixed(5):'')+dailyCtx+' Analyse la liquidite disponible selon RedPillFX. Liquidite=Cause, Mouvement=Effet.';
-      const sys='Reponds UNIQUEMENT avec un objet JSON brut. Orchestrateur RedPillFX rapide. Verifier liquidite disponible avant signal. Format: {"score":75,"decision":"SIGNAL","bias":"long","trap_identifie":true,"liquidite_disponible":"SSL a X.XXXXX","resume":"1 phrase","entry":"niveau","sl":"niveau","tp":"niveau"}';
+      const prompt='Paire:'+pair+' TF:H1 Session:'+sessionName+' Jour:'+days[now.getUTCDay()]+' Heure:'+h+'h'+(price?' Prix:'+price.toFixed(5):'')+dailyCtx+' Analyse la liquidite disponible selon L’Œil du Renard. Liquidite=Cause, Mouvement=Effet.';
+      const sys='Reponds UNIQUEMENT avec un objet JSON brut. Orchestrateur L’Œil du Renard rapide. Verifier liquidite disponible avant signal. Format: {"score":75,"decision":"SIGNAL","bias":"long","trap_identifie":true,"liquidite_disponible":"SSL a X.XXXXX","resume":"1 phrase","entry":"niveau","sl":"niveau","tp":"niveau"}';
       const r=await aiCall(sys,prompt,500);
       if((r.score||0)>=65){
         const isL=r.bias==='long';
