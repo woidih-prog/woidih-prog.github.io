@@ -1035,6 +1035,7 @@ async function launch(forcePair){
           if(candles.length>=15){
             h1Rsi=computeRSI(candles.map(cc=>parseFloat(cc.c)));
           }
+          console.log("ESPION MT4 —",targetPair,"| Bougies H1 recues:",candles.length,"| RSI calcule:",h1Rsi,"| age(s):",dc.age_seconds,"| perimee:",dc.stale);
           if(candles.length>=10){
             const last10=candles.slice(-10);
             const highs=last10.map(c=>parseFloat(c.h)),lows=last10.map(c=>parseFloat(c.l)),closes=last10.map(c=>parseFloat(c.c));
@@ -1071,6 +1072,7 @@ async function launch(forcePair){
           const d=await r.json();
           const candles=d.map(c=>({open:+c[1],high:+c[2],low:+c[3],close:+c[4]}));
           if(candles.length>=15)h1Rsi=computeRSI(candles.map(cc=>cc.close));
+          console.log("ESPION BINANCE —",targetPair,"| Bougies recues:",candles.length,"| RSI calcule:",h1Rsi);
           const w=candles.slice(-20),last=w[w.length-1];
           const hi=Math.max(...w.map(c=>c.high)),lo=Math.min(...w.map(c=>c.low)),mid=(hi+lo)/2;
           const pip=getPip(last.close,targetPair),isBull=last.close>w[0].open;
@@ -1140,9 +1142,13 @@ async function launch(forcePair){
     const contradictionForte=contradiction&&(results.liquidite?.score||0)>=14&&(results.structure?.score||0)>=14;
     if(smcTrapDetecte) total=Math.max(0,total-10);
     // ── BOUSSOLE RSI : entree interdite en zone extreme (regle n1 du journal) ──
-    const rsiBlocked=h1Rsi!==null&&(h1Rsi>=RSI_HAUT||h1Rsi<=RSI_BAS);
+    // FAIL-CLOSED : si le RSI n'est pas calculable (pas assez de bougies H1),
+    // on NE trade PAS. Dans le doute, on s'abstient. Un garde-fou muet qui
+    // laisse passer est pire que pas de garde-fou du tout.
+    const rsiInconnu=(h1Rsi===null);
+    const rsiBlocked=rsiInconnu||(h1Rsi>=RSI_HAUT||h1Rsi<=RSI_BAS);
     const gateBlocked=contradictionForte||rsiBlocked;
-    const gateRaison=contradictionForte?'CONTRADICTION LIQUIDITE/STRUCTURE HTF':rsiBlocked?('BOUSSOLE RSI — RSI H1 a '+h1Rsi.toFixed(1)+' en zone extreme '+(h1Rsi>=RSI_HAUT?'HAUTE':'BASSE')+' : pas d entree aux extremes epuises'):'';
+    const gateRaison=contradictionForte?'CONTRADICTION LIQUIDITE/STRUCTURE HTF':rsiInconnu?'BOUSSOLE RSI INDISPONIBLE — pas assez de bougies H1 pour calculer le RSI. On ne trade pas a l aveugle. Attendre 1-2 min que les bougies arrivent, puis relancer.':rsiBlocked?('BOUSSOLE RSI — RSI H1 a '+h1Rsi.toFixed(1)+' en zone extreme '+(h1Rsi>=RSI_HAUT?'HAUTE':'BASSE')+' : pas d entree aux extremes epuises'):'';
     const dec=gateBlocked?'ATTENDRE':total>=86?'EXECUTION':total>=61?'SIGNAL':'ATTENDRE';
     // ──────────────────────────────────────────────────────────
 
@@ -1184,7 +1190,8 @@ async function launch(forcePair){
       'GATE OVERRIDE ('+gateRaison+'): '+
       (smcTrapDetecte?'SMC TRAP detecte — les traders SMC sont la liquidite, ne pas entrer. ':'')+
       (contradiction?'Liquidite ('+liqDir+') vs Structure HTF ('+htfDir+') en contradiction. ':'')+
-      (rsiBlocked?'Le journal montre 8+ pertes sur des entrees en zone RSI extreme (ventes au creux, achats au sommet). Attendre le retour du RSI en zone neutre ou une vraie confirmation de retournement. ':'')+
+      (rsiInconnu?'La boussole RSI est indisponible : pas assez de bougies H1 pour la calculer. Le systeme refuse de trader sans ce garde-fou. Relancer dans 1-2 min. ':'')+
+      (rsiBlocked&&!rsiInconnu?'Le journal montre 8+ pertes sur des entrees en zone RSI extreme (ventes au creux, achats au sommet). Attendre le retour du RSI en zone neutre ou une vraie confirmation de retournement. ':'')+
       'Score ignore: '+total+'/100':
       oRaw.raisonnement||'Analyse RedPillFX completee.';
 
