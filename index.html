@@ -1279,7 +1279,7 @@ async function launch(forcePair){
           }
         }catch(e){}
         if(enqueteurContext&&enqueteurContext.pair===targetPair) ctx+=' | CONTEXTE ENQUETEUR (score '+enqueteurContext.score+'/100): Direction '+enqueteurContext.direction+'. Raison: '+enqueteurContext.raison+'.';
-        if(journalContext) ctx+=' | '+journalContext;
+        if(journalContext) ctx+=' | '+journalContext+' | RAPPEL SCORING : seul l Agent Memoire applique un ajustement historique (max ±1pt). Les autres agents n appliquent AUCUN malus base sur les winrates passes (paire/session) — ils jugent le marche ACTUEL. Les stats historiques servent a comprendre le POURQUOI des pertes (ex: range, TRAP absent), pas a punir deux fois.';
         // Injecter REDPILL_CORE dans le contexte (pas dans le system prompt)
         ctx+=' | METHODOLOGIE L’ŒIL DU RENARD: Liquidite=Cause/Mouvement=Effet. Sequence: IPA→TRAP(BSL/SSL)→CISD→IDC/OB→Move. LIT CYCLE: BuildUp→Inducement→Mitigation→Expansion. Entree sur 2eme vague uniquement. Sans TRAP=pas de move. SMC TRAP(faux BOS multiple sur OB traders SMC)=eviter. Inducement Mineur(M1-5,intrajournalier) Moyen(PDH/PDL,M5-15,1sem) Majeur(H1-Daily,multiweeks). Confluences maximisent score.';
         ctx+=' | Reponds en JSON uniquement selon format fourni dans ton system prompt.';
