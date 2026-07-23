@@ -1003,14 +1003,16 @@ SCORE DE BASE: 10/20 si la direction Daily est claire.
 BONUS: +3pts si H1 aligne avec Daily. +3pts si LIT Cycle identifie. +2pts si BOS ou CHoCH visible. +2pts si zone Premium/Discount coherente avec direction.
 MALUS: -3pts si H1 contre Daily. -2pts si structure confuse sans direction claire. -4pts si aucune structure identifiable.
 IMPORTANT: Daily bearish + prix en Premium = score 13+ meme sans MSU. Un score 11-14/20 est excellent.
-Format JSON: {"nom":"Agent Structure","analyse":"texte court","trend_htf":"bullish","trend_ltf":"bullish","strong_high":"niveau","strong_low":"niveau","msu_detecte":false,"msu_type":"","lit_cycle_phase":"build_up","fake_bos_detecte":false,"poi_htf_non_mitigue":"niveau","order_flow":"bullish","score":12,"score_max":20,"verdict":"texte court"}`,
+DIRECTION_SETUP: la direction que TOI tu traderais MAINTENANT sur ce setup precis (ACHETER/VENDRE/NEUTRE si aucun setup clair). Elle peut differer de la tendance de fond (ex: Daily bullish mais prix en Premium apres TRAP BSL = setup VENDRE ou NEUTRE).
+Format JSON: {"nom":"Agent Structure","analyse":"texte court","trend_htf":"bullish","trend_ltf":"bullish","direction_setup":"NEUTRE","strong_high":"niveau","strong_low":"niveau","msu_detecte":false,"msu_type":"","lit_cycle_phase":"build_up","fake_bos_detecte":false,"poi_htf_non_mitigue":"niveau","order_flow":"bullish","score":12,"score_max":20,"verdict":"texte court"}`,
 
     zones: pre+`Tu es l AGENT ZONES. Mission: identifier s il y a une zone d entree valide.
 SCORE DE BASE: 10/20 si une zone POI est identifiable (OB, FVG, niveau cle).
 BONUS: +3pts si liquidite prise avant la zone. +3pts si IDC (doji/pin bar) en zone. +2pts si FVG HTF non comble. +2pts si zone Premium pour SELL ou Discount pour BUY.
 MALUS: -3pts si zone deja tres mitiguee. -2pts si pas de confirmation en zone. -4pts si aucune zone identifiable.
 IMPORTANT: Une zone imparfaite vaut mieux que pas de zone. Score 11-14/20 = bon setup.
-Format JSON: {"nom":"Agent Zones","analyse":"texte court","poi_type":"continuation","ob_type":"bullish","zone_type":"discount","bpl_detecte":false,"fvg_htf":false,"ifvg_detecte":false,"idc_confirme":false,"entree_2eme_vague":false,"score":12,"score_max":20,"verdict":"texte court"}`,
+DIRECTION_SETUP: la direction que TOI tu traderais MAINTENANT selon tes zones (ACHETER/VENDRE/NEUTRE).
+Format JSON: {"nom":"Agent Zones","analyse":"texte court","poi_type":"continuation","ob_type":"bullish","zone_type":"discount","direction_setup":"NEUTRE","bpl_detecte":false,"fvg_htf":false,"ifvg_detecte":false,"idc_confirme":false,"entree_2eme_vague":false,"score":12,"score_max":20,"verdict":"texte court"}`,
 
     timing: pre+`Tu es l AGENT TIMING. Mission: evaluer si le moment est bon pour trader.
 SCORE DE BASE: 8/15 si session active (London ou NY).
@@ -1024,7 +1026,8 @@ SCORE DE BASE: 10/15 si RR >= 2:1 et SL logique.
 BONUS: +3pts si RR >= 3:1. +2pts si SL derriere un niveau fort. FTMO OK = pas de malus.
 MALUS: -4pts si RR < 1.5:1. -3pts si SL trop serré ou arbitraire. -3pts si violation FTMO (daily loss, drawdown). -5pts si RR < 1:1.
 IMPORTANT: RR 2:1 = score 10/15. RR 3:1 = score 13/15. Ne pas bloquer sur RR 2:1.
-Format JSON: {"nom":"Agent Risk","analyse":"texte court","rr_valide":true,"rr_calcule":"2.5:1","taille":"1%","sl_derriere_strong":true,"tp_sur_liquidite":"niveau","ftmo_ok":true,"daily_loss_ok":true,"drawdown_ok":true,"score":10,"score_max":15,"verdict":"texte court"}`,
+DIRECTION_SETUP: la direction du trade que TU evalues (ACHETER/VENDRE/NEUTRE).
+Format JSON: {"nom":"Agent Risk","analyse":"texte court","rr_valide":true,"rr_calcule":"2.5:1","direction_setup":"NEUTRE","taille":"1%","sl_derriere_strong":true,"tp_sur_liquidite":"niveau","ftmo_ok":true,"daily_loss_ok":true,"drawdown_ok":true,"score":10,"score_max":15,"verdict":"texte court"}`,
 
     memoire: pre+`Tu es l AGENT MEMOIRE. Mission: evaluer le setup selon l historique personnel du trader.
 SCORE DE BASE: 3/5 si la paire et la session ont deja ete tradees.
@@ -1038,7 +1041,8 @@ SCORE DE BASE: 2/5 si le setup a une direction claire et un niveau d entree iden
 BONUS: +1pt si prise de liquidite confirmee avant entree. +1pt si sequence complete (TRAP + zone + confirmation). +1pt si entree sur 2eme vague.
 MALUS: -1pt si setup incomplet (moins de 3 conditions validees). -2pts si setup contraire aux patterns historiques.
 IMPORTANT: 3 conditions sur 6 = score 3/5. Ne pas exiger la perfection.
-Format JSON: {"nom":"Agent Backtest","analyse":"texte court","checklist_score":3,"checklist_detail":"1:oui 2:oui 3:non 4:non 5:oui 6:non","sequence_complete":false,"taux_succes_estime":"55%","score":3,"score_max":5,"verdict":"texte court"}`,
+DIRECTION_SETUP: la direction du setup que TU evalues (ACHETER/VENDRE/NEUTRE).
+Format JSON: {"nom":"Agent Backtest","analyse":"texte court","checklist_score":3,"checklist_detail":"1:oui 2:oui 3:non 4:non 5:oui 6:non","direction_setup":"NEUTRE","sequence_complete":false,"taux_succes_estime":"55%","score":3,"score_max":5,"verdict":"texte court"}`,
 
     eco: pre+`Tu es l AGENT ECO. Mission: evaluer si le contexte macro soutient la direction du trade.
 SCORE DE BASE: 5/10 si contexte macro neutre ou inconnu.
@@ -1319,27 +1323,54 @@ async function launch(forcePair){
     const rsiBlocked=rsiInconnu||(h1Rsi>=RSI_HAUT||h1Rsi<=RSI_BAS);
     const gateBlocked=contradictionForte||rsiBlocked;
     const gateRaison=contradictionForte?'CONTRADICTION LIQUIDITE/STRUCTURE HTF':rsiInconnu?'BOUSSOLE RSI INDISPONIBLE — pas assez de bougies H1 pour calculer le RSI. On ne trade pas a l aveugle. Attendre 1-2 min que les bougies arrivent, puis relancer.':rsiBlocked?('BOUSSOLE RSI — RSI H1 a '+h1Rsi.toFixed(1)+' en zone extreme '+(h1Rsi>=RSI_HAUT?'HAUTE':'BASSE')+' : pas d entree aux extremes epuises'):'';
-    const dec=gateBlocked?'ATTENDRE':total>=86?'EXECUTION':total>=61?'SIGNAL':'ATTENDRE';
+    const dec0=gateBlocked?'ATTENDRE':total>=86?'EXECUTION':total>=61?'SIGNAL':'ATTENDRE';
     // ──────────────────────────────────────────────────────────
 
-    const sum=Object.values(results).map(a=>(a.nom||'?')+':'+(a.score||0)).join(' ');
+    // ── VOTE DE DIRECTION v2 : c'est le SETUP de chaque agent qui vote,
+    // PAS la tendance de fond. (FIX bug BRENT 23/07 : trend_htf bullish
+    // votait +3 long alors que tous les setups decrits etaient SELL,
+    // resultat: signal ACHETER contredisant les analyses.)
+    function dirVal(v){
+      if(!v) return 0;
+      const s=String(v).toUpperCase();
+      if(s.includes('ACHET')||s==='BULLISH'||s==='LONG'||s==='BUY') return 1;
+      if(s.includes('VEND')||s==='BEARISH'||s==='SHORT'||s==='SELL') return -1;
+      return 0; // NEUTRE
+    }
     const biasVotes={long:0,short:0};
-    if(results.liquidite){if(liqBull)biasVotes.long+=3;else if(liqBear)biasVotes.short+=3;}
-    if(results.structure){if(htfBull)biasVotes.long+=3;else if(htfBear)biasVotes.short+=3;if(results.structure.trend_ltf==='bullish')biasVotes.long+=1;else if(results.structure.trend_ltf==='bearish')biasVotes.short+=1;}
-    if(results.eco){if(results.eco.biais_fondamental==='bullish')biasVotes.long+=2;else if(results.eco.biais_fondamental==='bearish')biasVotes.short+=2;}
-    const votedBias=biasVotes.long>=biasVotes.short?'long':'short';
+    function vote(v,poids){const d=dirVal(v);if(d>0)biasVotes.long+=poids;else if(d<0)biasVotes.short+=poids;}
+    vote(results.liquidite&&results.liquidite.direction,3);                    // lecture liquidite = 3
+    vote(results.structure&&results.structure.direction_setup,3);             // SETUP structure = 3 (plus trend_htf!)
+    vote(results.zones&&results.zones.direction_setup,2);                     // zones = 2
+    vote(results.risk&&results.risk.direction_setup,1);                       // risk = 1
+    vote(results.backtest&&results.backtest.direction_setup,1);               // backtest = 1
+    vote(results.eco&&results.eco.biais_fondamental,1);                       // macro = 1 (contexte)
+    const ecartVote=Math.abs(biasVotes.long-biasVotes.short);
+    const voteAmbigu=(biasVotes.long+biasVotes.short===0)||(ecartVote<3);
+    const votedBias=biasVotes.long>biasVotes.short?'long':biasVotes.long<biasVotes.short?'short':'neutre';
+    // Direction non tranchee = on ne trade pas (jouer pile ou face = perdre)
+    const dec=voteAmbigu&&dec0!=='ATTENDRE'?'ATTENDRE':dec0;
+    const gateRaisonFinale=voteAmbigu&&!gateBlocked?('DIRECTION NON TRANCHEE — vote agents serre (long '+biasVotes.long+' / short '+biasVotes.short+'). Les setups decrits ne convergent pas assez pour trader.'):gateRaison;
+
+    // L'orchestrateur recoit les VERDICTS des agents (pas juste les scores)
+    // pour que son recit reflete leurs analyses au lieu d'inventer.
+    const sum=Object.values(results).map(a=>(a.nom||'?')+' [score '+(a.score||0)+', setup: '+(a.direction_setup||a.direction||a.biais_fondamental||'n/a')+'] verdict: '+(a.verdict||'')).join(' || ');
 
     const orchSys='Reponds UNIQUEMENT avec un objet JSON brut. Tu es l ORCHESTRATEUR L’ŒIL DU RENARD. Loi: LIQUIDITE=CAUSE / MOUVEMENT=EFFET. '+
       (trapOk?'TRAP confirme. ':'TRAP NON confirme — signal faible. ')+
       (cisdOk?'CISD confirme. ':'')+
       (msuOk?'MSU detecte. ':'')+
       (smcTrapDetecte?'SMC TRAP DETECTE — NE PAS ENTRER. ':'')+
-      'Vote agents: long='+biasVotes.long+' short='+biasVotes.short+'. '+
+      'Vote agents (setups): long='+biasVotes.long+' short='+biasVotes.short+(voteAmbigu?' — VOTE SERRE, direction non tranchee.':'')+' '+
+      'REGLE ABSOLUE: ton raisonnement doit REFLETER FIDELEMENT les verdicts fournis. Tu n inventes RIEN qui les contredise. Si les agents decrivent des setups vendeurs, tu ne racontes pas un biais acheteur. Si le vote est serre, tu le dis. '+
       'Checklist L’Œil du Renard: 1-Liquidite_externe 2-Cause/Effet 3-Buy_to_Sell_ou_Sell_to_Buy 4-CISD 5-IFVG 6-2eme_vague. '+
       'Format: {"score_total":'+total+',"decision":"'+dec+'","bias":"'+votedBias+'","checklist_validee":3,"raisonnement":"texte","confluence":"texte","invalidation":"texte","message":"texte"}';
     const oRaw=await aiCall(orchSys,targetPair+' '+selectedTf+' | '+sum,900);
 
-    const finalBias=oRaw.bias||votedBias;
+    // FIX : la direction finale = le VOTE des setups, point. L'IA orchestratrice
+    // ne peut plus la changer (avant : oRaw.bias pouvait contredire le vote).
+    // Si vote neutre, on garde la lecture bougies pour l'affichage des niveaux.
+    const finalBias=votedBias!=='neutre'?votedBias:(jsLevels?jsLevels.bias:'long');
     if(smcData){
       const price=parseFloat(smcData.bid||smcData.price),pip=getPip(price,targetPair),isBull=finalBias==='long';
       const entryPrice=mt4Source&&mt4?(isBull?mt4.ask:mt4.bid):price;
@@ -1357,10 +1388,12 @@ async function launch(forcePair){
     }
 
     const mentionDaily=dailyManquant?' [ANALYSE SANS CONFIRMATION DAILY — score reduit de 15 pts, tendance de fond non verifiee]':'';
-    const raisonnementFinal=gateBlocked?
-      'GATE OVERRIDE ('+gateRaison+'): '+
+    const bloqueParVote=voteAmbigu&&!gateBlocked&&dec==='ATTENDRE'&&dec0!=='ATTENDRE';
+    const raisonnementFinal=(gateBlocked||bloqueParVote)?
+      'GATE OVERRIDE ('+gateRaisonFinale+'): '+
       (smcTrapDetecte?'SMC TRAP detecte — les traders SMC sont la liquidite, ne pas entrer. ':'')+
       (contradiction?'Liquidite ('+liqDir+') vs Structure HTF ('+htfDir+') en contradiction. ':'')+
+      (bloqueParVote?'Les setups des agents ne convergent pas (long '+biasVotes.long+' / short '+biasVotes.short+'). Trader une direction non tranchee = jouer a pile ou face. ':'')+
       (rsiInconnu?'La boussole RSI est indisponible : pas assez de bougies H1 pour la calculer. Le systeme refuse de trader sans ce garde-fou. Relancer dans 1-2 min. ':'')+
       (rsiBlocked&&!rsiInconnu?'Le journal montre 8+ pertes sur des entrees en zone RSI extreme (ventes au creux, achats au sommet). Attendre le retour du RSI en zone neutre ou une vraie confirmation de retournement. ':'')+
       'Score ignore: '+total+'/100':
