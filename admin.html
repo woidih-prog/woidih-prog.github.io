@@ -188,7 +188,7 @@ body{background:var(--bg);color:var(--text);font-family:'Syne',sans-serif;min-he
 
   <!-- JOURNAL RECENT -->
   <div class="card" style="margin-bottom:24px">
-    <div class="card-title">20 derniers trades</div>
+    <div class="card-title">100 derniers trades</div>
     <div style="overflow-x:auto">
       <table class="trade-table">
         <thead>
@@ -199,6 +199,32 @@ body{background:var(--bg);color:var(--text);font-family:'Syne',sans-serif;min-he
           </tr>
         </thead>
         <tbody id="tradeBody"><tr><td colspan="10" class="empty">Chargement...</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ============ TABLEAU DE SUIVI DES REGLES ============ -->
+  <div class="card" style="margin-top:22px">
+    <div class="card-title">SUIVI DES REGLES &mdash; IMPACT SUR LE WINRATE</div>
+    <p style="font-size:12px;color:var(--muted);margin:8px 0 14px;font-style:italic">
+      Chaque regle activee est mesuree : winrate des trades AVANT sa date vs APRES.
+      Rappel : ceci donne des INDICES, pas des preuves (le marche change aussi tout seul).
+    </p>
+    <div style="overflow-x:auto">
+      <table style="width:100%;border-collapse:collapse;font-size:12px">
+        <thead>
+          <tr style="text-align:left;color:var(--gold);border-bottom:1px solid var(--border)">
+            <th style="padding:8px 6px">REGLE</th>
+            <th style="padding:8px 6px">DATE</th>
+            <th style="padding:8px 6px">WR AVANT</th>
+            <th style="padding:8px 6px">WR APRES</th>
+            <th style="padding:8px 6px">TRADES AP.</th>
+            <th style="padding:8px 6px">IMPACT</th>
+          </tr>
+        </thead>
+        <tbody id="reglesBody">
+          <tr><td colspan="6" class="empty">Chargement...</td></tr>
+        </tbody>
       </table>
     </div>
   </div>
@@ -225,6 +251,7 @@ async function loadAll(){
     renderPnlChart(trades);
     renderWrChart(trades);
     renderTable(trades);
+    renderRegles(trades);
   }catch(e){
     console.error('Erreur chargement:', e);
   }
@@ -422,7 +449,7 @@ function renderWrChart(trades){
 
 function renderTable(trades){
   const tbody = document.getElementById('tradeBody');
-  const recent = trades.slice(0, 20);
+  const recent = trades.slice(0, 100);
   if(!recent.length){ tbody.innerHTML='<tr><td colspan="10" class="empty">Aucun trade</td></tr>'; return; }
 
   const DC = {ATTENDRE:'#ff6666',SIGNAL:'#FFD700',EXECUTION:'#00C853',MANUEL:'#C0C0C0'};
@@ -449,6 +476,77 @@ function renderTable(trades){
 }
 
 // Chargement initial + refresh auto toutes les 60s
+// ============ SUIVI DES REGLES ============
+// LISTE DES REGLES : ajoute une ligne ici a chaque nouvelle regle activee.
+// date au format 'AAAA-MM-JJ'. Le calcul avant/apres se fait automatiquement.
+const REGLES = [
+  {nom:"POINT ZERO (etat systeme)", date:"2026-07-19", note:"reference"},
+  {nom:"Garde-fou RSI (fail-closed)", date:"2026-07-18", note:"bloque entrees si RSI inconnu ou extreme"},
+  {nom:"Daily crypto via Binance", date:"2026-07-18", note:"vrai Daily pour BTC/ETH/SOL"},
+  {nom:"Penalite Daily manquant (-15)", date:"2026-07-18", note:"score reduit si pas de Daily"},
+  {nom:"Detecteur de regime (observation)", date:"2026-07-19", note:"TREND/RANGE/INDECIS, sans pouvoir"},
+  // Pour ajouter une regle : copie une ligne ci-dessus et change nom + date.
+];
+
+// Calcule le winrate (win / (win+loss+be)) sur une liste de trades
+function winrateDe(trades){
+  let w=0, l=0, be=0;
+  trades.forEach(t=>{
+    if(t.resultat==='win') w++;
+    else if(t.resultat==='loss') l++;
+    else if(t.resultat==='be') be++;
+  });
+  const pris = w+l+be;
+  return pris>0 ? {wr:Math.round(w/pris*100), n:pris} : {wr:null, n:0};
+}
+
+// Convertit la date d'un trade (created_at ISO, ou date FR) en objet Date comparable
+function dateTrade(t){
+  const s = t.created_at || t.date || '';
+  // created_at est en ISO (2026-07-18T...), directement parsable
+  const d = new Date(s);
+  return isNaN(d.getTime()) ? null : d;
+}
+
+function renderRegles(trades){
+  const body = document.getElementById('reglesBody');
+  if(!body) return;
+  if(!trades || !trades.length){
+    body.innerHTML = '<tr><td colspan="6" class="empty">Aucun trade</td></tr>';
+    return;
+  }
+  // Trie les regles par date croissante
+  const regles = [...REGLES].sort((a,b)=> new Date(a.date) - new Date(b.date));
+  body.innerHTML = regles.map(r=>{
+    const dRegle = new Date(r.date);
+    const avant = trades.filter(t=>{ const d=dateTrade(t); return d && d < dRegle; });
+    const apres = trades.filter(t=>{ const d=dateTrade(t); return d && d >= dRegle; });
+    const wrAv = winrateDe(avant);
+    const wrAp = winrateDe(apres);
+    // Impact = difference de winrate, seulement si assez de donnees des deux cotes
+    let impact = '--', impactColor = 'var(--muted)';
+    if(wrAv.wr!==null && wrAp.wr!==null && wrAv.n>=5 && wrAp.n>=5){
+      const diff = wrAp.wr - wrAv.wr;
+      impact = (diff>=0?'+':'') + diff + ' pts';
+      impactColor = diff>0 ? 'var(--green)' : diff<0 ? 'var(--red)' : 'var(--muted)';
+    } else if(wrAp.n < 5){
+      impact = 'N<5 (attendre)';
+    } else {
+      impact = 'pas de "avant"';
+    }
+    const avTxt = wrAv.wr!==null ? (wrAv.wr+'% ('+wrAv.n+'T)') : '--';
+    const apTxt = wrAp.wr!==null ? (wrAp.wr+'% ('+wrAp.n+'T)') : '--';
+    return '<tr style="border-bottom:1px solid var(--border)">'
+      + '<td style="padding:8px 6px;color:var(--text)">'+r.nom+'</td>'
+      + '<td style="padding:8px 6px;color:var(--muted);font-family:monospace">'+r.date+'</td>'
+      + '<td style="padding:8px 6px;color:var(--silver)">'+avTxt+'</td>'
+      + '<td style="padding:8px 6px;color:var(--silver)">'+apTxt+'</td>'
+      + '<td style="padding:8px 6px;color:var(--muted)">'+wrAp.n+'</td>'
+      + '<td style="padding:8px 6px;font-weight:700;color:'+impactColor+'">'+impact+'</td>'
+      + '</tr>';
+  }).join('');
+}
+
 loadAll();
 setInterval(loadAll, 60000);
 </script>
