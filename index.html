@@ -581,6 +581,139 @@ function computeRSI(closes,period){
 // + AUD/JPY RSI72, NZD/JPY RSI70, CAD/JPY RSI76, USD/CAD RSI28.
 const RSI_HAUT=68, RSI_BAS=32;
 
+// ============================================================
+// DETECTEUR DE REGIME DE MARCHE (MARKET_STATE) — v1 OBSERVATEUR
+// Ne bloque rien, n'influence aucun agent. Il OBSERVE et AFFICHE.
+// Plan (cahier des charges) : Structure 50% / Largeur 30% / Pente MA 10% / RSI 10%
+// Sortie : { etat:'TREND_UP'|'TREND_DOWN'|'RANGE'|'INDECIS', confiance:0-100, detail:{...} }
+// ============================================================
+
+// Trouve les sommets (pivots hauts) et creux (pivots bas) sur une serie.
+// Un "sommet" = une bougie dont le haut depasse les N bougies avant ET apres.
+// N=2 : on ignore le petit clapot, on garde les vraies oscillations.
+function trouverPivots(highs, lows, N){
+  N = N || 2;
+  const sommets = [], creux = [];
+  for(let i = N; i < highs.length - N; i++){
+    let estSommet = true, estCreux = true;
+    for(let j = 1; j <= N; j++){
+      if(highs[i] <= highs[i-j] || highs[i] <= highs[i+j]) estSommet = false;
+      if(lows[i]  >= lows[i-j]  || lows[i]  >= lows[i+j])  estCreux  = false;
+    }
+    if(estSommet) sommets.push({i, v: highs[i]});
+    if(estCreux)  creux.push({i, v: lows[i]});
+  }
+  return {sommets, creux};
+}
+
+// Critere 1 (STRUCTURE, 50%) : les sommets montent-ils ? les creux montent-ils ?
+// +1 par paire de sommets successifs plus hauts, -1 si plus bas. Idem creux.
+// Score normalise entre -1 (baissier net) et +1 (haussier net). 0 = plat = range.
+function scoreStructure(sommets, creux){
+  function tendanceSuite(points){
+    if(points.length < 2) return 0;
+    let up = 0, down = 0;
+    for(let k = 1; k < points.length; k++){
+      if(points[k].v > points[k-1].v) up++;
+      else if(points[k].v < points[k-1].v) down++;
+    }
+    const tot = up + down;
+    return tot === 0 ? 0 : (up - down) / tot;
+  }
+  const sH = tendanceSuite(sommets);   // -1..+1
+  const sL = tendanceSuite(creux);     // -1..+1
+  return (sH + sL) / 2;                // -1..+1
+}
+
+// Critere 2 (LARGEUR DU COULOIR, 30%) : le prix avance-t-il ou tourne-t-il en boite ?
+// On compare le "trajet net" (depart -> arrivee) au "trajet total parcouru".
+// Ratio proche de 1 = le prix va quelque part (tendance).
+// Ratio proche de 0 = il fait des allers-retours sur place (range).
+function scoreCouloir(closes){
+  let trajetTotal = 0;
+  for(let i = 1; i < closes.length; i++) trajetTotal += Math.abs(closes[i]-closes[i-1]);
+  const trajetNet = Math.abs(closes[closes.length-1] - closes[0]);
+  if(trajetTotal === 0) return {efficacite:0, direction:0};
+  const eff = trajetNet / trajetTotal;                 // 0..1
+  const dir = closes[closes.length-1] >= closes[0] ? 1 : -1;
+  return {efficacite: eff, direction: dir};
+}
+
+// Critere 3 (PENTE DE LA MOYENNE MOBILE, 10%) : la MA monte, descend, ou est plate ?
+function scorePente(closes, periodeMA){
+  periodeMA = periodeMA || 20;
+  if(closes.length < periodeMA + 3) return 0;
+  const ma = j => {
+    let s = 0; for(let k = j - periodeMA + 1; k <= j; k++) s += closes[k];
+    return s / periodeMA;
+  };
+  const last = closes.length - 1;
+  const maNow = ma(last), maBefore = ma(last - 3);
+  const variation = (maNow - maBefore) / maBefore;     // variation relative
+  // seuil : au-dela de 0.1% sur 3 bougies = pente franche
+  if(variation >  0.001) return 1;
+  if(variation < -0.001) return -1;
+  return 0;
+}
+
+// Critere 4 (RSI, 10%) : simple confirmation.
+function scoreRSI(rsi){
+  if(rsi === null || rsi === undefined) return 0;
+  if(rsi >= 60) return 1;      // penche haussier
+  if(rsi <= 40) return -1;     // penche baissier
+  return 0;                    // 40-60 = neutre = renforce range
+}
+
+// ── FONCTION PRINCIPALE ──
+function detecterRegime(candles, rsi){
+  if(!candles || candles.length < 25) return {etat:'INDECIS', confiance:0, detail:{raison:'pas assez de bougies'}};
+  const n = Math.min(30, candles.length);
+  const w = candles.slice(-n);
+  const highs  = w.map(c=>parseFloat(c.h));
+  const lows   = w.map(c=>parseFloat(c.l));
+  const closes = w.map(c=>parseFloat(c.c));
+
+  const {sommets, creux} = trouverPivots(highs, lows, 2);
+  const sStruct = scoreStructure(sommets, creux);          // -1..+1
+  const {efficacite, direction} = scoreCouloir(closes);    // eff 0..1
+  const sCouloir = efficacite * direction;                 // -1..+1 (signe = sens)
+  const sPente = scorePente(closes, 20);                   // -1,0,+1
+  const sRSI = scoreRSI(rsi);                              // -1,0,+1
+
+  // Score directionnel pondere (-1 = baissier fort, +1 = haussier fort, 0 = range)
+  const scoreDir = sStruct*0.50 + sCouloir*0.30 + sPente*0.10 + sRSI*0.10;
+
+  // "Force de tendance" = a quel point on s'eloigne de 0 (le range)
+  const force = Math.abs(scoreDir);   // 0..1
+
+  let etat, confiance;
+  if(force < 0.20){
+    // Proche de 0 = pas de direction = range... mais est-ce un VRAI range ?
+    // Un vrai range a une faible efficacite de couloir (prix qui tourne en rond).
+    if(efficacite < 0.35){ etat='RANGE'; confiance = Math.round((1-efficacite)*100); }
+    else { etat='INDECIS'; confiance = Math.round((0.35 - Math.abs(force))*100 + 40); }
+  } else if(scoreDir > 0){
+    etat='TREND_UP';   confiance = Math.round(Math.min(100, force*100 + efficacite*20));
+  } else {
+    etat='TREND_DOWN'; confiance = Math.round(Math.min(100, force*100 + efficacite*20));
+  }
+  confiance = Math.max(0, Math.min(100, confiance));
+
+  return {
+    etat, confiance,
+    detail:{
+      structure: +sStruct.toFixed(2),
+      efficacite_couloir: +efficacite.toFixed(2),
+      pente_ma: sPente,
+      rsi_dir: sRSI,
+      score_directionnel: +scoreDir.toFixed(2),
+      nb_sommets: sommets.length,
+      nb_creux: creux.length
+    }
+  };
+}
+
+
 async function getPriceMT4(pair){
   const sym=MT4_SYMBOLS[pair];
   if(!sym) return null;
@@ -993,7 +1126,7 @@ async function launch(forcePair){
   const session=h>=7&&h<10?'London Open':h>=10&&h<16?'London Active':h>=13&&h<16?'NY Open':h>=2&&h<6?'Asian Session':'Inter-session';
   const days=['Dimanche','Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi'];
   const results={};let smcData=null,mt4Source=false,mt4=null,candleContext='';
-  jsLevels=null;let h1Rsi=null;
+  jsLevels=null;let h1Rsi=null;let marketState=null;
 
   try{
     let journalContext='';
@@ -1065,6 +1198,7 @@ async function launch(forcePair){
             h1Rsi=computeRSI(candles.map(cc=>parseFloat(cc.c)));
           }
           console.log("ESPION MT4 —",targetPair,"| Bougies H1 recues:",candles.length,"| RSI calcule:",h1Rsi,"| age(s):",dc.age_seconds,"| perimee:",dc.stale);
+          if(candles.length>=25){ marketState=detecterRegime(candles,h1Rsi); console.log("REGIME —",targetPair,"|",marketState.etat,"| confiance:",marketState.confiance+"%","| detail:",marketState.detail); }
           if(candles.length>=10){
             const last10=candles.slice(-10);
             const highs=last10.map(c=>parseFloat(c.h)),lows=last10.map(c=>parseFloat(c.l)),closes=last10.map(c=>parseFloat(c.c));
@@ -1102,6 +1236,7 @@ async function launch(forcePair){
           const candles=d.map(c=>({open:+c[1],high:+c[2],low:+c[3],close:+c[4]}));
           if(candles.length>=15)h1Rsi=computeRSI(candles.map(cc=>cc.close));
           console.log("ESPION BINANCE —",targetPair,"| Bougies recues:",candles.length,"| RSI calcule:",h1Rsi);
+          if(candles.length>=25){ const cForRegime=candles.map(c=>({h:c.high,l:c.low,c:c.close})); marketState=detecterRegime(cForRegime,h1Rsi); console.log("REGIME —",targetPair,"|",marketState.etat,"| confiance:",marketState.confiance+"%","| detail:",marketState.detail); }
           const w=candles.slice(-20),last=w[w.length-1];
           const hi=Math.max(...w.map(c=>c.high)),lo=Math.min(...w.map(c=>c.low)),mid=(hi+lo)/2;
           const pip=getPip(last.close,targetPair),isBull=last.close>w[0].open;
@@ -1116,7 +1251,7 @@ async function launch(forcePair){
       const sd=document.getElementById('smcData');
       const lvls=jsLevels||{entry:'--',sl:'--',tp:'--',rr:'--'};
       const rsiCol=h1Rsi===null?'#C0C0C0':(h1Rsi>=RSI_HAUT||h1Rsi<=RSI_BAS)?'#ff6666':'#00C853';
-      sd.innerHTML='<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px"><div class="gold-title">DONNEES LIVE — '+targetPair+' '+selectedTf+'</div>'+srcBadge+'</div><div class="divider"></div><div class="data-grid" style="margin-top:10px">'+[['BID',smcData.bid||smcData.price,'#e8e8e8'],['ASK',smcData.ask||smcData.price,'#C0C0C0'],['BSL',smcData.bsl,'#00d4ff'],['SSL',smcData.ssl,'#ff6666'],['ENTRY',lvls.entry,'#FFD700'],['SL',lvls.sl,'#ff6666'],['TP',lvls.tp,'#00C853'],['RR',lvls.rr,'#C0C0C0'],['RSI H1 🧭',h1Rsi!==null?h1Rsi.toFixed(1):'--',rsiCol]].map(([k,v,c])=>'<div class="data-box"><div class="silver-label" style="margin-bottom:3px">'+k+'</div><div style="font-size:11px;font-weight:700;color:'+c+';font-family:monospace">'+(v||'--')+'</div></div>').join('')+'</div>';
+      sd.innerHTML='<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px"><div class="gold-title">DONNEES LIVE — '+targetPair+' '+selectedTf+'</div>'+srcBadge+'</div><div class="divider"></div><div class="data-grid" style="margin-top:10px">'+[['BID',smcData.bid||smcData.price,'#e8e8e8'],['ASK',smcData.ask||smcData.price,'#C0C0C0'],['BSL',smcData.bsl,'#00d4ff'],['SSL',smcData.ssl,'#ff6666'],['ENTRY',lvls.entry,'#FFD700'],['SL',lvls.sl,'#ff6666'],['TP',lvls.tp,'#00C853'],['RR',lvls.rr,'#C0C0C0'],['RSI H1 🧭',h1Rsi!==null?h1Rsi.toFixed(1):'--',rsiCol],['REGIME 🦊',marketState?(({'TREND_UP':'📈 HAUSSE','TREND_DOWN':'📉 BAISSE','RANGE':'↔️ RANGE','INDECIS':'❓ INDECIS'})[marketState.etat]+' '+marketState.confiance+'%'):'--',marketState?(marketState.etat==='RANGE'?'#FFD700':marketState.etat==='TREND_UP'?'#00C853':marketState.etat==='TREND_DOWN'?'#ff6666':'#C0C0C0'):'#C0C0C0']].map(([k,v,c])=>'<div class="data-box"><div class="silver-label" style="margin-bottom:3px">'+k+'</div><div style="font-size:11px;font-weight:700;color:'+c+';font-family:monospace">'+(v||'--')+'</div></div>').join('')+'</div>';
       sd.style.display='block';
     }
 
@@ -1127,6 +1262,7 @@ async function launch(forcePair){
         let ctx='Paire:'+targetPair+' TF:'+selectedTf+' Session:'+session+' Jour:'+days[now.getUTCDay()]+' Heure:'+h+'h';
         if(smcData) ctx+=' | Prix LIVE:'+smcData.price+' Bid:'+(smcData.bid||smcData.price)+' Ask:'+(smcData.ask||smcData.price)+' BSL_estime:'+smcData.bsl+' SSL_estime:'+smcData.ssl;
         if(h1Rsi!==null) ctx+=' | RSI_H1='+h1Rsi.toFixed(1)+' (zone '+(h1Rsi>=RSI_HAUT?'EXTREME HAUTE — interdit de vendre contre / acheter un sommet epuise':h1Rsi<=RSI_BAS?'EXTREME BASSE — interdit d acheter un couteau / vendre un creux epuise':'neutre')+')';
+        if(marketState) ctx+=' | REGIME_MARCHE='+marketState.etat+' (confiance '+marketState.confiance+'%) — INFO CONTEXTE : '+(marketState.etat==='RANGE'?'marche en RANGE (le prix oscille sans direction). Un signal directionnel a moins de valeur ici ; privilegier les entrees pres des bords du range.':marketState.etat==='TREND_UP'?'marche en TENDANCE HAUSSIERE : privilegier les achats dans le sens, laisser courir.':marketState.etat==='TREND_DOWN'?'marche en TENDANCE BAISSIERE : privilegier les ventes dans le sens, laisser courir.':'marche INDECIS : prudence, direction non etablie.')+' (Cette information est indicative pour cette version — ne modifie pas encore tes seuils de score.)';
         if(candleContext) ctx+=candleContext;
         // B : donnee Daily absente = on le DIT a l'agent (il ne doit rien inventer)
         if(dailyContext) ctx+=dailyContext;
