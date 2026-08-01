@@ -722,8 +722,14 @@ async function getPriceMT4(pair){
     if(!r.ok) return null;
     const d=await r.json();
     if(d&&d.bid&&d.ask){
-      const ts=new Date(d.time.replace(" ","T")+"Z");
-      if((Date.now()-ts.getTime())/1000<120) return d;
+      // FIX : l'ancien test faisait new Date(d.time+"Z") — il lisait l'heure du
+      // serveur Admiral (GMT+2/+3) comme de l'UTC. L'ecart sortait NEGATIF, donc
+      // toujours < 120 : le garde-fou ne rejetait jamais rien.
+      // On utilise age_seconds, calcule par le backend a la reception : c'est la
+      // seule horloge fiable, et elle mesure exactement ce qu'on veut savoir
+      // (le robot est-il vivant ?).
+      if(typeof d.age_seconds==='number') return d.age_seconds<120?d:null;
+      return d;   // backend ancienne version : on ne bloque pas
     }
     return null;
   }catch(e){return null;}
@@ -1204,17 +1210,37 @@ async function launch(forcePair){
           // sur donnees mortes ne vaut rien — mieux vaut refuser proprement
           // que produire un signal fantome.
           const ageC=(dc.age_seconds!==undefined&&dc.age_seconds!==null)?dc.age_seconds:null;
+          // CAUSE 1 — le tuyau est coupe : plus aucune livraison depuis longtemps.
           const perimee=(dc.stale===true)||(ageC!==null&&ageC>900&&dc.market_open!==false);
-          if(perimee){
+          // CAUSE 2 — le tuyau coule mais l'eau est morte : le graphique MT4 est
+          // gele, l'EA renvoie les memes vieilles bougies. La livraison parait
+          // fraiche (age_seconds=78) alors que le contenu a 26h. Le backend
+          // compare maintenant l'heure MT4 a la date de la derniere bougie.
+          const gelees=(dc.bougies_gelees===true);
+          const lagMn=(dc.retard_minutes!==undefined&&dc.retard_minutes!==null)?Math.round(dc.retard_minutes):null;
+          if(perimee||gelees){
             const mn=ageC!==null?Math.round(ageC/60):'?';
+            const titre=gelees?'GRAPHIQUE MT4 GELE':'DONNEES PERIMEES';
+            const cause=gelees
+              ?('Le robot envoie bien des bougies (livraison il y a '+mn+' min), mais ce sont toujours les memes. '
+                +'La derniere bougie date de <b>'+(lagMn!==null?lagMn+' minutes':'?')+'</b>.')
+              :('Les bougies de '+targetPair+' datent de <b>'+mn+' minutes</b>. Le robot MT4 ne les envoie plus.');
             const eb=document.getElementById('errorBox');
-            eb.innerHTML='🔒 <b>ANALYSE ANNULEE — DONNEES PERIMEES</b><br>'
-              +'Les bougies de '+targetPair+' datent de <b>'+mn+' minutes</b>. '
-              +'Le robot MT4 ne les envoie plus.<br><br>'
-              +'<b>A verifier sur le VPS :</b> le graphique '+sym+' est-il ouvert dans MT4 avec le robot dessus ? '
-              +'Le symbole existe-t-il sous ce nom exact chez Admiral ?<br>'
+            eb.innerHTML='🔒 <b>ANALYSE ANNULEE — '+titre+'</b><br>'+cause+'<br><br>'
+              +'<b>A verifier sur le VPS :</b> ouvrir un graphique '+sym+' en H1 dans MT4 et le LAISSER ouvert '
+              +'(MT4 oublie l historique des paires qu il ne regarde pas). '
+              +'Verifier aussi le nom exact du symbole chez Admiral.<br>'
               +'Controle rapide : ouvrir <code>'+BACKEND+'/debug</code>';
             eb.style.display='block';
+            // ALERTE TELEGRAM : sans elle, une analyse annulee ne laisse aucune
+            // trace. Ce sont des trades fantomes, invisibles dans la validation.
+            try{
+              const alerte='⛔ ANALYSE ANNULEE — '+targetPair+' ('+sym+')\n'
+                +(gelees?'Graphique MT4 gele : derniere bougie il y a '+(lagMn!==null?lagMn:'?')+' min.'
+                        :'Bougies absentes depuis '+mn+' min.')+'\n'
+                +'Aucun signal envoye. Ouvrir le graphique '+sym+' H1 sur le VPS et le laisser ouvert.';
+              await fetch(BACKEND+'/telegram',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text:alerte})});
+            }catch(e){}
             setLoading(false);
             document.getElementById('stepBar').style.display='none';
             return;   // fail-closed : on n'analyse pas sur des donnees mortes
