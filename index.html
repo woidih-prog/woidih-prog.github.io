@@ -559,6 +559,58 @@ function orderTypeFor(bias,entry,current,pair){
 }
 
 // ── BOUSSOLE RSI : calcul du RSI(14) methode Wilder sur les clotures H1 ──
+// ── CISD CALCULE (v8) — Change In State of Delivery ──────────
+// AVANT : le CISD etait un champ que l'IA devait remplir seule, sans qu'aucune
+// consigne ne lui dise comment le reconnaitre. Resultat : 0 detection sur 12
+// analyses. Un detecteur qui ne se declenche jamais n'est pas exigeant, il est
+// absent. Il est desormais CALCULE sur les bougies, comme le regime.
+//
+// Definition retenue :
+//   1. Une bougie recente BALAIE un extreme des N bougies precedentes
+//      (son high depasse le plus haut, ou son low casse le plus bas)
+//   2. ...puis se RETOURNE : elle cloture du mauvais cote pour le balayage
+//      (sweep du haut -> cloture baissiere, sweep du bas -> cloture haussiere)
+//   3. Une bougie SUIVANTE cloture AU-DELA du corps de cette bougie de
+//      manipulation, dans le sens du retournement = livraison changee = CISD
+function detecterCISD(candles, lookback){
+  lookback = lookback || 10;
+  try{
+    if(!candles || candles.length < lookback+3) return {confirme:false, type:'', detail:'pas assez de bougies'};
+    const c = candles.map(x=>({o:parseFloat(x.o),h:parseFloat(x.h),l:parseFloat(x.l),c:parseFloat(x.c)}));
+    const n = c.length;
+    // On cherche la manipulation dans les 5 dernieres bougies (hors bougie en cours)
+    for(let i = n-2; i >= n-6 && i > lookback; i--){
+      const b = c[i];
+      const fenetre = c.slice(i-lookback, i);
+      if(!fenetre.length) continue;
+      const plusHaut = Math.max(...fenetre.map(x=>x.h));
+      const plusBas  = Math.min(...fenetre.map(x=>x.l));
+      const corpsHaut = Math.max(b.o, b.c);
+      const corpsBas  = Math.min(b.o, b.c);
+
+      // Sweep du HAUT (BSL) puis rejet baissier -> CISD baissier attendu
+      if(b.h > plusHaut && b.c < b.o){
+        for(let j = i+1; j < n; j++){
+          if(c[j].c < corpsBas){
+            return {confirme:true, type:'baissier',
+                    detail:'sweep BSL a '+b.h.toFixed(5)+' puis cloture sous le corps ('+c[j].c.toFixed(5)+')'};
+          }
+        }
+      }
+      // Sweep du BAS (SSL) puis rejet haussier -> CISD haussier attendu
+      if(b.l < plusBas && b.c > b.o){
+        for(let j = i+1; j < n; j++){
+          if(c[j].c > corpsHaut){
+            return {confirme:true, type:'haussier',
+                    detail:'sweep SSL a '+b.l.toFixed(5)+' puis cloture au-dessus du corps ('+c[j].c.toFixed(5)+')'};
+          }
+        }
+      }
+    }
+    return {confirme:false, type:'', detail:'aucun sweep suivi de cloture opposee'};
+  }catch(e){ return {confirme:false, type:'', detail:'erreur: '+e.message}; }
+}
+
 function computeRSI(closes,period){
   period=period||14;
   if(!closes||closes.length<period+1)return null;
@@ -1130,7 +1182,7 @@ async function launch(forcePair){
   const session=h>=7&&h<10?'London Open':h>=10&&h<16?'London Active':h>=13&&h<16?'NY Open':h>=2&&h<6?'Asian Session':'Inter-session';
   const days=['Dimanche','Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi'];
   const results={};let smcData=null,mt4Source=false,mt4=null,candleContext='';
-  jsLevels=null;let h1Rsi=null;let marketState=null;let rsiPente=null;let marketStateEA=null,regimeRatioEA=null;
+  jsLevels=null;let h1Rsi=null;let marketState=null;let rsiPente=null;let marketStateEA=null,regimeRatioEA=null;let cisdCalc=null;
 
   try{
     let journalContext='';
@@ -1224,6 +1276,7 @@ async function launch(forcePair){
             // PENTE RSI (pattern RSI, 9 cas documentes) : RSI actuel - RSI il y a 3 bougies.
             // Positif = le RSI monte ; negatif = il descend. Mode OBSERVATION.
             if(candles.length>=18){const rsiAvant=computeRSI(candles.slice(0,-3).map(cc=>parseFloat(cc.c)));if(rsiAvant!==null&&h1Rsi!==null)rsiPente=h1Rsi-rsiAvant;}
+            cisdCalc=detecterCISD(candles,10);   // v8 : CISD calcule, plus devine
           }
           console.log("ESPION MT4 —",targetPair,"| Bougies H1 recues:",candles.length,"| RSI calcule:",h1Rsi,"| age(s):",dc.age_seconds,"| perimee:",dc.stale);
           if(candles.length>=25){ marketState=detecterRegime(candles,h1Rsi); console.log("REGIME —",targetPair,"|",marketState.etat,"| confiance:",marketState.confiance+"%","| detail:",marketState.detail); }
@@ -1302,6 +1355,7 @@ async function launch(forcePair){
         if(h1Rsi!==null) ctx+=' | RSI_H1='+h1Rsi.toFixed(1)+(rsiPente!==null?' PENTE_RSI_3H='+(rsiPente>0?'+':'')+rsiPente.toFixed(1)+' ('+(rsiPente>2?'monte fort — un trade CONTRE cette montee est statistiquement defavorable (9 pertes documentees)':rsiPente<-2?'descend fort — un trade CONTRE cette descente est statistiquement defavorable':'stable')+')':'')+' (zone '+(h1Rsi>=RSI_HAUT?'EXTREME HAUTE — interdit de vendre contre / acheter un sommet epuise':h1Rsi<=RSI_BAS?'EXTREME BASSE — interdit d acheter un couteau / vendre un creux epuise':'neutre')+')';
         if(marketStateEA) ctx+=' | MARKET_STATE_EA='+marketStateEA+' (mesure du robot MT4)';
         if(marketState) ctx+=' | REGIME_MARCHE='+marketState.etat+' (confiance '+marketState.confiance+'%) — INFO CONTEXTE : '+(marketState.etat==='RANGE'?'marche en RANGE (le prix oscille sans direction). Un signal directionnel a moins de valeur ici ; privilegier les entrees pres des bords du range.':marketState.etat==='TREND_UP'?'marche en TENDANCE HAUSSIERE : privilegier les achats dans le sens, laisser courir.':marketState.etat==='TREND_DOWN'?'marche en TENDANCE BAISSIERE : privilegier les ventes dans le sens, laisser courir.':'marche INDECIS : prudence, direction non etablie.')+' (Cette information est indicative pour cette version — ne modifie pas encore tes seuils de score.)';
+        if(cisdCalc) ctx+=' | CISD_CALCULE='+(cisdCalc.confirme?('OUI ('+cisdCalc.type+') — '+cisdCalc.detail):'NON — '+cisdCalc.detail)+' [mesure sur les bougies, fait autorite : ne le contredis pas]';
         if(candleContext) ctx+=candleContext;
         // B : donnee Daily absente = on le DIT a l'agent (il ne doit rien inventer)
         if(dailyContext) ctx+=dailyContext;
@@ -1336,7 +1390,9 @@ async function launch(forcePair){
     const dailyManquant=(dailyContext==='');
     if(dailyManquant) total=Math.max(0,total-15);
     const trapOk=results.liquidite&&results.liquidite.trap_confirme;
-    const cisdOk=results.liquidite&&results.liquidite.cisd_confirme;
+    // v8 : le CISD calcule fait autorite. L'avis de l'IA ne sert que de secours
+    // si le calcul n'a pas pu tourner (bougies manquantes).
+    const cisdOk=cisdCalc?cisdCalc.confirme:(results.liquidite&&results.liquidite.cisd_confirme);
     const msuOk=results.structure&&results.structure.msu_detecte;
     const smcTrapDetecte=results.liquidite&&results.liquidite.smc_trap_detecte;
 
