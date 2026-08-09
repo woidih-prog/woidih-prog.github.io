@@ -1539,6 +1539,17 @@ async function launch(forcePair){
       const gateLineW=o.gate_blocked?('\n🧭 '+(o.raisonnement||'').slice(0,160)):'';
       const waitMsg=sensLabel+' '+targetPair+'\n'+selectedTf+' | Score: '+o.score_total+'/100\n'+consensusTxt+'\n⏳ ORCHESTRATEUR: ATTENDRE'+gateLineW+msLine+rsiLineW+'\nEntree: '+o.entry+'\nSL: '+o.sl+'\nTP: '+o.tp+'\nRR: '+o.rr+(lotInfo?('\n💰 LOT indicatif: '+lotInfo.lots+' (risque ~'+Math.round(lotInfo.risk_eur)+'€ = '+lotInfo.risk_pct_reel+'% · balance '+lotInfo.balance_utilisee+'€)'):'')+trapInfo+'\n\nTu prends ce trade quand même ?';
       try{await fetch(BACKEND+'/telegram',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text:waitMsg,trade_id:realTradeId,wait_override:true})});}catch(e){}
+      // v8 : mettre ce signal bloque SOUS SURVEILLANCE. Le backend le verifie
+      // toutes les 30 min (sans appel IA) et journalise l'issue : le blocage
+      // a-t-il evite une perte, ou fait rater un gain ? C'est la statistique
+      // qui manquait le plus — un ATTENDRE ne disparait plus sans trace.
+      try{await fetch(BACKEND+'/surveiller',{method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({trade_id:realTradeId,pair:targetPair,
+          mt4_symbol:MT4_SYMBOLS[targetPair]||targetPair.replace('/',''),
+          bias:o.bias,entry:o.entry,sl:o.sl,tp:o.tp,score:o.score_total,
+          raison_blocage:(o.gate_blocked?(gateRaisonFinale||'GATE'):'score sous seuil'),
+          consensus_long:biasVotes.long,consensus_short:biasVotes.short,
+          market_state:o.market_state,rsi_value:h1Rsi,rsi_pente:rsiPente})});}catch(e){}
     } else if((o.score_total||0)>=65&&o.decision!=='ATTENDRE'){
       if(!ftmoOk){
         const ftmoMsg=(isL?'⬆️ ACHETER':'⬇️ VENDRE')+' '+targetPair+'\n'+selectedTf+' | Score: '+o.score_total+'/100\n'+consensusTxt+'\n⚠️ BLOQUE AGENT RISK (FTMO)\nEntree: '+o.entry+'\nSL: '+o.sl+'\nTP: '+o.tp+'\nRR: '+o.rr+trapInfo+'\n\nPrends-tu ce trade quand même ?';
