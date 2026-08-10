@@ -1355,7 +1355,7 @@ async function launch(forcePair){
         if(h1Rsi!==null) ctx+=' | RSI_H1='+h1Rsi.toFixed(1)+(rsiPente!==null?' PENTE_RSI_3H='+(rsiPente>0?'+':'')+rsiPente.toFixed(1)+' ('+(rsiPente>2?'monte fort — un trade CONTRE cette montee est statistiquement defavorable (9 pertes documentees)':rsiPente<-2?'descend fort — un trade CONTRE cette descente est statistiquement defavorable':'stable')+')':'')+' (zone '+(h1Rsi>=RSI_HAUT?'EXTREME HAUTE — interdit de vendre contre / acheter un sommet epuise':h1Rsi<=RSI_BAS?'EXTREME BASSE — interdit d acheter un couteau / vendre un creux epuise':'neutre')+')';
         if(marketStateEA) ctx+=' | MARKET_STATE_EA='+marketStateEA+' (mesure du robot MT4)';
         if(marketState) ctx+=' | REGIME_MARCHE='+marketState.etat+' (confiance '+marketState.confiance+'%) — INFO CONTEXTE : '+(marketState.etat==='RANGE'?'marche en RANGE (le prix oscille sans direction). Un signal directionnel a moins de valeur ici ; privilegier les entrees pres des bords du range.':marketState.etat==='TREND_UP'?'marche en TENDANCE HAUSSIERE : privilegier les achats dans le sens, laisser courir.':marketState.etat==='TREND_DOWN'?'marche en TENDANCE BAISSIERE : privilegier les ventes dans le sens, laisser courir.':'marche INDECIS : prudence, direction non etablie.')+' (Cette information est indicative pour cette version — ne modifie pas encore tes seuils de score.)';
-        if(cisdCalc) ctx+=' | CISD_CALCULE='+(cisdCalc.confirme?('OUI ('+cisdCalc.type+') — '+cisdCalc.detail):'NON — '+cisdCalc.detail)+' [mesure sur les bougies, fait autorite : ne le contredis pas]';
+        if(cisdCalc) ctx+=' | CISD_MESURE_OBSERVATION='+(cisdCalc.confirme?('OUI ('+cisdCalc.type+')'):'NON')+' [information brute, mode observation — ne modifie NI ton score NI ta conclusion]';
         if(candleContext) ctx+=candleContext;
         // B : donnee Daily absente = on le DIT a l'agent (il ne doit rien inventer)
         if(dailyContext) ctx+=dailyContext;
@@ -1392,7 +1392,13 @@ async function launch(forcePair){
     const trapOk=results.liquidite&&results.liquidite.trap_confirme;
     // v8 : le CISD calcule fait autorite. L'avis de l'IA ne sert que de secours
     // si le calcul n'a pas pu tourner (bougies manquantes).
-    const cisdOk=cisdCalc?cisdCalc.confirme:(results.liquidite&&results.liquidite.cisd_confirme);
+    // RETOUR ARRIERE 10/08 : le CISD calcule est repasse en MODE OBSERVATION.
+    // Il avait ete rendu decisionnel le 06/08 ; c'est le seul changement de cette
+    // periode qui touche les decisions, donc le seul suspect du changement de
+    // performance. On revient au comportement anterieur pour isoler la variable.
+    // Le calcul continue de tourner et d'etre journalise (cisdCalc) — on garde
+    // la donnee pour pouvoir comparer plus tard, chiffres en main.
+    const cisdOk=results.liquidite&&results.liquidite.cisd_confirme;
     const msuOk=results.structure&&results.structure.msu_detecte;
     const smcTrapDetecte=results.liquidite&&results.liquidite.smc_trap_detecte;
 
