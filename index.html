@@ -611,6 +611,40 @@ function detecterCISD(candles, lookback){
   }catch(e){ return {confirme:false, type:'', detail:'erreur: '+e.message}; }
 }
 
+// ── STOP ADAPTE A LA RESPIRATION DU MARCHE (correctif 11/08/2026) ──
+// AVANT : stop fixe a 20 pips pour TOUS les instruments. Sur l'or,
+// 20 x 0.5 = 10 $, soit environ un quart d'une seule bougie H1 (15-40 $).
+// Le stop sautait sur une respiration normale du marche, sans erreur
+// d'analyse. Cas reel : XAU/USD du 11/08, -590 EUR en 3 minutes 15.
+// MAINTENANT : on mesure la respiration reelle des 14 dernieres bougies
+// H1 (ATR) et on place le stop a 1.5 fois cette respiration.
+// L'ancien 20 pips devient le PLANCHER : le stop ne peut plus etre plus
+// serre qu'avant, seulement plus large quand le marche bouge davantage.
+function atrH1(candles, period){
+  period = period || 14;
+  if(!candles || candles.length < period+1) return null;
+  const c = candles.slice(-(period+1)).map(x=>({
+    h: parseFloat(x.h !== undefined ? x.h : x.high),
+    l: parseFloat(x.l !== undefined ? x.l : x.low),
+    c: parseFloat(x.c !== undefined ? x.c : x.close)
+  }));
+  let somme = 0, nb = 0;
+  for(let i=1;i<c.length;i++){
+    if(!isFinite(c[i].h)||!isFinite(c[i].l)||!isFinite(c[i-1].c)) continue;
+    const tr = Math.max(c[i].h - c[i].l,
+                        Math.abs(c[i].h - c[i-1].c),
+                        Math.abs(c[i].l - c[i-1].c));
+    somme += tr; nb++;
+  }
+  return nb > 0 ? somme / nb : null;
+}
+// Distance du stop EN PRIX (pas en pips). Renvoie TOUJOURS un nombre.
+function stopDistance(atr, pip){
+  const plancher = pip * 20;
+  if(atr === null || !isFinite(atr) || atr <= 0) return plancher;
+  return Math.max(plancher, atr * 1.5);
+}
+
 function computeRSI(closes,period){
   period=period||14;
   if(!closes||closes.length<period+1)return null;
@@ -1182,12 +1216,15 @@ async function launch(forcePair){
   const session=h>=7&&h<10?'London Open':h>=10&&h<16?'London Active':h>=13&&h<16?'NY Open':h>=2&&h<6?'Asian Session':'Inter-session';
   const days=['Dimanche','Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi'];
   const results={};let smcData=null,mt4Source=false,mt4=null,candleContext='';
-  jsLevels=null;let h1Rsi=null;let marketState=null;let rsiPente=null;let marketStateEA=null,regimeRatioEA=null;let cisdCalc=null;
+  jsLevels=null;let h1Rsi=null;let h1Atr=null;let marketState=null;let rsiPente=null;let marketStateEA=null,regimeRatioEA=null;let cisdCalc=null;
 
   try{
     let journalContext='';
     try{
-      const jcr=await fetch(BACKEND+'/journal/context').catch(()=>null);
+      // FIX 11/08 : la memoire etait appelee SANS paire — le backend renvoyait
+      // les 4 derniers trades toutes paires confondues. "Conditions comparables"
+      // ne comparait rien. On envoie desormais la paire analysee.
+      const jcr=await fetch(BACKEND+'/journal/context?pair='+encodeURIComponent(targetPair)).catch(()=>null);
       if(jcr&&jcr.ok){const jcd=await jcr.json();if(jcd.has_data&&jcd.context){journalContext=jcd.context;}}
     }catch(e){}
 
@@ -1277,6 +1314,7 @@ async function launch(forcePair){
             // Positif = le RSI monte ; negatif = il descend. Mode OBSERVATION.
             if(candles.length>=18){const rsiAvant=computeRSI(candles.slice(0,-3).map(cc=>parseFloat(cc.c)));if(rsiAvant!==null&&h1Rsi!==null)rsiPente=h1Rsi-rsiAvant;}
             cisdCalc=detecterCISD(candles,10);   // v8 : CISD calcule, plus devine
+            h1Atr=atrH1(candles,14);             // respiration H1 pour le stop
           }
           console.log("ESPION MT4 —",targetPair,"| Bougies H1 recues:",candles.length,"| RSI calcule:",h1Rsi,"| age(s):",dc.age_seconds,"| perimee:",dc.stale);
           if(candles.length>=25){ marketState=detecterRegime(candles,h1Rsi); console.log("REGIME —",targetPair,"|",marketState.etat,"| confiance:",marketState.confiance+"%","| detail:",marketState.detail); }
@@ -1294,7 +1332,8 @@ async function launch(forcePair){
             if(!mt4){
               const pip=getPip(lastClose,targetPair),mid=(recentHigh+recentLow)/2,isBull=trend10==='bullish';
               smcData={price:lastClose.toFixed(5),bid:lastClose.toFixed(5),ask:(lastClose+pip).toFixed(5),bsl:recentHigh.toFixed(5),ssl:recentLow.toFixed(5),trend:trend10,zone:lastClose>mid?'premium':'discount',source:'Bougies MT4'};
-              jsLevels={entry:lastClose.toFixed(5),sl:(isBull?lastClose-pip*20:lastClose+pip*20).toFixed(5),tp:(isBull?lastClose+pip*60:lastClose-pip*60).toFixed(5),rr:'3.0:1',bias:isBull?'long':'short'};
+              const dS1=stopDistance(h1Atr,pip);
+              jsLevels={entry:lastClose.toFixed(5),sl:(isBull?lastClose-dS1:lastClose+dS1).toFixed(5),tp:(isBull?lastClose+dS1*3:lastClose-dS1*3).toFixed(5),rr:'3.0:1',bias:isBull?'long':'short'};
             }
           }
         }
@@ -1308,7 +1347,8 @@ async function launch(forcePair){
       const price=mt4.bid,pip=getPip(price,targetPair);
       smcData={price:fmtLevel(price,price),bid:fmtLevel(price,mt4.bid),ask:fmtLevel(price,mt4.ask),bsl:fmtLevel(price,price+pip*30),ssl:fmtLevel(price,price-pip*30),spread:mt4.ask-mt4.bid,trend:jsLevels?jsLevels.bias==='long'?'bullish':'bearish':'a confirmer',zone:'a confirmer',source:'MT4 LIVE'};
       const isBullFromCandles=jsLevels&&jsLevels.bias==='long';
-      jsLevels={entry:fmtLevel(price,mt4.ask),sl:fmtLevel(price,isBullFromCandles?mt4.bid-pip*20:mt4.ask+pip*20),tp:fmtLevel(price,isBullFromCandles?mt4.ask+pip*60:mt4.bid-pip*60),rr:'3.0:1',bias:jsLevels?jsLevels.bias:'long'};
+      const dS2=stopDistance(h1Atr,pip);
+      jsLevels={entry:fmtLevel(price,mt4.ask),sl:fmtLevel(price,isBullFromCandles?mt4.bid-dS2:mt4.ask+dS2),tp:fmtLevel(price,isBullFromCandles?mt4.ask+dS2*3:mt4.bid-dS2*3),rr:'3.0:1',bias:jsLevels?jsLevels.bias:'long'};
     } else if(!smcData){
       try{
         const PAIR_SRC={"XAU/USD":{s:"XAUUSDT"},"XAG/USD":{s:"XAGUSDT"},"BTC/USD":{s:"BTCUSDT"},"ETH/USD":{s:"ETHUSDT"},"BNB/USD":{s:"BNBUSDT"},"SOL/USD":{s:"SOLUSDT"},"XRP/USD":{s:"XRPUSDT"},"ADA/USD":{s:"ADAUSDT"}};
@@ -1321,12 +1361,13 @@ async function launch(forcePair){
           if(candles.length>=15)h1Rsi=computeRSI(candles.map(cc=>cc.close));
           if(candles.length>=18){const rsiAvantB=computeRSI(candles.slice(0,-3).map(cc=>cc.close));if(rsiAvantB!==null&&h1Rsi!==null)rsiPente=h1Rsi-rsiAvantB;}
           console.log("ESPION BINANCE —",targetPair,"| Bougies recues:",candles.length,"| RSI calcule:",h1Rsi);
-          if(candles.length>=25){ const cForRegime=candles.map(c=>({h:c.high,l:c.low,c:c.close})); marketState=detecterRegime(cForRegime,h1Rsi); console.log("REGIME —",targetPair,"|",marketState.etat,"| confiance:",marketState.confiance+"%","| detail:",marketState.detail); }
+          if(candles.length>=25){ const cForRegime=candles.map(c=>({h:c.high,l:c.low,c:c.close})); h1Atr=atrH1(cForRegime,14); marketState=detecterRegime(cForRegime,h1Rsi); console.log("REGIME —",targetPair,"|",marketState.etat,"| confiance:",marketState.confiance+"%","| detail:",marketState.detail); }
           const w=candles.slice(-20),last=w[w.length-1];
           const hi=Math.max(...w.map(c=>c.high)),lo=Math.min(...w.map(c=>c.low)),mid=(hi+lo)/2;
           const pip=getPip(last.close,targetPair),isBull=last.close>w[0].open;
           smcData={price:fmtLevel(last.close,last.close),bsl:fmtLevel(last.close,hi),ssl:fmtLevel(last.close,lo),trend:isBull?'bullish':'bearish',zone:last.close>mid?'premium':'discount',source:'Binance'};
-          jsLevels={entry:fmtLevel(last.close,last.close),sl:fmtLevel(last.close,isBull?last.close-pip*20:last.close+pip*20),tp:fmtLevel(last.close,isBull?last.close+pip*60:last.close-pip*60),rr:'3.0:1',bias:isBull?'long':'short'};
+          const dS3=stopDistance(h1Atr,pip);
+          jsLevels={entry:fmtLevel(last.close,last.close),sl:fmtLevel(last.close,isBull?last.close-dS3:last.close+dS3),tp:fmtLevel(last.close,isBull?last.close+dS3*3:last.close-dS3*3),rr:'3.0:1',bias:isBull?'long':'short'};
         }
       }catch(e){}
     }
@@ -1472,7 +1513,11 @@ async function launch(forcePair){
     if(smcData){
       const price=parseFloat(smcData.bid||smcData.price),pip=getPip(price,targetPair),isBull=finalBias==='long';
       const entryPrice=mt4Source&&mt4?(isBull?mt4.ask:mt4.bid):price;
-      jsLevels={entry:fmtLevel(price,entryPrice),sl:fmtLevel(price,isBull?entryPrice-pip*20:entryPrice+pip*20),tp:fmtLevel(price,isBull?entryPrice+pip*60:entryPrice-pip*60),rr:'3.0:1',bias:finalBias};
+      const dStop=stopDistance(h1Atr,pip);
+      jsLevels={entry:fmtLevel(price,entryPrice),
+        sl:fmtLevel(price,isBull?entryPrice-dStop:entryPrice+dStop),
+        tp:fmtLevel(price,isBull?entryPrice+dStop*3:entryPrice-dStop*3),
+        rr:'3.0:1',bias:finalBias};
     }
     renderDataBanner(); // FIX : le bandeau reflete maintenant les niveaux FINAUX (une seule verite)
 
