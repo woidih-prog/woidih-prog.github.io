@@ -984,12 +984,34 @@ REGLES FILTRAGE: Ne proposer une paire que si liquidite identifiable (BSL ou SSL
 MAXIMUM 5 opportunites, raisons en 1 phrase COURTE (15 mots max), paires_eviter 2 maximum. Reponse compacte obligatoire.
 Format STRICT: {"session_actuelle":"London Open","sentiment":"risk-on","dxy":"hausse","resume_macro":"2 phrases max","top_opportunites":[{"rang":1,"paire":"EUR/USD","direction":"ACHETER","raison":"1 phrase courte","session_ideale":"London Open","score_opportunite":82,"liquidite_cible":"SSL a 1.0820","cause_construite":true}],"paires_eviter":[{"paire":"USD/JPY","raison":"texte court"}],"conseil_du_jour":"1 phrase L’Œil du Renard"}`;
 
+// ── SESSION (correctif 14/08/2026) ──────────────────────────
+// AVANT : const sess = h>=7&&h<10 ? 'London Open'
+//                    : h>=10&&h<16 ? 'London Active'
+//                    : h>=13&&h<16 ? 'NY Open' : ...
+// La branche 10-16 attrapait deja 13-16, donc 'NY Open' etait
+// INATTEIGNABLE. Verifie dans le journal : aucun trade n'a jamais
+// porte cette etiquette. Toutes les entrees de la deuxieme Kill Zone
+// ont ete comptees en 'London Active'.
+// Consequence : l'Agent Memoire lit des statistiques par session
+// melangees ("London Active 21% sur 29 trades" contient en realite
+// des trades London Active ET des trades NY Open).
+// MAINTENANT : NY Open est teste AVANT London Active (plus specifique),
+// et le seuil 13h30 est respecte a la minute.
+function sessionActuelle(d){
+  const t = d.getUTCHours()*60 + d.getUTCMinutes();
+  if(t >= 420 && t < 600)  return 'London Open';    // 07h00-10h00 Kill Zone 1
+  if(t >= 810 && t < 960)  return 'NY Open';        // 13h30-16h00 Kill Zone 2
+  if(t >= 600 && t < 810)  return 'London Active';  // 10h00-13h30
+  if(t >= 120 && t < 360)  return 'Asian Session';  // 02h00-06h00
+  return 'Inter-session';
+}
+
 async function runEnquete(){
   const btn=document.getElementById('btnEnquete');
   btn.disabled=true;btn.textContent='ENQUETE EN COURS...';
   document.getElementById('enqueteResult').innerHTML='';
   const now=new Date(),h=now.getUTCHours();
-  const sess=h>=7&&h<10?'London Open':h>=10&&h<16?'London Active':h>=13&&h<16?'NY Open':h>=2&&h<6?'Asian Session':'Inter-session';
+  const sess=sessionActuelle(now);
   const days=['Dimanche','Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi'];
 
   // ── GEL WEEK-END : verifier l'etat du marche aupres du serveur ──
@@ -1107,7 +1129,9 @@ function renderEnquete(r){
 
 function analyzeFromEnquete(pair,raison,direction,score){
   selectedPair=pair;
-  enqueteurContext={pair,raison,direction,score};
+  // v14/08 : horodatage. Sans lui, une enquete de 8h continuait d'etre
+  // injectee dans les agents a 16h — huit heures de retard, invisible.
+  enqueteurContext={pair,raison,direction,score,ts:Date.now()};
   document.querySelectorAll('.pair-btn').forEach(b=>{b.classList.remove('active');if(b.textContent===pair)b.classList.add('active');});
   showTab('orchestrateur',document.querySelectorAll('.tab')[1]);
   setTimeout(()=>launch(),100);
@@ -1254,7 +1278,7 @@ async function launch(forcePair){
   document.getElementById('decisionPanel').innerHTML='';
 
   const now=new Date(),h=now.getUTCHours();
-  const session=h>=7&&h<10?'London Open':h>=10&&h<16?'London Active':h>=13&&h<16?'NY Open':h>=2&&h<6?'Asian Session':'Inter-session';
+  const session=sessionActuelle(now);
   const days=['Dimanche','Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi'];
   const results={};let smcData=null,mt4Source=false,mt4=null,candleContext='';
   jsLevels=null;let h1Rsi=null;let h1Atr=null;let murH1=null;let marketState=null;let rsiPente=null;let marketStateEA=null,regimeRatioEA=null;let cisdCalc=null;
@@ -1454,6 +1478,12 @@ async function launch(forcePair){
             if(visual) ctx+=visual;
           }
         }catch(e){}
+        // PEREMPTION 30 MIN (correctif 14/08) : au-dela, l'avis de
+        // l'Enqueteur ne decrit plus le marche actuel. On l'efface.
+        if(enqueteurContext&&enqueteurContext.ts&&(Date.now()-enqueteurContext.ts)>1800000){
+          console.log('CONTEXTE ENQUETEUR PERIME ('+Math.round((Date.now()-enqueteurContext.ts)/60000)+' min) — efface');
+          enqueteurContext=null;
+        }
         if(enqueteurContext&&enqueteurContext.pair===targetPair) ctx+=' | CONTEXTE ENQUETEUR (score '+enqueteurContext.score+'/100): Direction '+enqueteurContext.direction+'. Raison: '+enqueteurContext.raison+'.';
         if(journalContext) ctx+=' | '+journalContext+' | RAPPEL SCORING : seul l Agent Memoire applique un ajustement historique (max ±1pt). Les autres agents n appliquent AUCUN malus base sur les winrates passes (paire/session) — ils jugent le marche ACTUEL. Les stats historiques servent a comprendre le POURQUOI des pertes (ex: range, TRAP absent), pas a punir deux fois.';
         // Injecter REDPILL_CORE dans le contexte (pas dans le system prompt)
