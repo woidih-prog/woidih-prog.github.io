@@ -3,7 +3,24 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Trading Master V5</title>
+<title>RENARD — Trading Master V5</title>
+
+<!-- == INSTALLATION SUR L'ECRAN D'ACCUEIL (16/08/2026) ==============
+     Ces balises transforment la page en application installable :
+     une icone sur le bureau, le telephone et la tablette, et une
+     ouverture en plein ecran sans barre d'adresse.
+     Aucun effet sur le fonctionnement du systeme.
+     Fichiers a deposer a cote de index.html :
+       manifest.json, icone-renard-192.png, icone-renard-512.png -->
+<link rel="manifest" href="./manifest.json">
+<meta name="theme-color" content="#0a0f0a">
+<link rel="icon" type="image/png" sizes="192x192" href="./icone-renard-192.png">
+<link rel="apple-touch-icon" href="./icone-renard-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="RENARD">
+<meta name="mobile-web-app-capable" content="yes">
+<!-- ================================================================ -->
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{background:#0a0a0f;color:#e8e8e8;font-family:'Georgia',serif;min-height:100vh;padding-bottom:60px;background-image:radial-gradient(ellipse at top,#0d1a0d 0%,#0a0a0f 60%)}
@@ -66,9 +83,16 @@ button:disabled{opacity:.4;cursor:not-allowed}
 <!-- ECRAN MOT DE PASSE -->
 <div id="loginScreen" style="position:fixed;top:0;left:0;width:100%;height:100%;background:#050a05;display:flex;align-items:center;justify-content:center;z-index:9999;flex-direction:column;gap:20px;">
   <div style="text-align:center;margin-bottom:10px;">
-    <div style="font-size:36px;">⚡</div>
+    <img src="./icone-renard-192.png" alt="" width="72" height="72"
+         style="border-radius:16px;box-shadow:0 0 28px #FFD70035;margin-bottom:6px;">
     <div style="color:#FFD700;font-family:'Courier New',monospace;font-size:16px;letter-spacing:4px;font-weight:bold;">TRADING MASTER V5</div>
-    <div style="color:#4a6a4a;font-size:10px;letter-spacing:2px;margin-top:4px;">ACCÈS RESTREINT — BÊTA</div>
+    <div style="color:#4a6a4a;font-size:10px;letter-spacing:2px;margin-top:4px;">L’ŒIL DU RENARD</div>
+    <div style="max-width:330px;margin:18px auto 0;padding:0 12px;">
+      <p style="color:#C0C0C0;font-family:Georgia,serif;font-size:12px;font-style:italic;line-height:1.75;margin:0;">
+        « Voir la victoire seulement quand elle est à la portée du vulgaire<br>n’est pas le comble de l’excellence. »
+      </p>
+      <p style="color:#3a5a3a;font-size:9px;letter-spacing:2px;margin:8px 0 0;">SUN TZU — L’ART DE LA GUERRE, IV</p>
+    </div>
   </div>
   <div style="background:#0d180d;border:1px solid #1a2e1a;border-radius:12px;padding:30px;width:300px;text-align:center;">
     <div style="color:#8aaa7a;font-size:12px;margin-bottom:16px;letter-spacing:1px;">CODE D'ACCÈS</div>
