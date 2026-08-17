@@ -1659,6 +1659,26 @@ async function launch(forcePair){
     renderStepBar(9,'');
     renderDecision(o);
 
+    // ── RR REEL : CALCULE ICI, AVANT L'ENREGISTREMENT ────────────
+    // BUG CORRIGE LE 17/08 : rrInfoJournal etait declare 25 lignes APRES
+    // son utilisation dans le POST /journal. Avec let, JavaScript leve une
+    // erreur — avalee par un catch(e){} vide. Consequence : l'appel au
+    // journal ne partait JAMAIS, aucun id n'etait renvoye, et sans id le
+    // backend ne peut pas attacher les boutons Telegram. Les signaux
+    // ATTENDRE arrivaient nus, sans "Je prends / Je passe".
+    // Une variable doit toujours etre declaree AVANT d'etre lue.
+    let rrInfoJournal=null;
+    try{
+      const _rr=rrReel(o.bias,o.entry,o.sl,murH1);
+      if(_rr){
+        rrInfoJournal={
+          feu: _rr.depasse?'DEPASSE':(_rr.rr>=2?'VERT':_rr.rr>=1.5?'JAUNE':'ROUGE'),
+          valeur: +_rr.rr.toFixed(2),
+          mur: _rr.cible
+        };
+      }
+    }catch(e){ console.warn('RR reel journal:', e); }
+
     let realTradeId=null;
     try{
       const jr=await fetch(BACKEND+'/journal',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({date:new Date().toLocaleString('fr-FR'),pair:targetPair,tf:selectedTf,session:session,score:o.score_total,decision:o.decision,bias:o.bias,entry:o.entry,sl:o.sl,tp:o.tp,rr:o.rr,market_state:o.market_state,regime_ratio:o.regime_ratio,rsi_value:o.rsi_value,rsi_pente:o.rsi_pente,trap:o.trap,cisd:o.cisd,msu:o.msu,consensus_long:o.consensus_long,consensus_short:o.consensus_short,gate_blocked:o.gate_blocked,
@@ -1671,7 +1691,17 @@ async function launch(forcePair){
         voie:(enqueteurContext&&enqueteurContext.pair===targetPair)?'AVEC_ENQUETEUR':'SANS_ENQUETEUR',
         rapports_agents:o.rapports_agents?JSON.stringify(o.rapports_agents):null})});
       const jd=await jr.json();realTradeId=jd.id||null;
-    }catch(e){}
+      if(!realTradeId) console.error('JOURNAL : aucun id renvoye —', jd);
+      else if(jd.mode==='repli') console.warn('JOURNAL : enregistre en mode repli —', jd.avertissement);
+    }catch(e){ console.error('JOURNAL : appel echoue —', e); }
+    // Sans id, les boutons Telegram ne peuvent pas etre attaches.
+    // On le dit a l'ecran plutot que de laisser le trader chercher.
+    if(!realTradeId){
+      const eb=document.getElementById('errorBox');
+      if(eb){ eb.innerHTML='⚠️ <b>JOURNAL NON ENREGISTRE</b><br>'
+        +'Le signal partira sur Telegram mais SANS les boutons de resultat. '
+        +'Ouvre la console (F12) pour la cause exacte.'; eb.style.display='block'; }
+    }
     const t={id:realTradeId||Date.now(),date:new Date().toLocaleString('fr-FR'),pair:targetPair,tf:selectedTf,score:o.score_total,decision:o.decision,bias:o.bias,entry:o.entry,sl:o.sl,tp:o.tp,rr:o.rr};
     trades.unshift(t);lastId=t.id;
     if(trades.length>100) trades=trades.slice(0,100);
@@ -1690,12 +1720,9 @@ async function launch(forcePair){
     // ── LIGNE RR REEL (observation) — commune aux 3 messages Telegram ──
     // Aucune decision n'en depend. Si le calcul echoue, la ligne est vide.
     let rrLine='';
-    let rrInfoJournal=null;   // 16/08 : conserve pour le journal
     try{
       const rrInfo=rrReel(o.bias,o.entry,o.sl,murH1);
       if(rrInfo){
-        rrInfoJournal={feu:rrInfo.depasse?'DEPASSE':(rrInfo.rr>=2?'VERT':rrInfo.rr>=1.5?'JAUNE':'ROUGE'),
-                       valeur:+rrInfo.rr.toFixed(2), mur:rrInfo.cible};
         const dec=Math.abs(parseFloat(o.entry))>1000?2:Math.abs(parseFloat(o.entry))>100?3:5;
         if(rrInfo.depasse){
           rrLine='\n🧱 Mur le plus proche: '+rrInfo.cible.toFixed(dec)
