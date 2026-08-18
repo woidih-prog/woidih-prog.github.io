@@ -107,11 +107,32 @@ button:disabled{opacity:.4;cursor:not-allowed}
 
 <script>
 const ACCESS_CODES = ['BETA2026','REDPILL01','NOVICE01','NOVICE02','NOVICE03','ADMIN999'];
+
+// ── A QUI APPARTIENT CE TRADE ? (18/08/2026) ──────────────────
+// Jusqu'ici, TOUS les trades etaient ranges sous le compte du
+// proprietaire, y compris ceux d'un beta-testeur : le journal, les
+// compteurs et l'evolution melangeaient deux personnes.
+// Desormais le code d'acces sert d'etiquette. Le backend range chacun
+// dans sa case, et /compteurs?compte_id=XXX ne renvoie que ses trades.
+// AUCUNE decision ne change : c'est une etiquette, rien d'autre.
+const CODES_PROPRIETAIRE = ['ADMIN999'];   // <- codes de Woidih TARKHANI
+const COMPTE_PROPRIETAIRE = '22631676';
+
+function compteDuVisiteur(){
+  try{
+    const code = (sessionStorage.getItem('tmv5_code') || '').toUpperCase();
+    if(!code) return null;                        // session ancienne : le backend decidera
+    if(CODES_PROPRIETAIRE.indexOf(code) > -1) return COMPTE_PROPRIETAIRE;
+    return 'CODE_' + code;                        // ex : CODE_NOVICE01
+  }catch(e){ return null; }
+}
 function checkPassword() {
   const input = document.getElementById('pwdInput').value.toUpperCase().trim();
   if(ACCESS_CODES.includes(input)) {
     document.getElementById('loginScreen').style.display = 'none';
     sessionStorage.setItem('tmv5_access', 'granted');
+    sessionStorage.setItem('tmv5_code', input);   // etiquette de proprietaire
+    console.log('RENARD — trades ranges sous :', compteDuVisiteur());
   } else {
     document.getElementById('pwdError').style.display = 'block';
     document.getElementById('pwdInput').value = '';
@@ -1689,6 +1710,7 @@ async function launch(forcePair){
         rr_reel_valeur:rrInfoJournal?rrInfoJournal.valeur:null,
         rr_reel_mur:rrInfoJournal?rrInfoJournal.mur:null,
         voie:(enqueteurContext&&enqueteurContext.pair===targetPair)?'AVEC_ENQUETEUR':'SANS_ENQUETEUR',
+        compte_id:compteDuVisiteur(),
         rapports_agents:o.rapports_agents?JSON.stringify(o.rapports_agents):null})});
       const jd=await jr.json();realTradeId=jd.id||null;
       if(!realTradeId) console.error('JOURNAL : aucun id renvoye —', jd);
